@@ -1,0 +1,83 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "model": "opencode/x-preview-f-free",
+  "small_model": "openference/DeepSeek-V4-Pro-0813",
+  "subagent_depth": 2,
+  "instructions": ["~/.config/opencode/instructions/AGENTS.md"],
+  "agent": {
+    "build": {
+      "model": "opencode/x-preview-f-free"
+    },
+    "explore": {
+      "model": "agnes/agnes-2.5-flash"
+    },
+    "general": {
+      "model": "openference/DeepSeek-V4-Flash-0731",
+      "permission": {
+        "task": { "explore": "allow" }
+      }
+    }
+  },
+  "provider": {
+    "openference": {
+      "name": "OpenFerence",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://api.openference.com/v1",
+        "apiKey": "{env:OPENFERENCE_API_KEY}"
+      },
+      "models": {
+        "GLM-5.2": {
+          "name": "GLM-5.2",
+          "reasoning": true,
+          "variants": {
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 262144, "input": 262144, "output": 131071 }
+        },
+        "Qwen3.8 27b": {
+          "name": "Qwen3.8 27b",
+          "reasoning": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "variants": { "high": { "reasoningEffort": "high" } },
+          "limit": { "context": 262144, "output": 65536 }
+        },
+        "DeepSeek-V4-Flash-0731": {
+          "name": "DeepSeek-V4-Flash-0731",
+          "reasoning": true,
+          "tool_call": true,
+          "variants": { "max": { "reasoningEffort": "max" } },
+          "limit": { "context": 920576, "output": 384000 }
+        },
+        "DeepSeek-V4-Pro-0813": {
+          "name": "DeepSeekV4Pro",
+          "reasoning": true,
+          "tool_call": true,
+          "variants": {
+            "high": { "reasoningEffort": "high" },
+            "max": { "reasoningEffort": "max" }
+          },
+          "limit": { "context": 664576, "output": 384000 }
+        }
+      }
+    },
+    "agnes": {
+      "name": "Agnes AI",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://apihub.agnes-ai.com/v1",
+        "apiKey": "{env:AGNES_API_KEY}"
+      },
+      "models": {
+        "agnes-2.5-flash": {
+          "name": "Agnes 2.5 Flash",
+          "reasoning": true,
+          "tool_call": true,
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "limit": { "context": 512000, "output": 65536 }
+        }
+      }
+    }
+  }
+}
