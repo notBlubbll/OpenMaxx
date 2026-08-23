@@ -19,3 +19,4 @@
   - subagent_type `explore` -> "You are a subagent. Search and read directly with your own tools; report findings concisely."
 
 (append your project-specific sections below this line)
+- Parallel fan-out: a `general` coordinator SHOULD shard independent edits across MULTIPLE `edit` subagents in ONE message (parallel) rather than batching them into one call; same-file/overlapping edits stay in a single call to avoid conflicts. Independent searches fan out across parallel `explore` subagents the same way.
