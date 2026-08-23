@@ -4,6 +4,11 @@ Routes opencode work across providers by cost: free Agnes for ALL searching
 AND all code edits, paid DeepSeek only for coordination reasoning, paid
 DeepSeek Pro for high-stakes background summaries.
 
+## Save $5 on OpenFerence
+
+Sign up with this referral link to get **$5 credit** on OpenFerence:
+**https://openference.com/register?ref=JTVJHCYR**
+
 ## Layout
 
 ```
