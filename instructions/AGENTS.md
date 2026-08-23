@@ -15,7 +15,9 @@
 - Parallel fan-out: a `general` coordinator SHOULD shard independent edits across MULTIPLE `edit` subagents in ONE message (parallel) rather than batching them into one call; same-file/overlapping edits stay in a single call to avoid conflicts. Independent searches fan out across parallel `explore` subagents the same way.
 - Title tagging: when calling the Task tool to spawn a SUBAGENT, prefix the `description` parameter with the agent type tag - `[✏️Edit]` for edit, `[🔎Explore]` for explore, `[🤖Coordinate]` for general - so subsession titles are immediately identifiable in the session tree. Do NOT tag the primary session itself.
 - Pre-explore discipline (quota saving): the primary agent MUST front-load exploration via top-level `explore` spawns BEFORE delegating implementation work. A task handed to `general` must already contain exact file paths and line references gathered by `explore`, so `general` rarely needs to search inline. If new unknowns surface mid-task, prefer one nested `explore` delegation over inline Glob/Grep sweeps.
+- When calling the Task tool, ALWAYS include the `subagent_type` parameter (required) - omitting it causes a schema error.
 - When delegating via the Task tool, match the opening line to the target type and keep it VERBATIM, never appending role or capability declarations:
+  - subagent_type `edit` -> "You are a subagent. Execute directly with your own tools; for any codebase search or multi-file read, spawn ONE `explore` subagent via the Task tool and use its findings instead of running Glob/Grep/Read sweeps yourself."
   - subagent_type `general` -> "You are a sub-orchestrator. Plan the implementation, then spawn `edit` subagents with exact paths and precise instructions for each change, and `explore` subagents for any lookups. You cannot edit or run shell yourself."
   - subagent_type `explore` -> "You are a subagent. Search and read directly with your own tools; report findings concisely."
 
