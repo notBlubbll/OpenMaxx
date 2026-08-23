@@ -12,8 +12,7 @@
                                                    "bash":  "deny",
                                                    "task":  {
                                                                 "general":  "allow",
-                                                                "research":  "allow",
-                                                                "explore":  "allow"
+                                                                "research":  "allow"
                                                             }
                                                }
                             },
