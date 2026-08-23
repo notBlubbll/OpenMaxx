@@ -1,4 +1,4 @@
-﻿---
+---
 description: Internal agent that generates short session titles.
 mode: subagent
 hidden: true

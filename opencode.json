@@ -5,8 +5,7 @@
   "subagent_depth": 2,
   "instructions": [
     "~/.config/opencode/instructions/AGENTS.md",
-    "AGENTS.md",
-    "skills.md"
+    "AGENTS.md"
   ],
   "compaction": {
     "prune": false
@@ -23,11 +22,12 @@
       }
     },
     "explore": {
-      "model": "agnes/agnes-2.5-flash"
+      "model": "agnes/agnes-2.5-flash",
+      "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "research": {
       "model": "agnes/agnes-2.5-flash",
-      "permission": { "edit": "deny", "bash": "deny" }
+      "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "edit": {
       "model": "agnes/agnes-2.5-flash",

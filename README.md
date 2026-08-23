@@ -1,4 +1,4 @@
-﻿# opencode multi-model subagent setup
+# opencode multi-model subagent setup
 
 Routes opencode work across providers by cost: free Agnes for ALL searching
 AND all code edits, paid DeepSeek only for coordination reasoning, paid
@@ -51,7 +51,34 @@ Primary (GLM-5.2, paid)          receives request, delegates GOAL
 The primary NEVER spawns `edit` directly — ALL edits go through `general`.
 The primary spawns `research` for all lookups (single-file and multi-file).
 `explore` is restricted — only available for session titles and nested
-lookups inside `edit`/`general` if needed.
+lookups inside `edit` if needed.
+
+## Design principle: permission-enforced rules
+
+Rules stated in `AGENTS.md` are text — they compete for attention with growing
+history and can silently stop firing. The strongest rules in this setup are NOT
+text: they are **permission-denied** in `opencode.json`, so they cannot decay:
+
+- **Primary cannot edit/search/bash**: `build` permission denies `edit`, `glob`,
+  `grep`, `bash` — the primary physically cannot do implementation work, only
+  delegate.
+- **Primary cannot spawn `edit`**: `build.task` allows only `general` and
+  `research` — `edit` is absent, so the primary cannot bypass the coordinator.
+- **Primary cannot spawn `explore`**: same — `explore` is absent from
+  `build.task`, restricted to titles and nested lookups inside `edit`.
+- **`general` cannot edit/bash**: denied in its own permission block — it can
+  only plan and delegate to `edit` and `research`.
+- **`research` cannot bash**: denied — read-only search, no side effects.
+
+Text-mediated rules that CAN decay over long sessions:
+- Pre-explore discipline (research before delegating)
+- Parallel fan-out cap and self-check
+- Title tagging
+- Findings-to-disk (mitigated by making it a subagent rule, not a primary rule)
+
+These text-mediated rules are the ones to watch in long sessions. If compliance
+drops, the fix is a session restart (fresh context, rules at full strength) or
+converting the rule to a permission-denied enforcement if possible.
 
 ## Model routing
 
@@ -144,10 +171,34 @@ but trivial, so they go to the free tier.
    `research` spawn before delegating to `general`, so the goal already contains
    exact paths and context.
 
+## Snippet proof (verification, not enforcement)
+
+Findings files from `research` and `explore` must include a verbatim 1-3 line
+quote from each cited `file:line` reference. This proves the subagent actually
+read the file rather than confabulating a plausible-sounding reference. The
+caller can grep the quoted string to verify. This is the cheapest verification
+that survives compaction — it lives in the findings file on disk, not in
+history that gets summarised.
+
+The one-line summary from subagents ends with "READ BEFORE ACTING" as a
+per-turn reminder that survives in history. The caller (primary or general)
+is instructed to read the findings file via the Read tool before acting on
+any edit decision. This is text-mediated — it can decay in long sessions —
+but the reminder is fresh on every turn because it's in the response, not
+just in the injected instructions.
+
 ## Subsession title tags
 
 Subagent sessions are tagged in their title for easy identification:
 `[✏️Edit]`, `[🤖Coordinate]`, `[🔎Research]`. Primary sessions are not tagged.
+
+## Data retention note
+
+All code editing and searching in this setup runs on **Agnes 2.5 Flash** (free tier).
+Before pointing this at a private repository, review Agnes AI's data-retention
+and training-usage terms at https://agnes-ai.com/ to confirm whether API inputs
+are stored or used for model training. The paid models (GLM-5.2, DeepSeek Pro)
+run through OpenFerence — review their terms separately.
 
 ## Verify
 
