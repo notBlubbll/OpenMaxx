@@ -25,10 +25,10 @@ AGNES_API_KEY=...
 ~/.config/opencode/
 ├── opencode.json
 ├── agents/
-│   ├── explore.md      # searching -> agnes-2.5-flash (free)
-│   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash (free)
+│   ├── explore.md      # searching -> agnes-2.5-flash-explore (free, light thinking)
+│   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash-edit (free, deep thinking)
 │   ├── general.md      # coordinator -> DeepSeek-V4-Flash; cannot edit/bash itself
-│   └── title.md        # session titles -> agnes-2.5-flash (free)  [overrides small_model]
+│   └── title.md        # session titles -> agnes-2.5-flash-explore (free)  [overrides small_model]
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
 ```
@@ -39,14 +39,47 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 
 ## Model routing
 
-| Role | Model | Cost |
-|---|---|---|
-| main + build (orchestration) | openference/GLM-5.2 | paid quota |
-| edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | free |
-| explore (ALL searching, any depth) | agnes/agnes-2.5-flash | free |
-| session titles | agnes/agnes-2.5-flash | free |
-| general (coordinator, planning only) | openference/DeepSeek-V4-Flash-0731 | paid quota |
-| small_model (compaction summaries) | openference/DeepSeek-V4-Pro-0813 | paid quota |
+| Role | Model | Thinking | Output | Cost |
+|---|---|---|---|---|
+| main + build (orchestration) | openference/GLM-5.2 | 65,536 | 73,728 | paid quota |
+| edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash-edit | 8,192 | 65,536 | free |
+| explore (ALL searching, any depth) | agnes/agnes-2.5-flash-explore | 2,048 | 65,536 | free |
+| session titles | agnes/agnes-2.5-flash-explore | 2,048 | 65,536 | free |
+| general (coordinator, planning only) | openference/DeepSeek-V4-Flash-0731 | max | 16,384 | paid quota |
+| small_model (compaction summaries) | openference/DeepSeek-V4-Pro-0813 | max | 384,000 | paid quota |
+
+## Thinking and output tuning
+
+Each model is tuned for its workload by balancing **thinking budget** (reasoning
+tokens the model spends before responding) against **output limit** (total
+tokens available for the response including thinking):
+
+- **GLM-5.2 (orchestrator)**: 65K thinking / 73K output — max deep reasoning,
+  concise ~8K visible response. The orchestrator plans extensively but outputs
+  short delegation instructions.
+- **DeepSeek-V4-Flash (coordinator)**: `reasoningEffort: max` / 16K output —
+  deep reasoning for task decomposition, concise delegation output.
+- **agnes-2.5-flash-explore (searching)**: 2K thinking / 65K output — light
+  reasoning (search doesn't need deep planning), full output for comprehensive
+  findings. Agnes recommends 2K for regular tasks.
+- **agnes-2.5-flash-edit (code edits)**: 8K thinking / 65K output — 4× deeper
+  reasoning than explore, since code changes need more problem-solving. Full
+  output for large patches.
+- **DeepSeek-V4-Pro (small_model)**: `reasoningEffort: max` / 384K output —
+  max reasoning and full output for high-quality compaction summaries.
+
+## Why two Agnes model variants?
+
+Agnes 2.5 Flash supports a thinking toggle with a configurable token budget
+(`thinking.type: "enabled"`, `thinking.budget_tokens: N`). We register the
+same underlying model twice under different IDs with different thinking budgets:
+
+- `agnes-2.5-flash-explore` — 2,048 thinking tokens for fast search/report
+- `agnes-2.5-flash-edit` — 8,192 thinking tokens for deeper code reasoning
+
+Both share the same free API key, same 512K context, same 65.5K output ceiling.
+Only the thinking budget differs. This lets each agent type get appropriate
+reasoning depth without wasting tokens on tasks that don't need it.
 
 ## What small_model does (and doesn't)
 
@@ -95,5 +128,8 @@ Subagent sessions are tagged in their title for easy identification:
 opencode agent list
 # run a task, then check routing in the log:
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=edit'
-# expect: providerID=agnes modelID=agnes-2.5-flash
+# expect: providerID=agnes modelID=agnes-2.5-flash-edit
+
+Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=explore'
+# expect: providerID=agnes modelID=agnes-2.5-flash-explore
 ```
