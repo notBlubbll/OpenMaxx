@@ -41,9 +41,9 @@
           "name": "GLM-5.2",
           "reasoning": true,
           "variants": {
-            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 65536 } }
           },
-          "limit": { "context": 262144, "input": 262144, "output": 131071 }
+          "limit": { "context": 262144, "input": 262144, "output": 73728 }
         },
         "Qwen3.8 27b": {
           "name": "Qwen3.8 27b",
@@ -57,7 +57,7 @@
           "reasoning": true,
           "tool_call": true,
           "variants": { "max": { "reasoningEffort": "max" } },
-          "limit": { "context": 920576, "output": 384000 }
+          "limit": { "context": 920576, "output": 16384 }
         },
         "DeepSeek-V4-Pro-0813": {
           "name": "DeepSeekV4Pro",
