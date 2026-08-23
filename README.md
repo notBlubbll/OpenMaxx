@@ -46,9 +46,10 @@ Primary (GLM-5.2, paid)          receives request, delegates GOAL
        └─ explore (Agnes, free)   searches/reads (parallel if independent)
 ```
 
-The primary does NOT spawn edit/explore directly except for trivial one-off
-lookups. It hands the implementation goal to `general`, which breaks it down,
-plans the edit sequence, and delegates execution to free Agnes subagents.
+The primary NEVER spawns `edit` directly — ALL edits go through `general`.
+The primary MAY spawn `explore` directly only for quick standalone lookups
+(eg. "find all API endpoints"). For implementation-related work, it delegates
+the goal to `general`, which plans and fans out to free Agnes subagents.
 
 ## Model routing
 
@@ -123,8 +124,9 @@ but trivial, so they go to the free tier.
 ## How nesting + parallelization works
 
 1. Primary receives the request and delegates the GOAL to `general`
-   (sub-orchestrator). Primary does NOT spawn edit/explore directly except for
-   trivial one-off lookups.
+   (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
+   go through `general`. The primary MAY spawn `explore` directly only for
+   quick standalone lookups.
 2. `general` (paid DeepSeek) plans the implementation: breaks the goal into
    precise edit steps with exact file paths, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
