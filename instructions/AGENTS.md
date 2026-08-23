@@ -8,11 +8,11 @@ This document provides technical instructions, structural assumptions, and desig
 
 - For ANY implementation task, ALWAYS use the Task tool with subagent_type: "general" as a sub-orchestrator/planner. The primary delegates the GOAL to general; general breaks it down, plans the edit sequence, and spawns `edit` and `explore` subagents to execute.
 - The primary MUST NEVER spawn subagent_type "edit" directly. ALL edits go through `general`. No exceptions.
-- The primary MUST delegate ALL research work to subagents. If the primary needs to investigate, search, read code, or understand something before delegating implementation, it MUST spawn a esearch or explore subagent for that - never do the research itself on its own model. The primary's loop should be: spawn research/explore → read findings → delegate to general → synthesize. Not: reason through the codebase on GLM-5.2 tokens.
-- The primary MUST choose between explore and esearch based on scope:
+- The primary MUST delegate ALL research work to subagents. If the primary needs to investigate, search, read code, or understand something before delegating implementation, it MUST spawn a research or explore subagent for that - never do the research itself on its own model. The primary's loop should be: spawn research/explore → read findings → delegate to general → synthesize. Not: reason through the codebase on GLM-5.2 tokens.
+- The primary MUST choose between explore and research based on scope:
   - explore (Agnes, free): ONLY for single-file reads, definition lookups, or finding files by name/glob. One target, one answer.
-  - esearch (DeepSeek, paid): for ANY multi-file search, code tracing, call-path analysis, or when thoroughness is "medium" or "very thorough". If the lookup touches more than one file or needs reasoning to connect findings, use esearch.
-  - When in doubt, use esearch.
+  - research (DeepSeek, paid): for ANY multi-file search, code tracing, call-path analysis, or when thoroughness is "medium" or "very thorough". If the lookup touches more than one file or needs reasoning to connect findings, use research.
+  - When in doubt, use research.
 - Use the Task tool with subagent_type: "explore" ONLY for quick standalone lookups that don't need implementation (eg. "find all API endpoints", "where is X defined").
 - The primary agent's role is **orchestration only**: plan, delegate, synthesize results.
 - Exception: you may read AGENTS.md or config files directly for context. All other file operations go through subagents.
