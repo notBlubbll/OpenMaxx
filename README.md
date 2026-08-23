@@ -4,10 +4,20 @@ Routes opencode work across providers by cost: free Agnes for ALL searching
 AND all code edits, paid DeepSeek only for coordination reasoning, paid
 DeepSeek Pro for high-stakes background summaries.
 
-## Save $5 on OpenFerence
+## Get API keys
 
-Sign up with this referral link to get **$5 credit** on OpenFerence:
-**https://openference.com/register?ref=JTVJHCYR**
+**OpenFerence** — sign up with this referral link to get **$5 credit**:
+https://openference.com/register?ref=JTVJHCYR
+
+**Agnes AI** — create a free API key (no card required) at:
+https://platform.agnes-ai.com/
+
+Then set environment variables:
+
+```
+OPENFERENCE_API_KEY=...
+AGNES_API_KEY=...
+```
 
 ## Layout
 
@@ -25,14 +35,7 @@ Sign up with this referral link to get **$5 credit** on OpenFerence:
 
 Copy the files to `%USERPROFILE%\.config\opencode\` (Windows) or `~/.config/opencode/`.
 
-Requires **opencode >= 1.18** (`subagent_depth`). Set API keys first:
-
-```
-OPENFERENCE_API_KEY=...
-AGNES_API_KEY=...
-```
-
-Restart opencode after any change.
+Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any change.
 
 ## Model routing
 
