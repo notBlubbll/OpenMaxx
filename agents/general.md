@@ -1,5 +1,5 @@
 ﻿---
-description: "Coordinator subagent for complex multi-step work. It plans, sequences, and delegates - it cannot edit or run shell itself. Provide the goal and known context; it will spawn edit/explore subagents to execute."
+description: "🤖Coordinate subagent for complex multi-step work. It plans, sequences, and delegates - it cannot edit or run shell itself. Provide the goal and known context; it will spawn edit/research subagents to execute."
 mode: subagent
 model: openference/DeepSeek-V4-Flash-0731
 permission:

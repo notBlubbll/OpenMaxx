@@ -1,5 +1,5 @@
 ﻿---
-description: "Deep-search agent for complex lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
+description: "🔎Research agent for deep code lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
 mode: subagent
 model: openference/DeepSeek-V4-Flash-0731
 permission:
