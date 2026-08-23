@@ -1,20 +1,30 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "opencode/x-preview-f-free",
+  "model": "openference/GLM-5.2",
   "small_model": "openference/DeepSeek-V4-Pro-0813",
   "subagent_depth": 2,
   "instructions": ["~/.config/opencode/instructions/AGENTS.md"],
   "agent": {
     "build": {
-      "model": "opencode/x-preview-f-free"
+      "model": "openference/GLM-5.2"
     },
     "explore": {
       "model": "agnes/agnes-2.5-flash"
     },
+    "edit": {
+      "model": "agnes/agnes-2.5-flash",
+      "permission": {
+        "edit": "allow",
+        "bash": "allow",
+        "task": { "explore": "allow" }
+      }
+    },
     "general": {
       "model": "openference/DeepSeek-V4-Flash-0731",
       "permission": {
-        "task": { "explore": "allow" }
+        "edit": "deny",
+        "bash": "deny",
+        "task": { "explore": "allow", "edit": "allow" }
       }
     }
   },
