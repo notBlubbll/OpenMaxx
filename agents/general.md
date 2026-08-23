@@ -25,3 +25,6 @@ Parallelization (speed):
 - Shard independent searches across multiple parallel `explore` subagents too.
 - After parallel edits return, run ONE `edit` subagent to build/verify the combined result.
 - Prefer more, smaller, parallel spawns over fewer, larger, sequential ones whenever the work is independent.
+- After planning all groups, ALWAYS issue ALL Task calls in ONE message. Do NOT trickle them across multiple messages. If you planned N groups, emit N Task calls together.
+- If you are about to emit fewer Task calls than groups you planned, STOP and re-issue with ALL groups in one message.
+- Keep each edit instruction concise: file path, the specific change, and a 1-2 line description. Do NOT waste output tokens re-explaining context the subagent will read from files.
