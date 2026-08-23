@@ -63,7 +63,7 @@ lookups inside `edit`/`general` if needed.
 | explore (restricted, titles) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
-| small_model (compaction summaries) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
+| small_model (compaction summaries) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
 
 ## Thinking and output tuning
 
@@ -82,9 +82,8 @@ tokens available for the response including thinking):
   output — double the explore budget for tracing call paths across files.
 - **agnes-2.5-flash variant:edit (code edits)**: 8K thinking / 65K output —
   4x deeper reasoning than explore for code changes. Full output for patches.
-- **DeepSeek-V4-Pro (small_model)**: `reasoningEffort: max` / 384K output —
-  max reasoning and full output for high-quality compaction summaries.
-
+- **GLM-5.2 (small_model)**: 65K thinking / 73K output —
+  deep reasoning and full output for high-quality compaction summaries.
 ## How variants work
 
 The Agnes API only knows one model ID: `agnes-2.5-flash`. We register it once
