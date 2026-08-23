@@ -1,9 +1,16 @@
-{
+﻿{
   "$schema": "https://opencode.ai/config.json",
   "model": "openference/GLM-5.2",
   "small_model": "openference/DeepSeek-V4-Pro-0813",
   "subagent_depth": 2,
-  "instructions": ["~/.config/opencode/instructions/AGENTS.md"],
+  "instructions": [
+    "~/.config/opencode/instructions/AGENTS.md",
+    "AGENTS.md",
+    "skills.md"
+  ],
+  "compaction": {
+    "prune": false
+  },
   "agent": {
     "build": {
       "model": "openference/GLM-5.2",
@@ -27,7 +34,7 @@
       "permission": { "edit": "allow", "bash": "allow", "task": { "explore": "allow" } }
     },
     "general": {
-      "model": "openference/DeepSeek-V4-Flash-0731",
+      "model": "openference/DeepSeek-V4-Pro-0813",
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -98,6 +105,142 @@
             "edit": { "thinking": { "type": "enabled", "budget_tokens": 8192 } }
           },
           "limit": { "context": 512000, "output": 65536 }
+        }
+      }
+    },
+    "commandcode": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Command Code Proxy",
+      "options": { "baseURL": "http://localhost:3000/v1" },
+      "models": {
+        "deepseek/deepseek-v4-pro": { "name": "DeepSeek V4 Pro" },
+        "deepseek/deepseek-v4-flash": { "name": "DeepSeek V4 Flash" },
+        "MiniMaxAI/MiniMax-M2.7": { "name": "MiniMax M2.7" },
+        "Qwen/Qwen3.6-Plus": { "name": "Qwen 3.6 Plus" },
+        "zai-org/GLM-5.1": { "name": "GLM 5.1" },
+        "moonshotai/Kimi-K2.6": { "name": "Kimi K2.6" }
+      }
+    },
+    "freebuff": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Freebuff Proxy",
+      "options": { "baseURL": "http://localhost:8080/v1" },
+      "models": {
+        "anthropic/claude-fable-5": { "name": "[LIM] Claude Fable 5" },
+        "crof/greg-2-super": { "name": "[LIM] Greg 2 Super" },
+        "crof/greg-2-ultra": { "name": "[LIM] Greg 2 Ultra" },
+        "inclusionai/ling-3.0-flash:free": { "name": "[LIM] Ling 3.0 Flash" },
+        "meta/muse-spark-1.2-contributor": { "name": "[LIM] Muse Spark 1.2" },
+        "mimo/mimo-v2.5": { "name": "MiMo 2.5" },
+        "openai/gpt-5.6-luna": { "name": "[LIM] GPT-5.6 Luna" },
+        "openrouter/poolside/laguna-s-2.1": { "name": "[LIM] Laguna S 2.1 (OpenRouter)" },
+        "poolside/laguna-s-2.1": { "name": "[LIM] Laguna S 2.1 (Poolside)" },
+        "z-ai/glm-5.2": { "name": "[LIM] GLM 5.2" }
+      }
+    },
+    "synthetic": {
+      "npm": "@ai-sdk/openai-compatible",
+      "name": "Synthetic-Proxy",
+      "options": { "baseURL": "http://localhost:8084/v1", "apiKey": "synthetic-proxy" },
+      "models": {
+        "hf:moonshotai/Kimi-K3": {
+          "id": "hf:moonshotai/Kimi-K3", "name": "moonshotai/Kimi-K3", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 524288, "output": 524288 }, "temperature": true, "tool_call": true, "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4": {
+          "id": "hf:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4", "name": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B-NVFP4", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 262144, "output": 262144 }, "temperature": true, "tool_call": true, "attachment": false,
+          "modalities": { "input": ["text"], "output": ["text"] }
+        },
+        "hf:Qwen/Qwen3.6-27B": {
+          "id": "hf:Qwen/Qwen3.6-27B", "name": "Qwen/Qwen3.6-27B", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 262144, "output": 262144 }, "temperature": true, "tool_call": true, "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "syn:large:text": {
+          "id": "syn:large:text", "name": "syn:large:text", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 524288, "output": 524288 }, "temperature": true, "tool_call": true, "attachment": false,
+          "modalities": { "input": ["text"], "output": ["text"] }
+        },
+        "syn:large:vision": {
+          "id": "syn:large:vision", "name": "syn:large:vision", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 524288, "output": 524288 }, "temperature": true, "tool_call": true, "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "syn:small:text": {
+          "id": "syn:small:text", "name": "syn:small:text", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 196608, "output": 196608 }, "temperature": true, "tool_call": true, "attachment": false,
+          "modalities": { "input": ["text"], "output": ["text"] }
+        },
+        "syn:small:vision": {
+          "id": "syn:small:vision", "name": "syn:small:vision", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 262144, "output": 262144 }, "temperature": true, "tool_call": true, "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] }
+        },
+        "hf:zai-org/GLM-4.7-Flash": {
+          "id": "hf:zai-org/GLM-4.7-Flash", "name": "zai-org/GLM-4.7-Flash", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 196608, "output": 196608 }, "temperature": true, "tool_call": true, "attachment": false,
+          "modalities": { "input": ["text"], "output": ["text"] }
+        },
+        "hf:zai-org/GLM-5.2": {
+          "id": "hf:zai-org/GLM-5.2", "name": "zai-org/GLM-5.2", "reasoning": true,
+          "variants": {
+            "low": { "thinking": { "type": "enabled", "budget_tokens": 8000 } },
+            "medium": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "high": { "thinking": { "type": "enabled", "budget_tokens": 16000 } },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 32000 } }
+          },
+          "limit": { "context": 524288, "output": 524288 }, "temperature": true, "tool_call": true, "attachment": false,
+          "modalities": { "input": ["text"], "output": ["text"] }
         }
       }
     }

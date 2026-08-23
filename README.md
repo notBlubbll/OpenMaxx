@@ -28,7 +28,7 @@ AGNES_API_KEY=...
 │   ├── explore.md      # quick lookups -> agnes-2.5-flash variant:explore (free)
 │   ├── research.md     # deep search -> agnes-2.5-flash variant:research (free)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free)
-│   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Flash; plans + delegates, cannot edit/bash itself
+│   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Pro; plans + delegates, cannot edit/bash itself
 │   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
@@ -43,7 +43,7 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ```
 Primary (GLM-5.2, paid)          receives request, delegates GOAL
   ├─ research (Agnes, free)      deep code tracing + multi-file search
-  └─ general (DeepSeek, paid)    sub-orchestrator: plans, sequences, fans out
+   └─ general (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
        ├─ edit (Agnes, free)     applies edits + builds (parallel if independent)
        └─ research (Agnes, free) deep code tracing inside coordinator sessions
 ```
@@ -58,7 +58,7 @@ lookups inside `edit`/`general` if needed.
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
 | main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
-| general (sub-orchestrator) | openference/DeepSeek-V4-Flash-0731 | max | max | 32,768 | paid quota |
+| general (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | explore (restricted, titles) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
@@ -74,8 +74,8 @@ tokens available for the response including thinking):
 - **GLM-5.2 (orchestrator)**: 65K thinking / 73K output — max deep reasoning,
   concise ~8K visible response. The orchestrator plans extensively but outputs
   short delegation instructions.
-- **DeepSeek-V4-Flash (sub-orchestrator)**: `reasoningEffort: max` / 32K
-  output — deep reasoning for task decomposition, concise delegation output.
+- **DeepSeek-V4-Pro (sub-orchestrator)**: `reasoningEffort: max` / 384K
+  output — deep reasoning for task decomposition, full delegation output.
 - **agnes-2.5-flash variant:explore (titles)**: 2K thinking / 65K output —
   light reasoning, full output for findings.
 - **agnes-2.5-flash variant:research (deep search)**: 4K thinking / 65K
@@ -128,7 +128,7 @@ but trivial, so they go to the free tier.
 1. Primary receives the request and delegates the GOAL to `general`
    (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
    go through `general`. The primary spawns `research` for all lookups.
-2. `general` (paid DeepSeek) plans the implementation: breaks the goal into
+2. `general` (paid DeepSeek Pro) plans the implementation: breaks the goal into
    precise edit steps with exact file paths, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
 3. `general` spawns `edit` subagents (free Agnes) to apply each change. For
@@ -156,7 +156,7 @@ Subagent sessions are tagged in their title for easy identification:
 opencode agent list
 # run a task, then check routing in the log:
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=general'
-# expect: providerID=openference modelID=DeepSeek-V4-Flash-0731
+# expect: providerID=openference modelID=DeepSeek-V4-Pro-0813
 
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=edit'
 # expect: providerID=agnes modelID=agnes-2.5-flash
