@@ -76,6 +76,11 @@ but trivial, so they go to the free tier.
 6. Pre-explore discipline: primary front-loads exploration and hands exact
    paths downward, so paid requests approach zero.
 
+## Subsession title tags
+
+Subagent sessions are tagged in their title for easy identification:
+`[✏️Edit]`, `[🔎Explore]`, `[🤖Coordinate]`. Primary sessions are not tagged.
+
 ## Verify
 
 ```powershell
