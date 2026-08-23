@@ -8,7 +8,13 @@
                                 "permission":  {
                                                    "edit":  "deny",
                                                    "glob":  "deny",
-                                                   "grep":  "deny"
+                                                   "grep":  "deny",
+                                                   "bash":  "deny",
+                                                   "task":  {
+                                                                "general":  "allow",
+                                                                "research":  "allow",
+                                                                "explore":  "allow"
+                                                            }
                                                }
                             },
                   "explore":  {
