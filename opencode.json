@@ -9,10 +9,10 @@
       "model": "openference/GLM-5.2"
     },
     "explore": {
-      "model": "agnes/agnes-2.5-flash-explore"
+      "model": "agnes/agnes-2.5-flash"
     },
     "edit": {
-      "model": "agnes/agnes-2.5-flash-edit",
+      "model": "agnes/agnes-2.5-flash",
       "permission": {
         "edit": "allow",
         "bash": "allow",
@@ -79,25 +79,15 @@
         "apiKey": "{env:AGNES_API_KEY}"
       },
       "models": {
-        "agnes-2.5-flash-explore": {
-          "name": "Agnes 2.5 Flash (Explore)",
+        "agnes-2.5-flash": {
+          "name": "Agnes 2.5 Flash",
           "reasoning": true,
           "tool_call": true,
           "attachment": true,
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "variants": {
-            "max": { "thinking": { "type": "enabled", "budget_tokens": 2048 } }
-          },
-          "limit": { "context": 512000, "output": 65536 }
-        },
-        "agnes-2.5-flash-edit": {
-          "name": "Agnes 2.5 Flash (Edit)",
-          "reasoning": true,
-          "tool_call": true,
-          "attachment": true,
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "variants": {
-            "max": { "thinking": { "type": "enabled", "budget_tokens": 8192 } }
+            "explore": { "thinking": { "type": "enabled", "budget_tokens": 2048 } },
+            "edit": { "thinking": { "type": "enabled", "budget_tokens": 8192 } }
           },
           "limit": { "context": 512000, "output": 65536 }
         }
