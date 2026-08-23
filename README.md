@@ -1,8 +1,8 @@
 # opencode multi-model subagent setup
 
 Routes opencode work across providers by cost: free Agnes for ALL searching
-AND all code edits, paid DeepSeek only for coordination reasoning, free/paid
-split for background tasks.
+AND all code edits, paid DeepSeek only for coordination reasoning, paid
+DeepSeek Pro for high-stakes background summaries.
 
 ## Layout
 
@@ -58,16 +58,22 @@ Rationale: compaction is rare but high-stakes (a lossy summary degrades
 everything after it), so it keeps the strongest summarizer; titles are frequent
 but trivial, so they go to the free tier.
 
-## How nesting works
+## How nesting + parallelization works
 
 1. Primary orchestrates only; all work goes through Task subagents.
 2. With precise instructions, every edit + shell/build unit goes to an `edit`
-   subagent (free Agnes) - one call per tightly-coupled change set.
+   subagent (free Agnes).
 3. `general` (paid DeepSeek) is a pure coordinator: its own edit/bash tools are
    permission-denied, so it can ONLY delegate to `edit` and `explore`.
-4. `subagent_depth: 2` allows one nesting level; explores have no task
+4. **Parallel fan-out**: `general` shards independent edits across MULTIPLE
+   `edit` subagents in ONE message (parallel) rather than batching them into
+   one call. Same-file/overlapping edits stay in a single call to avoid write
+   conflicts. Independent searches fan out across parallel `explore`
+   subagents the same way. After parallel edits return, one `edit` subagent
+   builds/verifies the combined result.
+5. `subagent_depth: 2` allows one nesting level; explores have no task
    permission, so recursion hard-stops at depth 2.
-5. Pre-explore discipline: primary front-loads exploration and hands exact
+6. Pre-explore discipline: primary front-loads exploration and hands exact
    paths downward, so paid requests approach zero.
 
 ## Verify
