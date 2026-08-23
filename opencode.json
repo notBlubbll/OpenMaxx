@@ -57,7 +57,7 @@
           "reasoning": true,
           "tool_call": true,
           "variants": { "max": { "reasoningEffort": "max" } },
-          "limit": { "context": 920576, "output": 16384 }
+          "limit": { "context": 920576, "output": 32768 }
         },
         "DeepSeek-V4-Pro-0813": {
           "name": "DeepSeekV4Pro",
