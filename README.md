@@ -200,6 +200,20 @@ and training-usage terms at https://agnes-ai.com/ to confirm whether API inputs
 are stored or used for model training. The paid models (GLM-5.2, DeepSeek Pro)
 run through OpenFerence — review their terms separately.
 
+## Mind MCP server (persistent memory)
+
+This setup includes the mind MCP server for persistent cross-session memory.
+It auto-launches when opencode starts (via the `mcp` section in `opencode.json`
+with `enabled: true`).
+
+The mind binary must exist at `C:\Users\User\Documents\mind\mind`. If you're
+cloning this repo to a different machine, update the path in `opencode.json`
+under `mcp.mind.command` to point to your mind installation.
+
+The `mind-memory-protocol.md` instruction (in `instructions/`) teaches agents
+how to use checkpoints, durable memories, and living references so context
+survives compaction and session resets.
+
 ## Verify
 
 ```powershell
