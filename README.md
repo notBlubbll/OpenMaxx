@@ -2,7 +2,7 @@
 
 Routes opencode work across providers by cost: free Agnes for ALL searching
 AND all code edits, paid DeepSeek only for coordination reasoning, paid
-DeepSeek Pro for high-stakes background summaries.
+GLM-5.2 for high-stakes background summaries.
 
 ## Get API keys
 
@@ -43,7 +43,7 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ```
 Primary (GLM-5.2, paid)          receives request, delegates GOAL
   ├─ research (Agnes, free)      deep code tracing + multi-file search
-   └─ general (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
+  └─ general (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
        ├─ edit (Agnes, free)     applies edits + builds (parallel if independent)
        └─ research (Agnes, free) deep code tracing inside coordinator sessions
 ```
@@ -164,4 +164,3 @@ Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern
 # expect: providerID=agnes modelID=agnes-2.5-flash
 ```
 
-Report: confirm the file was written and show line count.

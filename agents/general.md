@@ -24,7 +24,7 @@ Parallelization (speed):
 - Edits to the SAME file (or overlapping regions) MUST stay in a single `edit` call to avoid write conflicts.
 - Shard independent searches across multiple parallel `research` subagents too.
 - After parallel edits return, run ONE `edit` subagent to build/verify the combined result.
-- Prefer more, smaller, parallel spawns over fewer, larger, sequential ones whenever the work is independent.
+- Cap parallel fan-out at 4 concurrent `edit` subagents and 4 concurrent `research` subagents per message. Beyond that, coordination overhead exceeds the parallelism benefit. If you have more than 4 independent edits, batch the remaining into a second wave after the first returns.
 - After planning all groups, ALWAYS issue ALL Task calls in ONE message. Do NOT trickle them across multiple messages. If you planned N groups, emit N Task calls together.
 - If you are about to emit fewer Task calls than groups you planned, STOP and re-issue with ALL groups in one message.
 - Keep each edit instruction concise: file path, the specific change, and a 1-2 line description. Do NOT waste output tokens re-explaining context the subagent will read from files.
