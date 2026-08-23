@@ -8,7 +8,7 @@ This document provides technical instructions, structural assumptions, and desig
 
 - For ANY implementation task, ALWAYS use the Task tool with subagent_type: "general" as a sub-orchestrator/planner. The primary delegates the GOAL to general; general breaks it down, plans the edit sequence, and spawns `edit` and `explore` subagents to execute.
 - The primary MUST NEVER spawn subagent_type "edit" directly. ALL edits go through `general`. No exceptions.
-- The primary MAY spawn subagent_type "explore" directly ONLY for quick standalone lookups that don't need implementation (eg. "find all API endpoints", "where is X defined").
+- The primary MAY spawn subagent_type "explore" directly ONLY for quick standalone lookups on Agnes (free): "quick" or "medium" thoroughness, simple file finds, single-file reads, definition lookups. For "very thorough" exploration or complex multi-file tracing, use subagent_type "research" instead (DeepSeek Flash, stronger reasoning).
 - Use the Task tool with subagent_type: "explore" ONLY for quick standalone lookups that don't need implementation (eg. "find all API endpoints", "where is X defined").
 - The primary agent's role is **orchestration only**: plan, delegate, synthesize results.
 - Exception: you may read AGENTS.md or config files directly for context. All other file operations go through subagents.

@@ -1,7 +1,7 @@
 ﻿# opencode multi-model subagent setup
 
-Routes opencode work across providers by cost: free Agnes for ALL searching
-AND all code edits, paid DeepSeek only for coordination reasoning, paid
+Routes opencode work across providers by cost: free Agnes for quick lookups
+AND all code edits, paid DeepSeek for coordination and deep research, paid
 DeepSeek Pro for high-stakes background summaries.
 
 ## Get API keys
@@ -25,8 +25,8 @@ AGNES_API_KEY=...
 ~/.config/opencode/
 ├── opencode.json
 ├── agents/
-│   ├── explore.md      # searching (primary direct) -> agnes-2.5-flash variant:explore (free, light thinking)
-│   ├── research.md     # deep search (inside general/edit) -> DeepSeek-V4-Flash (paid, strong reasoning)
+│   ├── explore.md      # quick lookups (primary direct) -> agnes-2.5-flash variant:explore (free)
+│   ├── research.md     # deep search (primary or nested) -> DeepSeek-V4-Flash (paid, strong reasoning)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free, deep thinking)
 │   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Flash; plans + delegates, cannot edit/bash itself
 │   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
@@ -41,17 +41,17 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ## Architecture
 
 ```
-Primary (GLM-5.2, paid)          receives request, delegates GOAL
-  ├─ explore (Agnes, free)        quick standalone lookups only
-  └─ general (DeepSeek Flash)    sub-orchestrator: plans, sequences, fans out
-       ├─ edit (Agnes, free)     applies edits + builds (parallel if independent)
-       └─ research (DeepSeek)    deep code tracing inside coordinator sessions
+Primary (GLM-5.2, paid)
+  ├─ explore (Agnes, free)         quick/medium lookups only
+  ├─ research (DeepSeek, paid)     very thorough multi-file tracing
+  └─ general (DeepSeek, paid)      sub-orchestrator: plans, sequences, fans out
+       ├─ edit (Agnes, free)       applies edits + builds (parallel if independent)
+       └─ research (DeepSeek)      deep code tracing inside coordinator sessions
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `general`.
-The primary MAY spawn `explore` (Agnes, free) directly only for quick
-standalone lookups. For implementation-related work, it delegates the goal to
-`general`, which plans and fans out to Agnes edits + DeepSeek research.
+The primary picks `explore` (Agnes, free) for quick/medium lookups and
+`research` (DeepSeek, paid) for very thorough multi-file tracing.
 
 ## Model routing
 
@@ -60,8 +60,8 @@ standalone lookups. For implementation-related work, it delegates the goal to
 | main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
 | general (sub-orchestrator) | openference/DeepSeek-V4-Flash-0731 | max | max | 32,768 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
-| explore (primary direct lookups) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
-| research (nested deep search) | openference/DeepSeek-V4-Flash-0731 | max | max | 32,768 | paid quota |
+| explore (quick/medium lookups) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
+| research (very thorough tracing) | openference/DeepSeek-V4-Flash-0731 | max | max | 32,768 | paid quota |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | small_model (compaction summaries) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
 
@@ -69,12 +69,16 @@ standalone lookups. For implementation-related work, it delegates the goal to
 
 | Agent | Model | Spawned by | Use case |
 |---|---|---|---|
-| `explore` | Agnes (free) | Primary directly | Quick standalone lookups ("find all API endpoints") |
-| `research` | DeepSeek Flash (paid) | `general` or `edit` (nested) | Deep code tracing inside implementation sessions |
+| `explore` | Agnes (free) | Primary directly | Quick/medium lookups: file finds, single reads, definition lookups |
+| `research` | DeepSeek Flash (paid) | Primary or `general`/`edit` (nested) | Very thorough: multi-file tracing, call path analysis, complex audits |
 
 Both are read-only (edit denied). `explore` runs on free Agnes for quota
-saving; `research` runs on DeepSeek Flash for stronger reasoning when tracing
-complex call paths inside a coordinator session.
+saving on simple lookups; `research` runs on DeepSeek Flash for stronger
+reasoning when tracing complex call paths or doing exhaustive analysis.
+
+The primary chooses which to spawn based on thoroughness:
+- "quick" or "medium" → `explore` (Agnes, free)
+- "very thorough" → `research` (DeepSeek, paid)
 
 ## Thinking and output tuning
 
@@ -86,8 +90,8 @@ tokens available for the response including thinking):
   concise ~8K visible response.
 - **DeepSeek-V4-Flash (sub-orchestrator + research)**: `reasoningEffort: max`
   / 32K output — deep reasoning for task decomposition and code tracing.
-- **agnes-2.5-flash variant:explore (searching)**: 2K thinking / 65K output —
-  light reasoning, full output for comprehensive findings.
+- **agnes-2.5-flash variant:explore (quick lookups)**: 2K thinking / 65K
+  output — light reasoning, full output for findings.
 - **agnes-2.5-flash variant:edit (code edits)**: 8K thinking / 65K output —
   4x deeper reasoning for code changes. Full output for large patches.
 - **DeepSeek-V4-Pro (small_model)**: `reasoningEffort: max` / 384K output —
@@ -136,4 +140,10 @@ variant: edit       # 8,192 thinking tokens
 opencode agent list
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=edit'
 # expect: providerID=agnes modelID=agnes-2.5-flash
+
+Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=explore'
+# expect: providerID=agnes modelID=agnes-2.5-flash
+
+Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=research'
+# expect: providerID=openference modelID=DeepSeek-V4-Flash-0731
 ```
