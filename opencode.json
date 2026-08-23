@@ -1,97 +1,239 @@
-{
-  "$schema": "https://opencode.ai/config.json",
-  "model": "openference/GLM-5.2",
-  "small_model": "openference/DeepSeek-V4-Pro-0813",
-  "subagent_depth": 2,
-  "instructions": ["~/.config/opencode/instructions/AGENTS.md"],
-  "agent": {
-    "build": {
-      "model": "openference/GLM-5.2"
-    },
-    "explore": {
-      "model": "agnes/agnes-2.5-flash"
-    },
-    "edit": {
-      "model": "agnes/agnes-2.5-flash",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "task": { "explore": "allow" }
-      }
-    },
-    "general": {
-      "model": "openference/DeepSeek-V4-Flash-0731",
-      "permission": {
-        "edit": "deny",
-        "bash": "deny",
-        "task": { "explore": "allow", "edit": "allow" }
-      }
-    }
-  },
-  "provider": {
-    "openference": {
-      "name": "OpenFerence",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
-        "baseURL": "https://api.openference.com/v1",
-        "apiKey": "{env:OPENFERENCE_API_KEY}"
-      },
-      "models": {
-        "GLM-5.2": {
-          "name": "GLM-5.2",
-          "reasoning": true,
-          "variants": {
-            "max": { "thinking": { "type": "enabled", "budget_tokens": 65536 } }
-          },
-          "limit": { "context": 262144, "input": 262144, "output": 73728 }
-        },
-        "Qwen3.8 27b": {
-          "name": "Qwen3.8 27b",
-          "reasoning": true,
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "variants": { "high": { "reasoningEffort": "high" } },
-          "limit": { "context": 262144, "output": 65536 }
-        },
-        "DeepSeek-V4-Flash-0731": {
-          "name": "DeepSeek-V4-Flash-0731",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": { "max": { "reasoningEffort": "max" } },
-          "limit": { "context": 920576, "output": 32768 }
-        },
-        "DeepSeek-V4-Pro-0813": {
-          "name": "DeepSeekV4Pro",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": { "reasoningEffort": "high" },
-            "max": { "reasoningEffort": "max" }
-          },
-          "limit": { "context": 664576, "output": 384000 }
-        }
-      }
-    },
-    "agnes": {
-      "name": "Agnes AI",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
-        "baseURL": "https://apihub.agnes-ai.com/v1",
-        "apiKey": "{env:AGNES_API_KEY}"
-      },
-      "models": {
-        "agnes-2.5-flash": {
-          "name": "Agnes 2.5 Flash",
-          "reasoning": true,
-          "tool_call": true,
-          "attachment": true,
-          "modalities": { "input": ["text", "image"], "output": ["text"] },
-          "variants": {
-            "explore": { "thinking": { "type": "enabled", "budget_tokens": 2048 } },
-            "edit": { "thinking": { "type": "enabled", "budget_tokens": 8192 } }
-          },
-          "limit": { "context": 512000, "output": 65536 }
-        }
-      }
-    }
-  }
+﻿{
+    "$schema":  "https://opencode.ai/config.json",
+    "model":  "opencode/x-preview-f-free",
+    "small_model":  "openference/DeepSeek-V4-Pro-0813",
+    "agent":  {
+                  "build":  {
+                                "model":  "openference/GLM-5.2",
+                                "permission":  {
+                                                   "edit":  "deny",
+                                                   "glob":  "deny",
+                                                   "grep":  "deny"
+                                               }
+                            },
+                  "explore":  {
+                                  "model":  "agnes/agnes-2.5-flash"
+                              },
+                  "general":  {
+                                  "model":  "openference/DeepSeek-V4-Flash-0731",
+                                  "permission":  {
+                                                     "edit":  "deny",
+                                                     "bash":  "deny",
+                                                     "task":  {
+                                                                  "research":  "allow",
+                                                                  "edit":  "allow"
+                                                              }
+                                                 }
+                              },
+                  "edit":  {
+                               "model":  "agnes/agnes-2.5-flash",
+                               "permission":  {
+                                                  "edit":  "allow",
+                                                  "bash":  "allow",
+                                                  "task":  {
+                                                               "explore":  "allow"
+                                                           }
+                                              }
+                           },
+                  "research":  {
+                                   "model":  "openference/DeepSeek-V4-Flash-0731",
+                                   "permission":  {
+                                                      "edit":  "deny",
+                                                      "bash":  "deny"
+                                                  }
+                               }
+              },
+    "provider":  {
+                     "openference":  {
+                                         "name":  "OpenFerence",
+                                         "npm":  "@ai-sdk/openai-compatible",
+                                         "options":  {
+                                                         "baseURL":  "https://api.openference.com/v1",
+                                                         "apiKey":  "{env:OPENFERENCE_API_KEY}"
+                                                     },
+                                         "models":  {
+                                                        "GLM-5.2":  {
+                                                                        "name":  "GLM-5.2",
+                                                                        "reasoning":  true,
+                                                                        "variants":  {
+                                                                                         "max":  {
+                                                                                                     "thinking":  {
+                                                                                                                      "type":  "enabled",
+                                                                                                                      "budget_tokens":  65536
+                                                                                                                  }
+                                                                                                 }
+                                                                                     },
+                                                                        "limit":  {
+                                                                                      "context":  262144,
+                                                                                      "input":  262144,
+                                                                                      "output":  73728
+                                                                                  }
+                                                                    },
+                                                        "Qwen3.8 27b":  {
+                                                                            "name":  "Qwen3.8 27b",
+                                                                            "reasoning":  true,
+                                                                            "modalities":  {
+                                                                                               "input":  [
+                                                                                                             "text",
+                                                                                                             "image"
+                                                                                                         ],
+                                                                                               "output":  [
+                                                                                                              "text"
+                                                                                                          ]
+                                                                                           },
+                                                                            "variants":  {
+                                                                                             "high":  {
+                                                                                                          "reasoningEffort":  "high"
+                                                                                                      }
+                                                                                         },
+                                                                            "limit":  {
+                                                                                          "context":  262144,
+                                                                                          "output":  65536
+                                                                                      }
+                                                                        },
+                                                        "DeepSeek-V4-Flash-0731":  {
+                                                                                       "name":  "DeepSeek-V4-Flash-0731",
+                                                                                       "reasoning":  true,
+                                                                                       "tool_call":  true,
+                                                                                       "variants":  {
+                                                                                                        "max":  {
+                                                                                                                    "reasoningEffort":  "max"
+                                                                                                                }
+                                                                                                    },
+                                                                                       "limit":  {
+                                                                                                     "context":  920576,
+                                                                                                     "output":  32768
+                                                                                                 }
+                                                                                   },
+                                                        "DeepSeek-V4-Pro-0813":  {
+                                                                                     "name":  "DeepSeekV4Pro",
+                                                                                     "reasoning":  true,
+                                                                                     "tool_call":  true,
+                                                                                     "variants":  {
+                                                                                                      "high":  {
+                                                                                                                   "reasoningEffort":  "high"
+                                                                                                               },
+                                                                                                      "max":  {
+                                                                                                                  "reasoningEffort":  "max"
+                                                                                                              }
+                                                                                                  },
+                                                                                     "limit":  {
+                                                                                                   "context":  664576,
+                                                                                                   "output":  384000
+                                                                                               }
+                                                                                 },
+                                                        "DeepSeek-V4-Flash-Vision-Exp":  {
+                                                                                             "name":  "DeepSeek-V4-Flash-Vision-Exp",
+                                                                                             "reasoning":  true,
+                                                                                             "tool_call":  true,
+                                                                                             "attachment":  true,
+                                                                                             "variants":  {
+                                                                                                              "max":  {
+                                                                                                                          "reasoningEffort":  "max"
+                                                                                                                      }
+                                                                                                          },
+                                                                                             "limit":  {
+                                                                                                           "context":  920576,
+                                                                                                           "output":  384000
+                                                                                                       },
+                                                                                             "modalities":  {
+                                                                                                                "input":  [
+                                                                                                                              "text",
+                                                                                                                              "image"
+                                                                                                                          ],
+                                                                                                                "output":  [
+                                                                                                                               "text"
+                                                                                                                           ]
+                                                                                                            }
+                                                                                         }
+                                                    }
+                                     },
+                     "agnes":  {
+                                   "npm":  "@ai-sdk/openai-compatible",
+                                   "name":  "Agnes AI",
+                                   "options":  {
+                                                   "baseURL":  "https://apihub.agnes-ai.com/v1",
+                                                   "apiKey":  "{env:AGNES_API_KEY}"
+                                               },
+                                   "models":  {
+                                                  "agnes-2.5-flash":  {
+                                                                          "name":  "Agnes 2.5 Flash",
+                                                                          "reasoning":  true,
+                                                                          "tool_call":  true,
+                                                                          "attachment":  true,
+                                                                          "modalities":  {
+                                                                                             "input":  [
+                                                                                                           "text",
+                                                                                                           "image"
+                                                                                                       ],
+                                                                                             "output":  [
+                                                                                                            "text"
+                                                                                                        ]
+                                                                                         },
+                                                                          "variants":  {
+                                                                                           "explore":  {
+                                                                                                           "thinking":  {
+                                                                                                                            "type":  "enabled",
+                                                                                                                            "budget_tokens":  2048
+                                                                                                                        }
+                                                                                                       },
+                                                                                           "edit":  {
+                                                                                                        "thinking":  {
+                                                                                                                         "type":  "enabled",
+                                                                                                                         "budget_tokens":  8192
+                                                                                                                     }
+                                                                                                    }
+                                                                                       },
+                                                                          "limit":  {
+                                                                                        "context":  512000,
+                                                                                        "output":  65536
+                                                                                    }
+                                                                      }
+                                              }
+                               },
+                     "opencode":  {
+                                      "name":  "OpenCode Zen",
+                                      "options":  {
+                                                      "baseURL":  "https://api.opencode.ai/v1"
+                                                  },
+                                      "models":  {
+                                                     "x-preview-f-free":  {
+                                                                              "name":  "Ox Alpha Free",
+                                                                              "reasoning":  true,
+                                                                              "tool_call":  true,
+                                                                              "attachment":  true,
+                                                                              "modalities":  {
+                                                                                                 "input":  [
+                                                                                                               "text",
+                                                                                                               "image",
+                                                                                                               "video"
+                                                                                                           ],
+                                                                                                 "output":  [
+                                                                                                                "text"
+                                                                                                            ]
+                                                                                             },
+                                                                              "variants":  {
+                                                                                               "low":  {
+                                                                                                           "reasoningEffort":  "low"
+                                                                                                       },
+                                                                                               "high":  {
+                                                                                                            "reasoningEffort":  "high"
+                                                                                                        },
+                                                                                               "max":  {
+                                                                                                           "reasoningEffort":  "max"
+                                                                                                       }
+                                                                                           },
+                                                                              "limit":  {
+                                                                                            "context":  1000000,
+                                                                                            "output":  131072
+                                                                                        }
+                                                                          }
+                                                 }
+                                  }
+                 },
+    "instructions":  [
+                         "~/.config/opencode/instructions/AGENTS.md"
+                     ],
+    "subagent_depth":  2
 }
+

@@ -1,4 +1,4 @@
-# opencode multi-model subagent setup
+﻿# opencode multi-model subagent setup
 
 Routes opencode work across providers by cost: free Agnes for ALL searching
 AND all code edits, paid DeepSeek only for coordination reasoning, paid
@@ -25,7 +25,8 @@ AGNES_API_KEY=...
 ~/.config/opencode/
 ├── opencode.json
 ├── agents/
-│   ├── explore.md      # searching -> agnes-2.5-flash variant:explore (free, light thinking)
+│   ├── explore.md      # searching (primary direct) -> agnes-2.5-flash variant:explore (free, light thinking)
+│   ├── research.md     # deep search (inside general/edit) -> DeepSeek-V4-Flash (paid, strong reasoning)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free, deep thinking)
 │   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Flash; plans + delegates, cannot edit/bash itself
 │   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
@@ -41,26 +42,39 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 
 ```
 Primary (GLM-5.2, paid)          receives request, delegates GOAL
-  └─ general (DeepSeek Flash)   sub-orchestrator: plans, sequences, fans out
+  ├─ explore (Agnes, free)        quick standalone lookups only
+  └─ general (DeepSeek Flash)    sub-orchestrator: plans, sequences, fans out
        ├─ edit (Agnes, free)     applies edits + builds (parallel if independent)
-       └─ explore (Agnes, free)   searches/reads (parallel if independent)
+       └─ research (DeepSeek)    deep code tracing inside coordinator sessions
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `general`.
-The primary MAY spawn `explore` directly only for quick standalone lookups
-(eg. "find all API endpoints"). For implementation-related work, it delegates
-the goal to `general`, which plans and fans out to free Agnes subagents.
+The primary MAY spawn `explore` (Agnes, free) directly only for quick
+standalone lookups. For implementation-related work, it delegates the goal to
+`general`, which plans and fans out to Agnes edits + DeepSeek research.
 
 ## Model routing
 
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
 | main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
-| general (sub-orchestrator) | openference/DeepSeek-V4-Flash-0731 | max | max | 16,384 | paid quota |
+| general (sub-orchestrator) | openference/DeepSeek-V4-Flash-0731 | max | max | 32,768 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
-| explore (ALL searching, any depth) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
+| explore (primary direct lookups) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
+| research (nested deep search) | openference/DeepSeek-V4-Flash-0731 | max | max | 32,768 | paid quota |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | small_model (compaction summaries) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
+
+## Two search agents: explore vs research
+
+| Agent | Model | Spawned by | Use case |
+|---|---|---|---|
+| `explore` | Agnes (free) | Primary directly | Quick standalone lookups ("find all API endpoints") |
+| `research` | DeepSeek Flash (paid) | `general` or `edit` (nested) | Deep code tracing inside implementation sessions |
+
+Both are read-only (edit denied). `explore` runs on free Agnes for quota
+saving; `research` runs on DeepSeek Flash for stronger reasoning when tracing
+complex call paths inside a coordinator session.
 
 ## Thinking and output tuning
 
@@ -69,97 +83,57 @@ tokens the model spends before responding) against **output limit** (total
 tokens available for the response including thinking):
 
 - **GLM-5.2 (orchestrator)**: 65K thinking / 73K output — max deep reasoning,
-  concise ~8K visible response. The orchestrator plans extensively but outputs
-  short delegation instructions.
-- **DeepSeek-V4-Flash (sub-orchestrator)**: `reasoningEffort: max` / 16K
-  output — deep reasoning for task decomposition, concise delegation output.
+  concise ~8K visible response.
+- **DeepSeek-V4-Flash (sub-orchestrator + research)**: `reasoningEffort: max`
+  / 32K output — deep reasoning for task decomposition and code tracing.
 - **agnes-2.5-flash variant:explore (searching)**: 2K thinking / 65K output —
-  light reasoning (search doesn't need deep planning), full output for
-  comprehensive findings. Agnes recommends 2K for regular tasks.
+  light reasoning, full output for comprehensive findings.
 - **agnes-2.5-flash variant:edit (code edits)**: 8K thinking / 65K output —
-  4x deeper reasoning than explore, since code changes need more
-  problem-solving. Full output for large patches.
+  4x deeper reasoning for code changes. Full output for large patches.
 - **DeepSeek-V4-Pro (small_model)**: `reasoningEffort: max` / 384K output —
-  max reasoning and full output for high-quality compaction summaries.
+  max reasoning for high-quality compaction summaries.
 
 ## How variants work
 
 The Agnes API only knows one model ID: `agnes-2.5-flash`. We register it once
 in `opencode.json` with **named variants** — each variant sets a different
-thinking budget via `thinking.type: "enabled"` + `thinking.budget_tokens: N`.
-The agent `.md` files select which variant to use via `variant: <name>` in
-their YAML frontmatter:
+thinking budget. The agent `.md` files select which variant to use via
+`variant: <name>` in their YAML frontmatter:
 
 ```yaml
-# agents/explore.md
 model: agnes/agnes-2.5-flash
 variant: explore    # 2,048 thinking tokens
-
-# agents/edit.md
-model: agnes/agnes-2.5-flash
+# or
 variant: edit       # 8,192 thinking tokens
 ```
-
-Both variants hit the same API endpoint with the same model name — only the
-thinking budget sent in the request differs. No fake model IDs.
 
 ## What small_model does (and doesn't)
 
 `small_model` handles opencode's internal background tasks - most importantly
-**compaction summaries** (when a long session is summarized to free context,
-that summary becomes the session's memory, so quality matters) and other
-utility generations.
-
-It does **NOT** handle:
-- **session titles** - `agents/title.md` overrides the internal title agent
-  and pins those to Agnes (free); small_model is bypassed for titles
-- **exploration** - explore is a full agent with its own pinned model (Agnes)
-- **edits / shell / orchestration** - those run on the edit, main and
-  general models
-
-Rationale: compaction is rare but high-stakes (a lossy summary degrades
-everything after it), so it keeps the strongest summarizer; titles are frequent
-but trivial, so they go to the free tier.
+**compaction summaries**. It does **NOT** handle session titles (overridden by
+`agents/title.md` → Agnes), exploration, edits, or orchestration.
 
 ## How nesting + parallelization works
 
-1. Primary receives the request and delegates the GOAL to `general`
-   (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
-   go through `general`. The primary MAY spawn `explore` directly only for
-   quick standalone lookups.
-2. `general` (paid DeepSeek) plans the implementation: breaks the goal into
-   precise edit steps with exact file paths, and sequences the work. Its own
-   edit/bash tools are permission-denied, so it can ONLY delegate.
-3. `general` spawns `edit` subagents (free Agnes) to apply each change. For
-   INDEPENDENT edits (different files / non-overlapping regions), it issues
-   MULTIPLE `edit` spawns in ONE message (parallel). Same-file/overlapping
-   edits stay in a single call to avoid write conflicts.
-4. `general` spawns `explore` subagents (free Agnes) for any lookups it needs,
-   also parallelized when independent.
-5. After parallel edits return, one `edit` subagent builds/verifies the
-   combined result.
-6. `subagent_depth: 2` allows one nesting level; explores have no task
+1. Primary receives the request and delegates the GOAL to `general`.
+   The primary NEVER spawns `edit` directly.
+2. `general` plans: breaks the goal into precise edit steps with exact file
+   paths. Its own edit/bash tools are permission-denied.
+3. `general` spawns `edit` subagents (free Agnes) — parallel for independent
+   files, single call for same-file/overlapping edits.
+4. `general` spawns `research` subagents (DeepSeek) for deep lookups.
+5. After parallel edits return, one `edit` subagent builds/verifies.
+6. `subagent_depth: 2` allows one nesting level; research has no task
    permission, so recursion hard-stops at depth 2.
-7. Pre-explore discipline: primary may front-load exploration via a quick
-   `explore` spawn before delegating to `general`, so the goal already contains
-   exact paths and context.
 
 ## Subsession title tags
 
-Subagent sessions are tagged in their title for easy identification:
-`[✏️Edit]`, `[🔎Explore]`, `[🤖Coordinate]`. Primary sessions are not tagged.
+`[✏️Edit]`, `[🔎Explore]`, `[🤖Coordinate]`, `[🔬Research]`. Primary not tagged.
 
 ## Verify
 
 ```powershell
 opencode agent list
-# run a task, then check routing in the log:
-Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=general'
-# expect: providerID=openference modelID=DeepSeek-V4-Flash-0731
-
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=edit'
-# expect: providerID=agnes modelID=agnes-2.5-flash
-
-Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=explore'
 # expect: providerID=agnes modelID=agnes-2.5-flash
 ```
