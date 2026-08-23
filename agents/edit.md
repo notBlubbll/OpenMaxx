@@ -1,7 +1,7 @@
 ---
 description: "Agent for applying code edits and running build/verify commands. Provide exact file paths and precise change descriptions; it applies edits and reports results."
 mode: subagent
-model: agnes/agnes-2.5-flash
+model: agnes/agnes-2.5-flash-edit
 permission:
   edit: allow
   bash: allow
