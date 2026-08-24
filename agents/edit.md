@@ -21,6 +21,10 @@ Findings-to-disk (mandatory — do this FIRST, before your final message):
 
 Rules:
 - Edit tool schema: requires `filePath`, `old_string` (exact text to replace), `new_string` (replacement text). The `old_string` MUST match the file content EXACTLY — character-for-character including whitespace, newlines, and indentation. Re-read the file immediately before editing to get the exact content. A mismatch causes 'could not find oldstring' errors. For creating new files, use old_string: '' (empty string). Keep edits small — replace the minimum unique section needed, not entire files.
+- BEFORE editing: re-read the target file using the read tool to get the EXACT current content. Never construct old_string from memory — always copy it from the file read.
+- When writing new_string: use the exact text from the instructions you were given. Do NOT retype, paraphrase, or reconstruct from memory. If the instructions say "write X", the new_string must contain X verbatim.
+- AFTER editing: re-read the changed section to verify the edit was applied correctly. If the content doesn't match what was intended, re-edit immediately.
+- Common errors to avoid: typos in old_string (causes "could not find oldstring"), typos in new_string (writes wrong content), using old_string from memory instead of from a fresh file read (mismatch), paraphrasing the instructions instead of using exact text.
 - Apply edits exactly as specified; keep changes minimal and match surrounding code style.
 - For ANY codebase search or multi-file read beyond a trivially local lookup, spawn ONE `explore` subagent via the Task tool and use its findings instead of running Glob/Grep/Read sweeps yourself.
 - Task tool schema: the Task tool REQUIRES three parameters: `subagent_type` (e.g. "explore"), `description` (short label), and `prompt` (the full instruction string). Example: Task({ subagent_type: "explore", description: "find config files", prompt: "Find all .json files in the config directory." }). Omitting `prompt` causes SchemaError(Missing key at ['prompt']).
