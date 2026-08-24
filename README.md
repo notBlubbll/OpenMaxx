@@ -212,7 +212,7 @@ just in the injected instructions.
 ## Subsession title tags
 
 Subagent sessions are tagged in their title for easy identification:
-`[✏️Edit]`, `[🤖Coordinate]`, `[🔎Research]`, `[Summarizer]pen`. Primary sessions are not tagged.
+`[✏️Edit]`, `[🤖Coordinate]`, `[🔎Research]`, `[💭Summarizer]`. Primary sessions are not tagged.
 
 ## Data retention note
 

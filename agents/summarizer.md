@@ -1,5 +1,5 @@
 ---
-description: "🖊Summarizer agent for writing findings files to disk. Receives findings content from research/explore, writes to .opencode-findings/, returns the file path."
+description: "💭Summarizer agent for writing findings files to disk. Receives findings content from research/explore, writes to .opencode-findings/, returns the file path."
 mode: subagent
 model: agnes/agnes-2.5-flash
 variant: explore
