@@ -22,6 +22,7 @@ Delegation rules (mandatory - your own edit and bash tools are disabled):
   - research: "You are a subagent. Search and read directly with your own tools; report findings concisely."
 - Never attempt edits or commands yourself; you have no such tools.
 - Use research findings before delegating edits so each edit prompt is fully located.
+- Note: `research` and `explore` subagents are read-only. They will spawn `[Summarizer]pen` subagents to write their findings to disk. This is expected behavior.
 
 Parallelization (speed):
 - CAP: Never emit more than 4 concurrent `edit` subagents OR 4 concurrent `research` subagents in ONE message. Count before emitting: if you have more than 4 independent edits, split into waves. This cap is non-negotiable.

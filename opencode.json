@@ -33,11 +33,15 @@
     },
     "explore": {
       "model": "agnes/agnes-2.5-flash",
+      "permission": { "edit": "deny", "bash": "deny", "task": { "summarizer": "allow" } }
+    },
+    "summarizer": {
+      "model": "agnes/agnes-2.5-flash",
       "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "research": {
-      "model": "agnes/agnes-2.5-flash",
-      "permission": { "edit": "allow", "bash": "deny", "task": {} }
+      "model": "openference/DeepSeek-V4-Flash-0731",
+      "permission": { "edit": "deny", "bash": "deny", "task": { "summarizer": "allow" } }
     },
     "edit": {
       "model": "agnes/agnes-2.5-flash",
@@ -80,7 +84,10 @@
           "name": "DeepSeek-V4-Flash-0731",
           "reasoning": true,
           "tool_call": true,
-          "variants": { "max": { "reasoningEffort": "max" } },
+          "variants": {
+            "max": { "reasoningEffort": "max" },
+            "research": { "reasoningEffort": "high" }
+          },
           "limit": { "context": 920576, "output": 32768 }
         },
         "DeepSeek-V4-Pro-0813": {
