@@ -37,7 +37,7 @@
     },
     "summarizer": {
       "model": "agnes/agnes-2.5-flash",
-      "permission": { "edit": "allow", "bash": "deny", "task": {} }
+      "permission": { "edit": "allow", "bash": "allow", "task": {} }
     },
     "research": {
       "model": "agnes/agnes-2.5-flash",
