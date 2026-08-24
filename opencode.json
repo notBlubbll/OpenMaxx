@@ -44,7 +44,7 @@
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
     },
     "general": {
-      "model": "openference/DeepSeek-V4-Pro",
+      "model": "openference/DeepSeek-V4-Flash-0731",
       "permission": {
         "edit": "deny",
         "bash": "deny",
