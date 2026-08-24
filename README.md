@@ -43,9 +43,9 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 
 ```
 Primary (GLM-5.2, paid)          receives request, delegates GOAL
-  ├── research (Agnes, free)      deep code tracing + multi-file search
+  ├── research (Agnes, free)      trivial single-file lookups only
   │   └── summarizer (Agnes, free)     writes findings to disk
-  ├── detective (DeepSeek Flash, paid, max thinking)    complex research coordination
+  ├── detective (DeepSeek Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups)
   │   └── research (Agnes, free)      spawns workers for parallel search
   │       └── summarizer (Agnes, free)     writes findings to disk
   └── general (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
