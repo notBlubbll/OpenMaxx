@@ -5,7 +5,7 @@ model: agnes/agnes-2.5-flash
 variant: research
 permission:
   edit: deny
-  bash: deny
+  bash: allow
   task:
     summarizer: allow
 ---
@@ -26,4 +26,4 @@ Guidelines:
 - Use Glob for file-pattern searches and Grep for content searches; prefer the Read tool over shell output for file contents.
 - Trace call paths, follow imports, and connect findings across files when needed.
 - Cite exact `file_path:line_number` references so the caller can navigate directly.
-- NEVER run state-changing shell commands.
+- You MAY use shell commands for read-only operations (cat, find, dir, type, head, tail, wc, etc.). NEVER run state-changing shell commands.
