@@ -28,7 +28,7 @@
         "glob": "deny",
         "grep": "deny",
         "bash": "deny",
-        "task": { "general": "allow", "research": "allow" }
+        "task": { "general": "allow", "research": "allow", "detective": "allow" }
       }
     },
     "summarizer": {
@@ -38,6 +38,14 @@
     "research": {
       "model": "agnes/agnes-2.5-flash",
       "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
+    },
+    "detective": {
+      "model": "openference/DeepSeek-V4-Flash-0731",
+      "permission": {
+        "edit": "deny",
+        "bash": "allow",
+        "task": { "research": "allow", "summarizer": "allow" }
+      }
     },
     "edit": {
       "model": "agnes/agnes-2.5-flash",
