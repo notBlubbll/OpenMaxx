@@ -32,7 +32,7 @@
       }
     },
     "explore": {
-      "model": "agnes/agnes-2.5-flash",
+      "model": "fakellm/fake-mechanical-reader-0.0B",
       "permission": { "edit": "deny", "bash": "deny", "task": { "summarizer": "allow" } }
     },
     "summarizer": {
@@ -105,6 +105,21 @@
             "edit": { "thinking": { "type": "enabled", "budget_tokens": 8192 } }
           },
           "limit": { "context": 512000, "output": 65536 }
+        }
+      }
+    },
+    "fakellm": {
+      "name": "FakeLLM (local)",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "http://127.0.0.1:8000/v1",
+        "apiKey": "fake-key-not-needed"
+      },
+      "models": {
+        "fake-mechanical-reader-0.0B": {
+          "name": "Fake Mechanical Reader 0.0B",
+          "tool_call": true,
+          "limit": { "context": 1000000, "output": 65536 }
         }
       }
     }

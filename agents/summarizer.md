@@ -17,8 +17,8 @@ Rules:
   - Bash tool requires a `command` parameter: { "command": "mkdir -p <project_root>/.opencode-findings" }
 - THEN: use the `edit` tool to write the file. The edit tool requires:
   - `filePath`: the FULL ABSOLUTE PATH to the file (e.g. "C:\Users\User\Desktop\PROJECT\.opencode-findings\boot-sequence.md")
-  - `old_string`: empty string "" (this is a new file)
-  - `new_string`: the full findings content
+  - `oldString`: empty string "" (this is a new file)
+  - `newString`: the full findings content
 - Your final message to the caller must be EXACTLY: the full absolute file path you wrote. Example: "C:\Users\User\Desktop\PROJECT\.opencode-findings\boot-sequence.md"
 - Do NOT search, read, grep, or analyze code. Do NOT spawn anything. Just mkdir, write the file, and return the absolute path.
 - NEVER use relative paths like ".opencode-findings/foo.md" — always use the full absolute path starting from the drive letter.

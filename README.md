@@ -25,7 +25,7 @@ AGNES_API_KEY=...
 ~/.config/opencode/
 ├── opencode.json
 ├── agents/
-│   ├── explore.md      # quick lookups -> agnes-2.5-flash variant:explore (free, read-only, spawns summarizer)
+│   ├── explore.md      # quick lookups -> fakellm/fake-mechanical-reader-0.0B (local, free)
 │   ├── research.md     # deep search -> agnes-2.5-flash variant:research (free, read-only, spawns summarizer)
 │   ├── summarizer.md   # writes findings to disk -> agnes-2.5-flash (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free)
@@ -108,7 +108,7 @@ converting the rule to a permission-denied enforcement if possible.
 | main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
 | general (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
-| explore (restricted, titles) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
+| explore (restricted, lookups) | fakellm/fake-mechanical-reader-0.0B | — | — | 65,536 | local (free) |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
 | summarizer (writes findings files) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
@@ -241,6 +241,20 @@ When enabled, opencode auto-launches the mind server on startup. The
 to use checkpoints, durable memories, and living references so context
 survives compaction and session resets. The instruction is harmless even
 without the MCP server — it only activates when mind tools are available.
+
+## FakeLLM (local model for explore)
+
+The explore agent uses a local FakeLLM server (`http://127.0.0.1:8000/v1`) instead
+of a real LLM. FakeLLM is a mock server that handles mechanical read/grep/glob
+tool calls deterministically — no reasoning, no tokens, no cost. Start it before
+running opencode:
+
+```
+tools\fakellm\publish\FakeLLM.exe
+```
+
+If the server is not running, explore calls will fail with a connection error.
+The summarizer (which writes findings files) still uses Agnes.
 
 ## Verify
 
