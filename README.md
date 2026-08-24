@@ -200,19 +200,25 @@ and training-usage terms at https://agnes-ai.com/ to confirm whether API inputs
 are stored or used for model training. The paid models (GLM-5.2, DeepSeek Pro)
 run through OpenFerence — review their terms separately.
 
-## Mind MCP server (persistent memory)
+## Mind MCP server (persistent memory, optional)
 
-This setup includes the mind MCP server for persistent cross-session memory.
-It auto-launches when opencode starts (via the `mcp` section in `opencode.json`
-with `enabled: true`).
+This setup optionally includes the [mind](https://github.com/) MCP server for
+persistent cross-session memory. It is **disabled by default** (`enabled: false`)
+because it requires a separate installation.
 
-The mind binary must exist at `C:\Users\User\Documents\mind\mind`. If you're
-cloning this repo to a different machine, update the path in `opencode.json`
-under `mcp.mind.command` to point to your mind installation.
+To enable it:
+1. Install the mind binary on your machine.
+2. Update the path in `opencode.json` under `mcp.mind.command` to point to
+   your mind installation.
+3. Change `mcp.mind.enabled` from `false` to `true`.
+4. Restart opencode.
+5. Add `"~/.config/opencode/instructions/mind-memory-protocol.md"` to the `instructions` array in `opencode.json` so agents learn how to use mind tools.
 
-The `mind-memory-protocol.md` instruction (in `instructions/`) teaches agents
-how to use checkpoints, durable memories, and living references so context
-survives compaction and session resets.
+When enabled, opencode auto-launches the mind server on startup. The
+`mind-memory-protocol.md` instruction (in `instructions/`) teaches agents how
+to use checkpoints, durable memories, and living references so context
+survives compaction and session resets. The instruction is harmless even
+without the MCP server — it only activates when mind tools are available.
 
 ## Verify
 

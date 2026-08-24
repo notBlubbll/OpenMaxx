@@ -4,7 +4,6 @@
   "small_model": "openference/GLM-5.2",
   "subagent_depth": 2,
   "instructions": [
-    "~/.config/opencode/instructions/mind-memory-protocol.md",
     "~/.config/opencode/instructions/AGENTS.md",
     "AGENTS.md"
   ],
@@ -18,7 +17,7 @@
         "C:\\Users\\User\\Documents\\mind\\mind",
         "mcp"
       ],
-      "enabled": true
+      "enabled": false
     }
   },
   "agent": {
