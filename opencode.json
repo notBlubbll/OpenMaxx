@@ -69,8 +69,8 @@
           },
           "limit": { "context": 262144, "input": 262144, "output": 73728 }
         },
-        "DeepSeek-V4-Pro": {
-          "name": "DeepSeek-V4-Pro",
+        "DeepSeek-V4-Pro-0813": {
+          "name": "DeepSeek-V4-Pro-0813",
           "reasoning": true,
           "tool_call": true,
           "variants": {
