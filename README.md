@@ -28,7 +28,7 @@ AGNES_API_KEY=...
 │   ├── research.md     # deep search -> agnes-2.5-flash variant:research (free, read-only, spawns summarizer)
 │   ├── summarizer.md   # writes findings to disk -> agnes-2.5-flash (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free)
-│   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Flash-0731; plans + delegates, cannot edit/bash itself
+│   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Pro-0813; plans + delegates, cannot edit/bash itself
 │   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
@@ -44,7 +44,7 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 Primary (GLM-5.2, paid)          receives request, delegates GOAL
   ├── research (Agnes, free)      deep code tracing + multi-file search
   │   └── summarizer (Agnes, free)     writes findings to disk
-  └── general (DeepSeek Flash, paid)    sub-orchestrator: plans, sequences, fans out
+  └── general (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
       ├── edit (Agnes, free)     applies edits + builds (parallel if independent)
       └── research (Agnes, free) deep code tracing inside coordinator sessions
           └── summarizer (Agnes, free)     writes findings to disk
@@ -63,7 +63,7 @@ search and edit work, paid models only do reasoning.
   are the bulk of the work, so keeping them on the free tier keeps costs near
   zero.
 
-- **DeepSeek Flash (paid) for coordination**: task decomposition, edit sequencing,
+- **DeepSeek Pro (paid) for coordination**: task decomposition, edit sequencing,
   parallel fan-out planning — the strongest reasoning model for the job that
   determines the quality of all downstream work.
 
@@ -101,7 +101,7 @@ converting the rule to a permission-denied enforcement if possible.
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
 | main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
-| general (sub-orchestrator) | openference/DeepSeek-V4-Flash-0731 | max | max | 384,000 | paid quota |
+| general (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
 | summarizer (writes findings files) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
@@ -117,7 +117,7 @@ tokens available for the response including thinking):
 - **GLM-5.2 (orchestrator)**: 65K thinking / 73K output — max deep reasoning,
   concise ~8K visible response. The orchestrator plans extensively but outputs
   short delegation instructions.
-- **DeepSeek-V4-Flash-0731 (sub-orchestrator)**: `reasoningEffort: max` / 384K
+- **DeepSeek-V4-Pro-0813 (sub-orchestrator)**: `reasoningEffort: max` / 384K
   output — deep reasoning for task decomposition, full delegation output.
 - **agnes-2.5-flash variant:explore (titles)**: 2K thinking / 65K output —
   light reasoning, full output for findings.
@@ -170,7 +170,7 @@ but trivial, so they go to the free tier.
 1. Primary receives the request and delegates the GOAL to `general`
    (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
    go through `general`. The primary spawns `research` for all lookups.
-2. `general` (paid DeepSeek Flash) plans the implementation: breaks the goal into
+2. `general` (paid DeepSeek Pro) plans the implementation: breaks the goal into
    precise edit steps with exact file paths, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
 3. `general` spawns `edit` subagents (free Agnes) to apply each change. For
@@ -213,7 +213,7 @@ Subagent sessions are tagged in their title for easy identification:
 All code editing and searching in this setup runs on **Agnes 2.5 Flash** (free tier).
 Before pointing this at a private repository, review Agnes AI's data-retention
 and training-usage terms at https://agnes-ai.com/ to confirm whether API inputs
-are stored or used for model training. The paid models (GLM-5.2, DeepSeek Flash)
+are stored or used for model training. The paid models (GLM-5.2, DeepSeek Pro)
 run through OpenFerence — review their terms separately.
 
 ## Mind MCP server (persistent memory, optional)
@@ -241,8 +241,7 @@ without the MCP server — it only activates when mind tools are available.
 ## Planned upgrades
 
 - Main model: GLM-5.2 → GLM-5.3 once released
-- General (sub-orchestrator): currently DeepSeek-V4-Flash-0731 - may switch back to DeepSeek-V4-Pro for stronger 
-reasoning if needed
+- General (sub-orchestrator): currently DeepSeek-V4-Pro-0813
 
 ## Verify
 
@@ -251,7 +250,7 @@ opencode agent list
 # run a task, then check routing in the log:
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 
 'agent=general'
-# expect: providerID=openference modelID=DeepSeek-V4-Flash-0731
+# expect: providerID=openference modelID=DeepSeek-V4-Pro-0813
 
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 
 'agent=edit'
