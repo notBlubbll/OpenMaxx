@@ -106,7 +106,7 @@ converting the rule to a permission-denied enforcement if possible.
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
 | main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
-| general (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
+| general (sub-orchestrator) | openference/DeepSeek-V4-Pro | max | max | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | explore (restricted, lookups) | fakellm/fake-mechanical-reader-0.0B | — | — | 65,536 | local (free) |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
@@ -262,7 +262,7 @@ The summarizer (which writes findings files) still uses Agnes.
 opencode agent list
 # run a task, then check routing in the log:
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=general'
-# expect: providerID=openference modelID=DeepSeek-V4-Pro-0813
+# expect: providerID=openference modelID=DeepSeek-V4-Pro
 
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 'agent=edit'
 # expect: providerID=agnes modelID=agnes-2.5-flash

@@ -48,7 +48,7 @@
       "permission": { "edit": "allow", "bash": "allow", "task": { "explore": "allow" } }
     },
     "general": {
-      "model": "openference/DeepSeek-V4-Pro-0813",
+      "model": "openference/DeepSeek-V4-Pro",
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -73,8 +73,8 @@
           },
           "limit": { "context": 262144, "input": 262144, "output": 73728 }
         },
-        "DeepSeek-V4-Pro-0813": {
-          "name": "DeepSeekV4Pro",
+        "DeepSeek-V4-Pro": {
+          "name": "DeepSeek-V4-Pro",
           "reasoning": true,
           "tool_call": true,
           "variants": {
