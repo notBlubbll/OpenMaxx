@@ -40,7 +40,7 @@
       "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "research": {
-      "model": "openference/DeepSeek-V4-Flash-0731",
+      "model": "agnes/agnes-2.5-flash",
       "permission": { "edit": "deny", "bash": "deny", "task": { "summarizer": "allow" } }
     },
     "edit": {

@@ -1,7 +1,7 @@
 ---
-description: "🔎Research agent for deep code lookups. Uses DeepSeek-V4-Flash for high-quality code tracing and analysis. Reads code, traces call paths, and reports structured findings with exact file:line references."
+description: "🔎Research agent for deep code lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
 mode: subagent
-model: openference/DeepSeek-V4-Flash-0731
+model: agnes/agnes-2.5-flash
 variant: research
 permission:
   edit: deny

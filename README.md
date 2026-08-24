@@ -1,11 +1,8 @@
 # opencode multi-model subagent setup
 
-Routes opencode work across providers by role: Agnes (free) for mechanical
-work — code edits, pure explore lookups, and file writing — where the task
-is deterministic and cost matters more than reasoning depth. DeepSeek (paid)
-for research and coordination, where tracing call paths and planning edits
-requires genuine reasoning. GLM-5.2 (paid) for orchestration and compaction
-summaries.
+Routes opencode work across providers by cost: free Agnes for ALL searching
+AND all code edits, paid DeepSeek only for coordination reasoning, paid
+GLM-5.2 for high-stakes background summaries.
 
 ## Get API keys
 
@@ -29,7 +26,7 @@ AGNES_API_KEY=...
 ├── opencode.json
 ├── agents/
 │   ├── explore.md      # quick lookups -> agnes-2.5-flash variant:explore (free, read-only, spawns summarizer)
-│   ├── research.md     # deep search -> DeepSeek-V4-Flash-0731 variant:research (paid)
+│   ├── research.md     # deep search -> agnes-2.5-flash variant:research (free, read-only, spawns summarizer)
 │   ├── summarizer.md   # writes findings to disk -> agnes-2.5-flash (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free)
 │   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Pro; plans + delegates, cannot edit/bash itself
@@ -46,11 +43,11 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 
 ```
 Primary (GLM-5.2, paid)          receives request, delegates GOAL
-  ├─ research (DeepSeek Flash, paid)  deep code tracing + multi-file search
+  ├─ research (Agnes, free)      deep code tracing + multi-file search
   │   └─ summarizer (Agnes, free)     writes findings to disk
   └─ general (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
       ├─ edit (Agnes, free)     applies edits + builds (parallel if independent)
-      └─ research (DeepSeek Flash, paid) deep code tracing inside coordinator sessions
+      └─ research (Agnes, free) deep code tracing inside coordinator sessions
           └─ summarizer (Agnes, free)     writes findings to disk
 ```
 
@@ -61,22 +58,16 @@ lookups inside `edit` if needed.
 
 ## Why this routing
 
-The split between free (Agnes) and paid (DeepSeek, GLM) is by **task type**,
-not just cost:
+The split is by cost, with one principle: the free tier handles all the
+search and edit work, paid models only do reasoning.
 
-- **Agnes (free) for mechanical work**: code edits, explore lookups, summarizer
-  file-writes, session titles. These tasks are deterministic — apply a patch,
-  find a file, write findings to disk, generate a 5-word title. No deep
-  reasoning needed, so the free tier is the right choice.
-
-- **DeepSeek Flash (paid) for research**: tracing call paths across files,
-  connecting imports, understanding code behavior. This is genuine reasoning
-  work where a stronger model finds the right answer faster and with fewer
-  false leads. The cost per query is small but the quality difference is
-  significant — a wrong research finding wastes an edit cycle.
+- **Agnes (free) for ALL searching and ALL code edits**: research deep-dives,
+  explore lookups, edit patches, summarizer file-writes, session titles. These
+  are the bulk of the work, so keeping them on the free tier keeps costs near
+  zero.
 
 - **DeepSeek Pro (paid) for coordination**: task decomposition, edit sequencing,
-  parallel fan-out planning, the strongest reasoning model for the job that
+  parallel fan-out planning — the strongest reasoning model for the job that
   determines the quality of all downstream work.
 
 - **GLM-5.2 (paid) for orchestration + compaction**: the primary agent's
@@ -118,7 +109,7 @@ converting the rule to a permission-denied enforcement if possible.
 | general (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | explore (restricted, titles) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
-| research (deep search, reasoning) | openference/DeepSeek-V4-Flash-0731 | research | high (reasoning) | 32,768 | paid |
+| research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
 | summarizer (writes findings files) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | small_model (compaction summaries) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
