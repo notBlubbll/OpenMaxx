@@ -1,9 +1,11 @@
 # opencode multi-model subagent setup
 
 Routes opencode work across providers by cost: free Agnes for ALL searching
-AND all code edits, paid DeepSeek only for coordination reasoning, free
+AND all code edits, paid GLM-5.2 only for coordination reasoning, free
 Ox Alpha for primary orchestration, GLM-5.2 for high-stakes detective
-research.
+research. The GLM-5.2 model routes via the Anthropic SDK
+(`openference-anthropic` provider) against the OpenFerence
+`/v1/messages` endpoint using Bearer auth.
 
 ## Get API keys
 
@@ -20,6 +22,21 @@ OPENFERENCE_API_KEY=...
 AGNES_API_KEY=...
 ```
 
+## Anthropic SDK on OpenFerence (stability)
+
+GLM-5.2 (coordinator, detective) routes
+via the `openference-anthropic` provider using `@ai-sdk/anthropic` against the
+OpenFerence `/v1/messages` endpoint with Bearer auth + `anthropic-version:
+2023-06-01`.
+
+The Anthropic SDK is **more stable** than the OpenAI-compatible SDK on
+OpenFerence — streaming responses parse cleanly, no `data: [DONE]`
+concatenation errors, and Anthropic-format usage fields (cache tokens, etc.)
+are returned natively.
+
+The `openference` provider (OpenAI-compatible SDK) is still used for Ox Alpha
+and any model that doesn't support the Anthropic endpoint.
+
 ## Layout
 
 ```
@@ -27,10 +44,10 @@ AGNES_API_KEY=...
 ├── opencode.json
 ├── agents/
 │   ├── research.md     # deep search -> agnes-2.5-flash variant:research (free, read-only, spawns summarizer)
-│   ├── detective.md  # complex research -> GLM-5.2 variant:max (paid, max thinking, spawns research workers)
+│   ├── detective.md  # complex research -> GLM-5.2 variant:max (paid, max thinking, spawns research workers) [Anthropic SDK via openference-anthropic provider]
 │   ├── summarizer.md   # writes findings to disk -> agnes-2.5-flash (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free)
-│   ├── coordinator.md    # sub-orchestrator -> DeepSeek-V4-Pro-0813; plans + delegates, cannot edit/bash itself
+│   ├── coordinator.md    # sub-orchestrator -> GLM-5.2; plans + delegates, cannot edit/bash itself [Anthropic SDK via openference-anthropic provider]
 │   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
@@ -43,20 +60,20 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ## Architecture
 
 ```
-Primary (Ox Alpha, free)          receives request, delegates GOAL
+Primary (Ox Alpha, free, opencode provider)          receives request, delegates GOAL
   ├── research (Agnes, free)      trivial single-file lookups only
   │   └── summarizer (Agnes, free)     writes findings to disk
-  ├── detective (GLM-5.2, paid, max thinking)    complex multi-file research (PREFERRED for lookups)
+  ├── detective (GLM-5.2, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [Anthropic SDK]
   │   └── research (Agnes, free)      spawns workers for parallel search
   │       └── summarizer (Agnes, free)     writes findings to disk
-  └── coordinator (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
+  └── coordinator (GLM-5.2, paid)    sub-orchestrator: plans, sequences, fans out [Anthropic SDK]
       ├── edit (Agnes, free)     applies edits + builds (parallel if independent)
       └── research (Agnes, free) deep code tracing inside coordinator sessions
           └── summarizer (Agnes, free)     writes findings to disk
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
-The primary spawns `research` for all lookups (single-file and multi-file).
+The primary spawns `detective` for multi-file lookups (PREFERRED) and `research` for trivial single-file reads only.
 
 ## Why this routing
 
@@ -68,13 +85,13 @@ search and edit work, paid models only do reasoning.
   are the bulk of the work, so keeping them on the free tier keeps costs near
   zero.
 
-- **DeepSeek Pro (paid) for coordination**: task decomposition, edit sequencing,
+- **GLM-5.2 (paid) for coordination**: task decomposition, edit sequencing,
   parallel fan-out planning — the strongest reasoning model for the job that
   determines the quality of all downstream work.
 
-- **GLM-5.2 (paid) for orchestration + compaction**: the primary agent's
-  delegation decisions and compaction summaries are high-stakes — a bad
-  summary degrades everything after it.
+- **GLM-5.2 (paid) for detective work**: the detective agent coordinates complex multi-file research with max thinking — high-stakes, a missed research path degrades everything after it.
+- **Ox Alpha (free) for compaction**: small_model handles compaction summaries on the free tier with 1M+ context headroom and is explicitly pinned so it never inherits the host session model.
+- **Ox Alpha (free) for primary orchestration**: the primary agent receives requests and delegates goals. Ox Alpha has 1M+ context and zero prompt cost, making it ideal for the high-context orchestration role.
 
 ## Design principle: permission-enforced rules
 
@@ -85,8 +102,7 @@ text: they are **permission-denied** in `opencode.json`, so they cannot decay:
 - **Primary cannot edit/search/bash**: `build` permission denies `edit`, `glob`,
   `grep`, `bash` — the primary physically cannot do implementation work, only
   delegate.
-- **Primary cannot spawn `edit`**: `build.task` allows only `coordinator` and
-  `research` — `edit` is absent, so the primary cannot bypass the coordinator.
+- **Primary cannot spawn `edit`**: `build.task` allows only `coordinator`, `research`, and `detective` — `edit` is absent, so the primary cannot bypass the coordinator.
 - **`coordinator` cannot edit/bash**: denied in its own permission block — it can
   only plan and delegate to `edit` and `research`.
 - **`research` cannot bash**: denied — read-only search, no side effects.
@@ -105,14 +121,14 @@ converting the rule to a permission-denied enforcement if possible.
 
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
-| main + build (orchestration) | openference/Ox Alpha | max | 65,536 | 73,728 | free |
-| coordinator (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
+| main + build (orchestration) | opencode/Ox Alpha | max | 65,536 | 73,728 | free |
+| coordinator (sub-orchestrator) | openference-anthropic/GLM-5.2 | max | 65,536 | 128,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
-| detective (complex research coord) | openference/GLM-5.2 | max | max | 384,000 | paid quota |
+| detective (complex research coord) | openference-anthropic/GLM-5.2 | max | max | 384,000 | paid quota |
 | summarizer (writes findings files) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
-| small_model (compaction summaries) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
+| small_model (compaction summaries) | opencode/Ox Alpha | max | 65,536 | 131,072 | free |
 
 ## Thinking and output tuning
 
@@ -120,19 +136,17 @@ Each model is tuned for its workload by balancing **thinking budget** (reasoning
 tokens the model spends before responding) against **output limit** (total
 tokens available for the response including thinking):
 
-- **GLM-5.2 (orchestrator)**: 65K thinking / 73K output — max deep reasoning,
-  concise ~8K visible response. The orchestrator plans extensively but outputs
-  short delegation instructions.
-- **DeepSeek-V4-Pro-0813 (sub-orchestrator)**: `reasoningEffort: max` / 384K
-  output — deep reasoning for task decomposition, full delegation output.
+- **Ox Alpha (primary)**: 1M context / 131K output — large context for orchestration, delegation decisions. Free tier.
+- **GLM-5.2 (detective)**: 65K thinking / 128K output — max deep reasoning for complex multi-file research coordination.
+- **GLM-5.2 (sub-orchestrator)**: 65K thinking / 128K output — deep
+  reasoning for task decomposition, full delegation output.
 - **agnes-2.5-flash variant:explore (titles)**: 2K thinking / 65K output —
   light reasoning, full output for findings.
 - **agnes-2.5-flash variant:research (deep search)**: 4K thinking / 65K
   output — double the explore budget for tracing call paths across files.
 - **agnes-2.5-flash variant:edit (code edits)**: 8K thinking / 65K output —
   4x deeper reasoning than explore for code changes. Full output for patches.
-- **GLM-5.2 (small_model)**: 65K thinking / 73K output —
-  deep reasoning and full output for high-quality compaction summaries.
+- **Ox Alpha (small_model)**: 131K output — compaction summaries on the free tier with huge context headroom. Explicitly pinned so it never inherits the host session model.
 ## How variants work
 
 The Agnes API only knows one model ID: `agnes-2.5-flash`. We register it once
@@ -167,16 +181,14 @@ It does **NOT** handle:
 - **edits / shell / orchestration** - those run on the edit, main and
   coordinator models
 
-Rationale: compaction is rare but high-stakes (a lossy summary degrades
-everything after it), so it keeps the strongest summarizer; titles are frequent
-but trivial, so they go to the free tier.
+Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets Ox Alpha — free, with 1M+ context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier.
 
 ## How nesting + parallelization works
 
 1. Primary receives the request and delegates the GOAL to `coordinator`
    (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
-   go through `coordinator`. The primary spawns `research` for all lookups.
-2. `coordinator` (paid DeepSeek Pro) plans the implementation: breaks the goal into
+   go through `coordinator`. The primary spawns `detective` for multi-file lookups and `research` for trivial single-file reads.
+2. `coordinator` (paid GLM-5.2) plans the implementation: breaks the goal into
    precise edit steps with exact file paths, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
 3. `coordinator` spawns `edit` subagents (free Agnes) to apply each change. For
@@ -187,11 +199,11 @@ but trivial, so they go to the free tier.
    also parallelized when independent.
 5. After parallel edits return, one `edit` subagent builds/verifies the
    combined result.
-6. `subagent_depth: 2` allows one nesting level; research has no task
+6. `subagent_depth: 3` allows deeper nesting; research has no task
    permission, so recursion hard-stops at depth 2.
-7. Pre-explore discipline: primary may front-load exploration via a quick
-   `research` spawn before delegating to `coordinator`, so the goal already contains
-   exact paths and context.
+7. Pre-explore discipline: primary may front-load exploration via a `detective`
+   spawn (which fans out research workers) before delegating to `coordinator`,
+   so the goal already contains exact paths and context.
 
 ## Snippet proof (verification, not enforcement)
 
@@ -212,14 +224,14 @@ just in the injected instructions.
 ## Subsession title tags
 
 Subagent sessions are tagged in their title for easy identification:
-`[✏️Edit]`, `[🤖Coordinate]`, `[🔎Research]`, `[💭Summarizer]`. Primary sessions are not tagged.
+`[✏️Edit]`, `[🤖Coordinate]`, `[🔎Research]`, `[🕵🏼‍♂️Detective]`, `[💭Summarizer]`. Primary sessions are not tagged.
 
 ## Data retention note
 
 All code editing and searching in this setup runs on **Agnes 2.5 Flash** (free tier).
 Before pointing this at a private repository, review Agnes AI's data-retention
 and training-usage terms at https://agnes-ai.com/ to confirm whether API inputs
-are stored or used for model training. The paid models (GLM-5.2, DeepSeek Pro)
+are stored or used for model training. The paid models (all GLM-5.2)
 run through OpenFerence — review their terms separately.
 
 ## Mind MCP server (persistent memory, optional)
@@ -246,8 +258,8 @@ without the MCP server — it only activates when mind tools are available.
 
 ## Planned upgrades
 
-- Main model: GLM-5.2 → GLM-5.3 once released
-- Coordinator (sub-orchestrator): currently DeepSeek-V4-Pro-0813
+- Main model: Ox Alpha → GLM-5.3 once released
+- Coordinator (sub-orchestrator): currently GLM-5.2
 
 ## Verify
 
@@ -256,7 +268,7 @@ opencode agent list
 # run a task, then check routing in the log:
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String
 'agent=coordinator'
-# expect: providerID=openference modelID=DeepSeek-V4-Pro-0813
+# expect: providerID=openference-anthropic modelID=GLM-5.2
 
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 
 'agent=edit'
