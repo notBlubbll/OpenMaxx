@@ -23,6 +23,7 @@
   "agent": {
     "build": {
       "model": "opencode/Ox Alpha",
+      "color": "primary",
       "permission": {
         "edit": "deny",
         "glob": "deny",
@@ -33,14 +34,17 @@
     },
     "summarizer": {
       "model": "agnes/agnes-2.5-flash",
+      "color": "#c0c0c0",
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
     },
     "research": {
       "model": "agnes/agnes-2.5-flash",
+      "color": "#7aa2f7",
       "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
     },
     "detective": {
       "model": "openference-anthropic/GLM-5.2",
+      "color": "#8b5a2b",
       "permission": {
         "edit": "deny",
         "bash": "allow",
@@ -49,10 +53,12 @@
     },
     "edit": {
       "model": "agnes/agnes-2.5-flash",
+      "color": "#ffd54f",
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
     },
     "coordinator": {
       "model": "openference-anthropic/DeepSeek-V4-Pro-0813",
+      "color": "#555555",
       "permission": {
         "edit": "deny",
         "bash": "deny",
