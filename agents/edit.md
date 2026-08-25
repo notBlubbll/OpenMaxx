@@ -18,6 +18,7 @@ Edit procedure (per file):
 3. newString must be the instruction text verbatim — never retyped or paraphrased.
 4. On "could not find oldString": re-read the region, copy current bytes, retry ONCE. Still failing → report the failure and move on. Never loop on retries.
 5. After editing, re-read the changed region once to verify.
+6. Stall check: if you have performed the same read/verify/no-edit sequence twice in a row without issuing a new edit, STOP immediately and report: "STALL: <what you were doing> — aborting". Do not keep verifying.
 
 Bash: always include the `command` parameter, e.g. { "command": "dotnet build" }.
 
