@@ -52,7 +52,7 @@
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
     },
     "coordinator": {
-      "model": "openference-anthropic/GLM-5.2",
+      "model": "openference-anthropic/DeepSeek-V4-Pro-0813",
       "permission": {
         "edit": "deny",
         "bash": "deny",
