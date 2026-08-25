@@ -7,6 +7,11 @@ research. The GLM-5.2 model routes via the Anthropic SDK
 (`openference-anthropic` provider) against the OpenFerence
 `/v1/messages` endpoint using Bearer auth.
 
+# tree example
+
+<img width="377" height="160" alt="image" src="https://github.com/user-attachments/assets/d59e9716-a441-4316-9480-0547c4f2ae88" />
+
+
 ## Get API keys
 
 **OpenFerence** — sign up with this referral link to get **$5 credit**:
