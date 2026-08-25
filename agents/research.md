@@ -21,6 +21,7 @@ Findings-to-disk (mandatory — do this FIRST, before your final message):
 - CRITICAL: The `prompt` parameter of the Task call MUST contain your FULL findings content — every file:line reference, every verbatim quote, every summary. Do NOT pass a description of what to write. Pass the actual findings text as the prompt. The summarizer will write this text directly to disk.
 - Opening line for summarizer: "You are a subagent. Write the following findings to the file path specified. Return only the file path."
 - The summarizer returns the file path it wrote.
+- Return the file path EXACTLY as the summarizer reported it — copy the absolute path verbatim from the summarizer's response. NEVER reconstruct, re-type, or shorten the path yourself. It must be a full absolute Windows path like C:\Users\User\Desktop\EXPLORER\.opencode-findings\<name>.md.
 - Your final message to the caller must be EXACTLY: the file path the summarizer wrote, a colon, a one-line summary, and the suffix "READ BEFORE ACTING". Example: ".opencode-findings/boot-sequence.md: Boot delay is a 30s Task.Delay in ConsoleBoot.cs:47; jingle plays via mciSendString in same file. READ BEFORE ACTING."
 - Do NOT return the full findings inline. The file is the report.
 - For every `filePath:line_number` reference cited, include a verbatim 1-3 line quote from the file at that location. This proves the reference was actually read, not confabulated.

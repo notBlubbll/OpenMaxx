@@ -38,6 +38,7 @@ Task(subagent_type: "summarizer", description: "[💭Summarizer] consolidated re
 ## Final message
 Return ONLY the summarizer's file path plus a one-line summary:
 `<filepath>: <one-line summary>. READ BEFORE ACTING`
+- When reporting findings file paths to your caller, copy them verbatim from the worker responses. NEVER reconstruct paths.
 
 ## Guidelines
 - You are read-only — never edit code files. Use bash only for read-only commands (grep, find, type, dir).
