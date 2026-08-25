@@ -91,6 +91,8 @@
       "options": {
         "baseURL": "https://api.openference.com/v1",
         "apiKey": "{env:OPENFERENCE_API_KEY}",
+        "timeout": 600000,
+        "chunkTimeout": 30000,
         "headers": {
           "Authorization": "Bearer {env:OPENFERENCE_API_KEY}",
           "anthropic-version": "2023-06-01"
@@ -123,7 +125,9 @@
       "npm": "@ai-sdk/openai-compatible",
       "options": {
         "baseURL": "https://apihub.agnes-ai.com/v1",
-        "apiKey": "{env:AGNES_API_KEY}"
+        "apiKey": "{env:AGNES_API_KEY}",
+        "timeout": 600000,
+        "chunkTimeout": 30000
       },
       "models": {
         "agnes-2.5-flash": {
