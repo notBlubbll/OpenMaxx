@@ -8,8 +8,10 @@ research. The GLM-5.2 model routes via the Anthropic SDK
 `/v1/messages` endpoint using Bearer auth.
 
 # tree example
-
+Researching:
 <img width="377" height="160" alt="image" src="https://github.com/user-attachments/assets/d59e9716-a441-4316-9480-0547c4f2ae88" />
+Editing:
+<img width="298" height="107" alt="image" src="https://github.com/user-attachments/assets/4485f9ec-571a-4c5f-821a-149fa089a3eb" />
 
 
 ## Get API keys
