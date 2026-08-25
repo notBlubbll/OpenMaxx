@@ -10,12 +10,15 @@ research. The GLM-5.2 model routes via the Anthropic SDK
 # tree example
 
 Detective:
+
 <img width="290" height="108" alt="image" src="https://github.com/user-attachments/assets/6422c671-440c-4a8a-88b0-3a79b0efcac3" />
 
 Researching:
+
 <img width="377" height="160" alt="image" src="https://github.com/user-attachments/assets/d59e9716-a441-4316-9480-0547c4f2ae88" />
 
 Editing:
+
 <img width="298" height="107" alt="image" src="https://github.com/user-attachments/assets/4485f9ec-571a-4c5f-821a-149fa089a3eb" />
 
 
