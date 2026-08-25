@@ -17,8 +17,14 @@ Findings-to-disk (mandatory — do this FIRST, before your final message):
 - You are read-only. You CANNOT write files yourself. Instead, spawn a `summarizer` subagent (Task tool, subagent_type: "summarizer") to write your findings to disk.
 - Task tool schema: the Task tool REQUIRES three parameters: `subagent_type` (e.g. "summarizer"), `description` (short label, prefix with [💭Summarizer]), and `prompt` (the full findings content to write). Omitting `prompt` causes SchemaError(Missing key at ['prompt']).
 - Prefix the description with [💭Summarizer].
-- Pass the summarizer: your full findings content (with file:line references and verbatim quotes), a filename (e.g. `boot-sequence.md`), and the project root path (the absolute path to the project you're working in). The summarizer will create the `.opencode-findings/` directory and write the file. It returns the full absolute path.
+- Pass the summarizer: your full findings content (with file:line references and verbatim quotes), plus at the end: the FULL ABSOLUTE target file path (<project-root>\.opencode-findings\<name>.md — one single path string, do NOT split into root + filename). The summarizer will write the file. It returns the full absolute path.
 - CRITICAL: The `prompt` parameter of the Task call MUST contain your FULL findings content — every file:line reference, every verbatim quote, every summary. Do NOT pass a description of what to write. Pass the actual findings text as the prompt. The summarizer will write this text directly to disk.
+- PATH RULES (validate before spawning summarizer):
+  - Build ONE full absolute Windows path: <project-root>\.opencode-findings\<descriptive-name>.md
+  - The path MUST contain `\.opencode-findings\` WITH the leading backslash. If you see `.opencode-findings` glued onto the root without a separator (e.g. `EXPLORER.opencode-findings`), it is WRONG — insert the backslash.
+  - Sanity-check: starts with drive letter? contains \.opencode-findings\? ends with .md? If any check fails, rebuild.
+  - Pass that single absolute path string to the summarizer. Never pass root and filename separately.
+  - The directory already exists (detective pre-creates it). Do NOT run mkdir.
 - Opening line for summarizer: "You are a subagent. Write the following findings to the file path specified. Return only the file path."
 - The summarizer returns the file path it wrote.
 - Return the file path EXACTLY as the summarizer reported it — copy the absolute path verbatim from the summarizer's response. NEVER reconstruct, re-type, or shorten the path yourself. It must be a full absolute Windows path like C:\Users\User\Desktop\EXPLORER\.opencode-findings\<name>.md.
