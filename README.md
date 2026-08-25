@@ -1,8 +1,9 @@
 # opencode multi-model subagent setup
 
 Routes opencode work across providers by cost: free Agnes for ALL searching
-AND all code edits, paid DeepSeek only for coordination reasoning, paid
-GLM-5.2 for high-stakes background summaries.
+AND all code edits, paid DeepSeek only for coordination reasoning, free
+Ox Alpha for primary orchestration, GLM-5.2 for high-stakes detective
+research.
 
 ## Get API keys
 
@@ -26,7 +27,7 @@ AGNES_API_KEY=...
 ├── opencode.json
 ├── agents/
 │   ├── research.md     # deep search -> agnes-2.5-flash variant:research (free, read-only, spawns summarizer)
-│   ├── detective.md  # complex research -> DeepSeek-V4-Flash-0731 variant:max (paid, max thinking, spawns research workers)
+│   ├── detective.md  # complex research -> GLM-5.2 variant:max (paid, max thinking, spawns research workers)
 │   ├── summarizer.md   # writes findings to disk -> agnes-2.5-flash (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free)
 │   ├── coordinator.md    # sub-orchestrator -> DeepSeek-V4-Pro-0813; plans + delegates, cannot edit/bash itself
@@ -42,10 +43,10 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ## Architecture
 
 ```
-Primary (GLM-5.2, paid)          receives request, delegates GOAL
+Primary (Ox Alpha, free)          receives request, delegates GOAL
   ├── research (Agnes, free)      trivial single-file lookups only
   │   └── summarizer (Agnes, free)     writes findings to disk
-  ├── detective (DeepSeek Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups)
+  ├── detective (GLM-5.2, paid, max thinking)    complex multi-file research (PREFERRED for lookups)
   │   └── research (Agnes, free)      spawns workers for parallel search
   │       └── summarizer (Agnes, free)     writes findings to disk
   └── coordinator (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
@@ -104,11 +105,11 @@ converting the rule to a permission-denied enforcement if possible.
 
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
-| main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
+| main + build (orchestration) | openference/Ox Alpha | max | 65,536 | 73,728 | free |
 | coordinator (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
-| detective (complex research coord) | openference/DeepSeek-V4-Flash-0731 | max | max | 384,000 | paid quota |
+| detective (complex research coord) | openference/GLM-5.2 | max | max | 384,000 | paid quota |
 | summarizer (writes findings files) | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | small_model (compaction summaries) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |

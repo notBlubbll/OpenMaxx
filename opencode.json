@@ -22,7 +22,7 @@
   },
   "agent": {
     "build": {
-      "model": "openference/GLM-5.2",
+      "model": "openference/Ox Alpha",
       "permission": {
         "edit": "deny",
         "glob": "deny",
@@ -40,7 +40,7 @@
       "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
     },
     "detective": {
-      "model": "openference/DeepSeek-V4-Flash-0731",
+      "model": "openference/GLM-5.2",
       "permission": {
         "edit": "deny",
         "bash": "allow",

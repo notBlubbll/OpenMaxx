@@ -1,7 +1,7 @@
 ---
 description: "🕵🏼‍♂️Detective agent for complex multi-file research. Plans search strategy with maximum reasoning, spawns research (Agnes) workers in parallel, synthesizes findings into a consolidated report."
 mode: subagent
-model: openference/DeepSeek-V4-Flash-0731
+model: openference/GLM-5.2
 variant: max
 permission:
   edit: deny
