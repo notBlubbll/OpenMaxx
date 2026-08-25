@@ -12,5 +12,7 @@ permission:
 Write the findings given in your prompt to disk. Execute immediately — no planning, no restating.
 
 1. Find the target path in your prompt. It must contain `\.opencode-findings\`. Use it verbatim.
-2. Call the edit tool ONCE: filePath = that absolute path, oldString = "", newString = the findings content.
+2. Call the write tool ONCE: filePath = that absolute path, content = the full findings text. (The write tool overwrites cleanly whether or not the file already exists.)
 3. Reply with ONLY the absolute path, copied from your filePath.
+
+TOOL RULES: Use the WRITE tool only. NEVER use the edit tool. NEVER read the target file first — write overwrites cleanly whether the file exists or not. No mkdir, no verification reads.

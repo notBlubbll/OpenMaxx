@@ -24,6 +24,9 @@ Findings-to-disk (mandatory — do this FIRST, before your final message):
 - Prefix the description with [💭Summarizer].
 - Pass the summarizer: your full findings content (with file:line references and verbatim quotes), plus at the end: the FULL ABSOLUTE target file path (<project-root>\.opencode-findings\<name>.md — one single path string, do NOT split into root + filename). The summarizer will write the file. It returns the full absolute path.
 - CRITICAL: The `prompt` parameter of the Task call MUST contain your FULL findings content — every file:line reference, every verbatim quote, every summary. Do NOT pass a description of what to write. Pass the actual findings text as the prompt. The summarizer will write this text directly to disk.
+
+HARD GUARD: every Task call MUST contain all three keys with non-empty values. An empty or near-empty arguments object ({}) is invalid and will fail. If unsure, re-read the example above and copy its shape exactly.
+
 - PATH RULES (validate before spawning summarizer):
   - Build ONE full absolute Windows path: <project-root>\.opencode-findings\<descriptive-name>.md
   - The path MUST contain `\.opencode-findings\` WITH the leading backslash. If you see `.opencode-findings` glued onto the root without a separator (e.g. `EXPLORER.opencode-findings`), it is WRONG — insert the backslash.
