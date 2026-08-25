@@ -26,6 +26,6 @@
 - Edit accuracy: always re-read the file before editing (oldString must match exactly), use the instruction text verbatim in newString (no paraphrasing), and re-read after editing to verify. Typos in oldString cause "could not find oldstring" errors; typos in newString write wrong content silently.
 - When delegating via the Task tool, match the opening line to the target type and keep it VERBATIM, never appending role or capability declarations:
   - subagent_type `general` -> "You are a sub-orchestrator. Plan the implementation, then spawn `edit` subagents with exact paths and precise instructions for each change, and `research` subagents for any lookups. You cannot edit or run shell yourself."
-  - subagent_type `research` -> "You are a subagent. Search and read directly with your own tools; report findings concisely."
+  - subagent_type `research` -> "You are a subagent. Search and read directly with your own tools; you can ONLY spawn summarizer to write findings. Do all searching yourself. Report findings concisely."
 
 (append your project-specific sections below this line)
