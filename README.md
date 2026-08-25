@@ -29,7 +29,7 @@ AGNES_API_KEY=...
 │   ├── detective.md  # complex research -> DeepSeek-V4-Flash-0731 variant:max (paid, max thinking, spawns research workers)
 │   ├── summarizer.md   # writes findings to disk -> agnes-2.5-flash (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes-2.5-flash variant:edit (free)
-│   ├── general.md      # sub-orchestrator -> DeepSeek-V4-Pro-0813; plans + delegates, cannot edit/bash itself
+│   ├── coordinator.md    # sub-orchestrator -> DeepSeek-V4-Pro-0813; plans + delegates, cannot edit/bash itself
 │   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
@@ -48,13 +48,13 @@ Primary (GLM-5.2, paid)          receives request, delegates GOAL
   ├── detective (DeepSeek Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups)
   │   └── research (Agnes, free)      spawns workers for parallel search
   │       └── summarizer (Agnes, free)     writes findings to disk
-  └── general (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
+  └── coordinator (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out
       ├── edit (Agnes, free)     applies edits + builds (parallel if independent)
       └── research (Agnes, free) deep code tracing inside coordinator sessions
           └── summarizer (Agnes, free)     writes findings to disk
 ```
 
-The primary NEVER spawns `edit` directly — ALL edits go through `general`.
+The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
 The primary spawns `research` for all lookups (single-file and multi-file).
 
 ## Why this routing
@@ -84,9 +84,9 @@ text: they are **permission-denied** in `opencode.json`, so they cannot decay:
 - **Primary cannot edit/search/bash**: `build` permission denies `edit`, `glob`,
   `grep`, `bash` — the primary physically cannot do implementation work, only
   delegate.
-- **Primary cannot spawn `edit`**: `build.task` allows only `general` and
+- **Primary cannot spawn `edit`**: `build.task` allows only `coordinator` and
   `research` — `edit` is absent, so the primary cannot bypass the coordinator.
-- **`general` cannot edit/bash**: denied in its own permission block — it can
+- **`coordinator` cannot edit/bash**: denied in its own permission block — it can
   only plan and delegate to `edit` and `research`.
 - **`research` cannot bash**: denied — read-only search, no side effects.
 
@@ -105,7 +105,7 @@ converting the rule to a permission-denied enforcement if possible.
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
 | main + build (orchestration) | openference/GLM-5.2 | max | 65,536 | 73,728 | paid quota |
-| general (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
+| coordinator (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | max | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | research (deep search, all lookups) | agnes/agnes-2.5-flash | research | 4,096 | 65,536 | free |
 | detective (complex research coord) | openference/DeepSeek-V4-Flash-0731 | max | max | 384,000 | paid quota |
@@ -164,7 +164,7 @@ It does **NOT** handle:
   and pins those to Agnes (free); small_model is bypassed for titles
 - **exploration** - research is a full agent with its own pinned model (Agnes)
 - **edits / shell / orchestration** - those run on the edit, main and
-  general models
+  coordinator models
 
 Rationale: compaction is rare but high-stakes (a lossy summary degrades
 everything after it), so it keeps the strongest summarizer; titles are frequent
@@ -172,24 +172,24 @@ but trivial, so they go to the free tier.
 
 ## How nesting + parallelization works
 
-1. Primary receives the request and delegates the GOAL to `general`
+1. Primary receives the request and delegates the GOAL to `coordinator`
    (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
-   go through `general`. The primary spawns `research` for all lookups.
-2. `general` (paid DeepSeek Pro) plans the implementation: breaks the goal into
+   go through `coordinator`. The primary spawns `research` for all lookups.
+2. `coordinator` (paid DeepSeek Pro) plans the implementation: breaks the goal into
    precise edit steps with exact file paths, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
-3. `general` spawns `edit` subagents (free Agnes) to apply each change. For
+3. `coordinator` spawns `edit` subagents (free Agnes) to apply each change. For
    INDEPENDENT edits (different files / non-overlapping regions), it issues
    MULTIPLE `edit` spawns in ONE message (parallel). Same-file/overlapping
    edits stay in a single call to avoid write conflicts.
-4. `general` spawns `research` subagents (free Agnes) for any lookups it needs,
+4. `coordinator` spawns `research` subagents (free Agnes) for any lookups it needs,
    also parallelized when independent.
 5. After parallel edits return, one `edit` subagent builds/verifies the
    combined result.
 6. `subagent_depth: 2` allows one nesting level; research has no task
    permission, so recursion hard-stops at depth 2.
 7. Pre-explore discipline: primary may front-load exploration via a quick
-   `research` spawn before delegating to `general`, so the goal already contains
+   `research` spawn before delegating to `coordinator`, so the goal already contains
    exact paths and context.
 
 ## Snippet proof (verification, not enforcement)
@@ -202,7 +202,7 @@ that survives compaction — it lives in the findings file on disk, not in
 history that gets summarised.
 
 The one-line summary from subagents ends with "READ BEFORE ACTING" as a
-per-turn reminder that survives in history. The caller (primary or general)
+per-turn reminder that survives in history. The caller (primary or coordinator)
 is instructed to read the findings file via the Read tool before acting on
 any edit decision. This is text-mediated — it can decay in long sessions —
 but the reminder is fresh on every turn because it's in the response, not
@@ -246,15 +246,15 @@ without the MCP server — it only activates when mind tools are available.
 ## Planned upgrades
 
 - Main model: GLM-5.2 → GLM-5.3 once released
-- General (sub-orchestrator): currently DeepSeek-V4-Pro-0813
+- Coordinator (sub-orchestrator): currently DeepSeek-V4-Pro-0813
 
 ## Verify
 
 ```powershell
 opencode agent list
 # run a task, then check routing in the log:
-Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 
-'agent=general'
+Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String
+'agent=coordinator'
 # expect: providerID=openference modelID=DeepSeek-V4-Pro-0813
 
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 

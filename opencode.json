@@ -28,7 +28,7 @@
         "glob": "deny",
         "grep": "deny",
         "bash": "deny",
-        "task": { "general": "allow", "research": "allow", "detective": "allow" }
+        "task": { "coordinator": "allow", "research": "allow", "detective": "allow" }
       }
     },
     "summarizer": {
@@ -51,7 +51,7 @@
       "model": "agnes/agnes-2.5-flash",
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
     },
-    "general": {
+    "coordinator": {
       "model": "openference/DeepSeek-V4-Pro-0813",
       "permission": {
         "edit": "deny",
