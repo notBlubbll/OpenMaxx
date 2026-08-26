@@ -3,6 +3,7 @@ description: "🔎Research agent for deep code lookups inside coordinator sessio
 mode: subagent
 model: agnes/agnes-2.5-flash
 variant: research
+steps: 30
 permission:
   edit: deny
   bash: allow

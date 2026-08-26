@@ -3,6 +3,7 @@ description: "✏️Edit agent for applying code edits and running build/verify 
 mode: subagent
 model: agnes/agnes-2.5-flash
 variant: edit
+steps: 40
 permission:
   edit: allow
   bash: allow

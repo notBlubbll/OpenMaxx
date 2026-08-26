@@ -40,6 +40,7 @@
     },
     "research": {
       "model": "agnes/agnes-2.5-flash",
+      "steps": 30,
       "color": "#7aa2f7",
       "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
     },
@@ -54,6 +55,7 @@
     },
     "edit": {
       "model": "agnes/agnes-2.5-flash",
+      "steps": 40,
       "color": "#ffd54f",
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
     },
