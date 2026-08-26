@@ -1,7 +1,7 @@
 ---
 description: "🔎Research agent for deep code lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
 mode: subagent
-model: agnes/agnes-2.5-flash
+model: qwen-hf/Qwen3.8-Flash-Next
 variant: research
 steps: 30
 permission:
