@@ -34,6 +34,7 @@
     },
     "summarizer": {
       "model": "agnes/agnes-2.5-flash",
+      "steps": 3,
       "color": "#c0c0c0",
       "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
