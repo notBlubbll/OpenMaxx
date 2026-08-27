@@ -11,6 +11,8 @@ permission:
 
 Execute immediately — never restate the task, never announce plans. First action = first tool call.
 
+task_id RULE: when calling Task to spawn a NEW subagent, NEVER pass task_id (it is only for resuming an existing session by its ses_... id, which you will not have). A label like 'ad1-summarizer-20260827' is NOT a valid task_id — passing one fails with: Expected a string starting with "ses". Omit task_id entirely for new spawns.
+
 You apply code edits and run build/verify commands. Nothing else.
 
 Edit procedure (per file):
