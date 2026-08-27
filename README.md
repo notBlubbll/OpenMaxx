@@ -1,7 +1,7 @@
 # opencode multi-model subagent setup
 
 Routes opencode work across providers by cost: free Qwen3.8-Flash-Next (HF
-endpoint) for ALL searching AND findings-writes, paid DeepSeek-V4-Pro-0813
+endpoint) for ALL searching AND findings-writes, paid GLM-5.3-Flash
 for coordination reasoning, paid GLM-5.3-Flash for primary orchestration and
 high-stakes detective research (max thinking). GLM-5.3-Flash routes via the
 OpenAI-compatible SDK (`openference` provider) against the OpenFerence
@@ -61,7 +61,7 @@ Hugging Face free inference endpoint) handles all searching and findings-writes.
     │   ├── detective.md  # complex research -> GLM-5.3-Flash variant:max (paid, max thinking, spawns research workers) [OpenAI-compatible SDK via openference provider]
 │   ├── summarizer.md   # writes findings to disk -> qwen-hf/Qwen3.8-Flash-Next variant:explore (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes/agnes-2.5-flash variant:edit (free)
-│   ├── coordinator.md    # sub-orchestrator -> DeepSeek-V4-Pro-0813; plans + delegates, cannot edit/bash itself [OpenAI-compatible SDK via openference provider]
+│   ├── coordinator.md    # sub-orchestrator -> GLM-5.3-Flash; plans + delegates, cannot edit/bash itself [OpenAI-compatible SDK via openference provider]
 │   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
@@ -80,7 +80,7 @@ Primary (GLM-5.3-Flash, paid, openference provider)          receives request, d
   ├── detective (GLM-5.3-Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [OpenAI-compatible SDK]
   │   └── research (Qwen3.8-Flash-Next, free)      spawns workers for parallel search
   │       └── summarizer (Qwen3.8-Flash-Next, free)     writes findings to disk
-  └── coordinator (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out [OpenAI-compatible SDK]
+  └── coordinator (GLM-5.3-Flash, paid)    sub-orchestrator: plans, sequences, fans out [OpenAI-compatible SDK]
       ├── edit (Agnes, free)     applies edits + builds (parallel if independent)
       └── research (Qwen3.8-Flash-Next, free) deep code tracing inside coordinator sessions
           └── summarizer (Qwen3.8-Flash-Next, free)     writes findings to disk
@@ -100,7 +100,7 @@ search work, paid models only do reasoning and orchestration.
   are the bulk of the lookup work, so keeping them on the free tier keeps
   costs near zero. Code edits still go to Agnes (free) via the `edit` agent.
 
-- **DeepSeek-V4-Pro-0813 (paid) for coordination**: task decomposition, edit sequencing,
+- **GLM-5.3-Flash (paid) for coordination**: task decomposition, edit sequencing,
   parallel fan-out planning — the strongest reasoning model for the job that
   determines the quality of all downstream work.
 
@@ -113,10 +113,10 @@ Rules stated in `AGENTS.md` are text — they compete for attention with growing
 history and can silently stop firing. The strongest rules in this setup are NOT
 text: they are **permission-denied** in `opencode.json`, so they cannot decay:
 
-- **Primary cannot edit/search/bash**: `build` permission denies `edit`, `glob`,
+- **Primary cannot edit/search/bash**: permission denies `edit`, `glob`,
   `grep`, `bash` — the primary physically cannot do implementation work, only
   delegate.
-- **Primary cannot spawn `edit`**: `build.task` allows only `coordinator`, `research`, and `detective` — `edit` is absent, so the primary cannot bypass the coordinator.
+- **Primary cannot spawn `edit`**: `task` allows only `coordinator`, `research`, and `detective` — `edit` is absent, so the primary cannot bypass the coordinator.
 - **`coordinator` cannot edit/bash**: denied in its own permission block — it can
   only plan and delegate to `edit` and `research`.
 - **`research` cannot bash**: denied — read-only search, no side effects.
@@ -135,8 +135,8 @@ converting the rule to a permission-denied enforcement if possible.
 
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
-| main + build (orchestration) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
-| coordinator (sub-orchestrator) | openference/DeepSeek-V4-Pro-0813 | max | 65,536 | 384,000 | paid quota |
+| main (orchestration) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
+| coordinator (sub-orchestrator) | openference/GLM-5.3-Flash | max | 65,536 | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | research (deep search, all lookups) | qwen-hf/Qwen3.8-Flash-Next | research | medium | 65,536 | free |
 | detective (complex research coord) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
@@ -152,7 +152,7 @@ tokens available for the response including thinking):
 
 - **GLM-5.3-Flash (primary + small_model)**: 1M context / 128K output — large context for orchestration, delegation decisions, and high-stakes compaction summaries. Paid tier. Variants: max (65K thinking), high (32K), medium (16K), low (8K).
 - **GLM-5.3-Flash (detective)**: 65K thinking / 128K output — max deep reasoning for complex multi-file research coordination.
-- **DeepSeek-V4-Pro-0813 (sub-orchestrator)**: 65K thinking / 384K output — deep
+- **GLM-5.3-Flash (sub-orchestrator)**: 65K thinking / 384K output — deep
   reasoning for task decomposition, full delegation output.
 - **Qwen3.8-Flash-Next variant:explore (summarizer)**: low reasoning effort / 65K
   output — light reasoning, full output for findings file-writes.
@@ -202,7 +202,7 @@ Rationale: compaction is rare but high-stakes (a lossy summary degrades everythi
 1. Primary receives the request and delegates the GOAL to `coordinator`
    (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
    go through `coordinator`. The primary spawns `detective` for multi-file lookups and `research` for trivial single-file reads.
-2. `coordinator` (paid DeepSeek-V4-Pro-0813) plans the implementation: breaks the goal into
+2. `coordinator` (paid GLM-5.3-Flash) plans the implementation: breaks the goal into
    precise edit steps with exact file paths, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
 3. `coordinator` spawns `edit` subagents (free Agnes) to apply each change. For
@@ -247,8 +247,7 @@ searching and findings-writes run on **Qwen3.8-Flash-Next** (free HF endpoint).
 Before pointing this at a private repository, review Agnes AI's data-retention
 and training-usage terms at https://agnes-ai.com/ and Hugging Face's terms for
 the Qwen endpoint, to confirm whether API inputs
-are stored or used for model training. The paid models (GLM-5.3-Flash for primary + detective,
-DeepSeek-V4-Pro-0813 for coordination) run through OpenFerence — review their
+are stored or used for model training. The paid models (GLM-5.3-Flash for primary + detective + coordination) run through OpenFerence — review their
 terms separately.
 
 ## Mind MCP server (persistent memory, optional)
@@ -276,7 +275,7 @@ without the MCP server — it only activates when mind tools are available.
 ## Planned upgrades
 
 - Main model: GLM-5.3-Flash (current)
-- Coordinator (sub-orchestrator): currently DeepSeek-V4-Pro-0813
+- Coordinator (sub-orchestrator): GLM-5.3-Flash (upgraded from DeepSeek-V4-Pro-0813)
 - Detective: GLM-5.3-Flash (max thinking, coordinates research workers)
 - Research + Summarizer: Qwen3.8-Flash-Next via free HF endpoint (current, was Agnes)
 
@@ -287,7 +286,7 @@ opencode agent list
 # run a task, then check routing in the log:
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String
 'agent=coordinator'
-# expect: providerID=openference modelID=DeepSeek-V4-Pro-0813
+# expect: providerID=openference modelID=GLM-5.3-Flash
 
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 
 'agent=edit'
