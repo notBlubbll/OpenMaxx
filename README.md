@@ -2,8 +2,8 @@
 
 Routes opencode work across providers by cost: free Qwen3.8-Flash-Next (HF
 endpoint) for ALL searching AND findings-writes, paid DeepSeek-V4-Pro-0813
-for coordination reasoning, paid GLM-5.3-Flash for primary orchestration and
-high-stakes detective research (max thinking). GLM-5.3-Flash routes via the
+for coordination reasoning, paid GLM-5.2 for primary orchestration and
+high-stakes detective research (max thinking). GLM-5.2 routes via the
 Anthropic SDK (`openference-anthropic` provider) against the OpenFerence
 `/v1/messages` endpoint using Bearer auth; Qwen3.8-Flash-Next routes via a
 free Hugging Face inference endpoint (`qwen-hf` provider).
@@ -39,7 +39,7 @@ OPENFERENCE_API_KEY=...
 
 ## Anthropic SDK on OpenFerence (stability)
 
-GLM-5.3-Flash (primary + detective) routes
+GLM-5.2 (primary + detective) routes
 via the `openference-anthropic` provider using `@ai-sdk/anthropic` against the
 OpenFerence `/v1/messages` endpoint with Bearer auth + `anthropic-version:
 2023-06-01`.
@@ -61,7 +61,7 @@ inference endpoint) handles all searching and findings-writes.
 ├── opencode.json
 ├── agents/
 │   ├── research.md     # deep search -> qwen-hf/Qwen3.8-Flash-Next variant:research (free, read-only, spawns summarizer)
-│   ├── detective.md  # complex research -> GLM-5.3-Flash variant:max (paid, max thinking, spawns research workers) [Anthropic SDK via openference-anthropic provider]
+│   ├── detective.md  # complex research -> GLM-5.2 variant:max (paid, max thinking, spawns research workers) [Anthropic SDK via openference-anthropic provider]
 │   ├── summarizer.md   # writes findings to disk -> qwen-hf/Qwen3.8-Flash-Next variant:explore (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes/agnes-2.5-flash variant:edit (free)
 │   ├── coordinator.md    # sub-orchestrator -> DeepSeek-V4-Pro-0813; plans + delegates, cannot edit/bash itself [Anthropic SDK via openference-anthropic provider]
@@ -77,10 +77,10 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ## Architecture
 
 ```
-Primary (GLM-5.3-Flash, paid, opencode-anthropic provider)          receives request, delegates GOAL
+Primary (GLM-5.2, paid, opencode-anthropic provider)          receives request, delegates GOAL
   ├── research (Qwen3.8-Flash-Next, free)      trivial single-file lookups only
   │   └── summarizer (Qwen3.8-Flash-Next, free)     writes findings to disk
-  ├── detective (GLM-5.3-Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [Anthropic SDK]
+  ├── detective (GLM-5.2, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [Anthropic SDK]
   │   └── research (Qwen3.8-Flash-Next, free)      spawns workers for parallel search
   │       └── summarizer (Qwen3.8-Flash-Next, free)     writes findings to disk
   └── coordinator (DeepSeek Pro, paid)    sub-orchestrator: plans, sequences, fans out [Anthropic SDK]
@@ -107,8 +107,8 @@ search work, paid models only do reasoning and orchestration.
   parallel fan-out planning — the strongest reasoning model for the job that
   determines the quality of all downstream work.
 
-- **GLM-5.3-Flash (paid) for detective work**: the detective agent coordinates complex multi-file research with max thinking — high-stakes, a missed research path degrades everything after it.
-- **GLM-5.3-Flash (paid) for primary orchestration + compaction (small_model)**: the primary agent receives requests and delegates goals, and small_model handles compaction summaries. GLM-5.3-Flash has 1M context and 128K output, making it ideal for high-context orchestration and high-stakes compaction. Explicitly pinned so small_model never inherits a different host session model.
+- **GLM-5.2 (paid) for detective work**: the detective agent coordinates complex multi-file research with max thinking — high-stakes, a missed research path degrades everything after it.
+- **GLM-5.2 (paid) for primary orchestration + compaction (small_model)**: the primary agent receives requests and delegates goals, and small_model handles compaction summaries. GLM-5.2 has 1M context and 128K output, making it ideal for high-context orchestration and high-stakes compaction. Explicitly pinned so small_model never inherits a different host session model.
 
 ## Design principle: permission-enforced rules
 
@@ -138,14 +138,14 @@ converting the rule to a permission-denied enforcement if possible.
 
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
-| main + build (orchestration) | openference-anthropic/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
+| main + build (orchestration) | openference-anthropic/GLM-5.2 | max | 65,536 | 128,000 | paid quota |
 | coordinator (sub-orchestrator) | openference-anthropic/DeepSeek-V4-Pro-0813 | max | 65,536 | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | research (deep search, all lookups) | qwen-hf/Qwen3.8-Flash-Next | research | medium | 65,536 | free |
-| detective (complex research coord) | openference-anthropic/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
+| detective (complex research coord) | openference-anthropic/GLM-5.2 | max | 65,536 | 128,000 | paid quota |
 | summarizer (writes findings files) | qwen-hf/Qwen3.8-Flash-Next | explore | low | 65,536 | free |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
-| small_model (compaction summaries) | openference-anthropic/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
+| small_model (compaction summaries) | openference-anthropic/GLM-5.2 | max | 65,536 | 128,000 | paid quota |
 
 ## Thinking and output tuning
 
@@ -153,8 +153,8 @@ Each model is tuned for its workload by balancing **thinking budget** (reasoning
 tokens the model spends before responding) against **output limit** (total
 tokens available for the response including thinking):
 
-- **GLM-5.3-Flash (primary + small_model)**: 1M context / 128K output — large context for orchestration, delegation decisions, and high-stakes compaction summaries. Paid tier. Variants: max (65K thinking), high (32K), medium (16K), low (8K).
-- **GLM-5.3-Flash (detective)**: 65K thinking / 128K output — max deep reasoning for complex multi-file research coordination.
+- **GLM-5.2 (primary + small_model)**: 1M context / 128K output — large context for orchestration, delegation decisions, and high-stakes compaction summaries. Paid tier. Variants: max (65K thinking), high (32K), medium (16K), low (8K).
+- **GLM-5.2 (detective)**: 65K thinking / 128K output — max deep reasoning for complex multi-file research coordination.
 - **DeepSeek-V4-Pro-0813 (sub-orchestrator)**: 65K thinking / 384K output — deep
   reasoning for task decomposition, full delegation output.
 - **Qwen3.8-Flash-Next variant:explore (summarizer)**: low reasoning effort / 65K
@@ -163,7 +163,7 @@ tokens available for the response including thinking):
   65K output — balanced reasoning for tracing call paths across files.
 - **agnes-2.5-flash variant:edit (code edits)**: 8K thinking / 65K output —
   4x deeper reasoning than explore for code changes. Full output for patches.
-- **GLM-5.3-Flash (small_model)**: 128K output — compaction summaries on a high-context model. Explicitly pinned so it never inherits the host session model.
+- **GLM-5.2 (small_model)**: 128K output — compaction summaries on a high-context model. Explicitly pinned so it never inherits the host session model.
 ## How variants work
 
 The Agnes API only knows one model ID: `agnes-2.5-flash`. We register it once
@@ -198,7 +198,7 @@ It does **NOT** handle:
 - **edits / shell / orchestration** - those run on the edit, main and
   coordinator models
 
-Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.3-Flash — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Searching and findings-writes go to the free Qwen3.8-Flash-Next HF endpoint.
+Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.2 — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Searching and findings-writes go to the free Qwen3.8-Flash-Next HF endpoint.
 
 ## How nesting + parallelization works
 
@@ -250,7 +250,7 @@ searching and findings-writes run on **Qwen3.8-Flash-Next** (free HF endpoint).
 Before pointing this at a private repository, review Agnes AI's data-retention
 and training-usage terms at https://agnes-ai.com/ and Hugging Face's terms for
 the Qwen endpoint, to confirm whether API inputs
-are stored or used for model training. The paid models (GLM-5.3-Flash for primary + detective,
+are stored or used for model training. The paid models (GLM-5.2 for primary + detective,
 DeepSeek-V4-Pro-0813 for coordination) run through OpenFerence — review their
 terms separately.
 
@@ -278,10 +278,11 @@ without the MCP server — it only activates when mind tools are available.
 
 ## Planned upgrades
 
-- Main model: GLM-5.3-Flash (current, was Ox Alpha)
+- Main model: GLM-5.2 (current, reverted from GLM-5.3-Flash — SSE issues / too slow for routine use)
 - Coordinator (sub-orchestrator): currently DeepSeek-V4-Pro-0813
-- Detective: GLM-5.3-Flash (current, was GLM-5.2)
+- Detective: GLM-5.2 (current, reverted from GLM-5.3-Flash — SSE issues / too slow)
 - Research + Summarizer: Qwen3.8-Flash-Next via free HF endpoint (current, was Agnes)
+- GLM-5.3-Flash: rejected — too slow / SSE issues on OpenFerence
 
 ## Verify
 
