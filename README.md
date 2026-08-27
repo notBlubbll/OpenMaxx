@@ -1,12 +1,12 @@
 # opencode multi-model subagent setup
 
-Routes opencode work across providers by cost: free Qwen3.8-Flash-Next (HF
-endpoint) for ALL searching AND findings-writes, paid GLM-5.3-Flash
-for coordination reasoning, paid GLM-5.3-Flash for primary orchestration and
-high-stakes detective research (max thinking). GLM-5.3-Flash routes via the
-OpenAI-compatible SDK (`openference` provider) against the OpenFerence
-`/v1/chat/completions` endpoint using Bearer auth; Qwen3.8-Flash-Next routes via a
-free Hugging Face inference endpoint (`qwen-hf` provider).
+Routes opencode work across providers by cost: paid GLM-5.3-Flash for primary
+orchestration, detective research, and coordination reasoning (max thinking);
+camelai/auto (fleet) for all searching and findings-writes; agnes/agnes-2.5-flash
+for code edits and session titles. GLM-5.3-Flash routes via the OpenAI-compatible
+SDK (`openference` provider) against the OpenFerence `/v1/chat/completions`
+endpoint using Bearer auth; camelai/auto routes via the `camelai` provider
+(camelStream https://stream.camelai.com/v1); agnes uses the `agnes` provider.
 
 # tree example
 
@@ -28,9 +28,6 @@ Editing:
 **OpenFerence** — sign up with this referral link to get **$5 credit**:
 https://openference.com/register?ref=JTVJHCYR
 
-**Hugging Face** — the Qwen3.8-Flash-Next endpoint is a free HF inference
-endpoint; no API key required (`apiKey: "not-needed"` in `qwen-hf`).
-
 Then set environment variables:
 
 ```
@@ -46,9 +43,8 @@ OpenFerence /v1/chat/completions endpoint with Bearer auth.
 The OpenAI-compatible SDK handles streaming responses cleanly and returns
 usage fields natively.
 
-The openference provider (OpenAI-compatible SDK) is used for all GLM and
-DeepSeek models. The free qwen-hf provider (OpenAI-compatible SDK against a
-Hugging Face free inference endpoint) handles all searching and findings-writes.
+The openference provider (OpenAI-compatible SDK) is used for all GLM models.
+The camelai provider (camelStream) handles all searching and findings-writes.
 
 
 ## Layout
@@ -57,12 +53,12 @@ Hugging Face free inference endpoint) handles all searching and findings-writes.
 ~/.config/opencode/
 ├── opencode.json
 ├── agents/
-│   ├── research.md     # deep search -> qwen-hf/Qwen3.8-Flash-Next variant:research (free, read-only, spawns summarizer)
+│   ├── research.md     # deep search -> camelai/auto variant:research (fleet, spawns summarizer)
     │   ├── detective.md  # complex research -> GLM-5.3-Flash variant:max (paid, max thinking, spawns research workers) [OpenAI-compatible SDK via openference provider]
-│   ├── summarizer.md   # writes findings to disk -> qwen-hf/Qwen3.8-Flash-Next variant:explore (free, write-only)
+│   ├── summarizer.md   # writes findings to disk -> camelai/auto variant:explore (fleet, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes/agnes-2.5-flash variant:edit (free)
 │   ├── coordinator.md    # sub-orchestrator -> GLM-5.3-Flash; plans + delegates, cannot edit/bash itself [OpenAI-compatible SDK via openference provider]
-│   └── title.md        # session titles -> agnes-2.5-flash variant:explore (free)  [overrides small_model]
+│   └── title.md        # session titles -> agnes/agnes-2.5-flash variant:explore (free)  [overrides small_model]
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
 ```
@@ -75,15 +71,15 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 
 ```
 Primary (GLM-5.3-Flash, paid, openference provider)          receives request, delegates GOAL
-  ├── research (Qwen3.8-Flash-Next, free)      trivial single-file lookups only
-  │   └── summarizer (Qwen3.8-Flash-Next, free)     writes findings to disk
+  ├── research (camelai/auto, fleet)       trivial single-file lookups only
+  │   └── summarizer (camelai/auto, fleet)     writes findings to disk
   ├── detective (GLM-5.3-Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [OpenAI-compatible SDK]
-  │   └── research (Qwen3.8-Flash-Next, free)      spawns workers for parallel search
-  │       └── summarizer (Qwen3.8-Flash-Next, free)     writes findings to disk
+  │   └── research (camelai/auto, fleet)      spawns workers for parallel search
+  │       └── summarizer (camelai/auto, fleet)     writes findings to disk
   └── coordinator (GLM-5.3-Flash, paid)    sub-orchestrator: plans, sequences, fans out [OpenAI-compatible SDK]
       ├── edit (Agnes, free)     applies edits + builds (parallel if independent)
-      └── research (Qwen3.8-Flash-Next, free) deep code tracing inside coordinator sessions
-          └── summarizer (Qwen3.8-Flash-Next, free)     writes findings to disk
+      └── research (camelai/auto, fleet) deep code tracing inside coordinator sessions
+          └── summarizer (camelai/auto, fleet)     writes findings to disk
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
@@ -95,10 +91,9 @@ The `general` agent is also restricted (edit/bash/glob/grep deny, task: {researc
 The split is by cost, with one principle: the free tier handles all the
 search work, paid models only do reasoning and orchestration.
 
-- **Qwen3.8-Flash-Next (free, HF endpoint) for ALL searching and ALL
-  findings-writes**: research deep-dives, summarizer file-writes. These
-  are the bulk of the lookup work, so keeping them on the free tier keeps
-  costs near zero. Code edits still go to Agnes (free) via the `edit` agent.
+- **camelai/auto (fleet) for ALL searching and ALL findings-writes**: research
+  deep-dives, summarizer file-writes. These are the bulk of the lookup work.
+  Code edits still go to Agnes (free) via the `edit` agent.
 
 - **GLM-5.3-Flash (paid) for coordination**: task decomposition, edit sequencing,
   parallel fan-out planning — the strongest reasoning model for the job that
@@ -138,9 +133,9 @@ converting the rule to a permission-denied enforcement if possible.
 | main (orchestration) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
 | coordinator (sub-orchestrator) | openference/GLM-5.3-Flash | max | 65,536 | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
-| research (deep search, all lookups) | qwen-hf/Qwen3.8-Flash-Next | research | medium | 65,536 | free |
+| research (deep search, all lookups) | camelai/auto | research | medium | 65,536 | fleet |
 | detective (complex research coord) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
-| summarizer (writes findings files) | qwen-hf/Qwen3.8-Flash-Next | explore | low | 65,536 | free |
+| summarizer (writes findings files) | camelai/auto | explore | low | 65,536 | fleet |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | small_model (compaction summaries) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
 
@@ -154,9 +149,9 @@ tokens available for the response including thinking):
 - **GLM-5.3-Flash (detective)**: 65K thinking / 128K output — max deep reasoning for complex multi-file research coordination.
 - **GLM-5.3-Flash (sub-orchestrator)**: 65K thinking / 384K output — deep
   reasoning for task decomposition, full delegation output.
-- **Qwen3.8-Flash-Next variant:explore (summarizer)**: low reasoning effort / 65K
+- **camelai/auto variant:explore (summarizer)**: low reasoning effort / 65K
   output — light reasoning, full output for findings file-writes.
-- **Qwen3.8-Flash-Next variant:research (deep search)**: medium reasoning effort /
+- **camelai/auto variant:research (deep search)**: medium reasoning effort /
   65K output — balanced reasoning for tracing call paths across files.
 - **agnes-2.5-flash variant:edit (code edits)**: 8K thinking / 65K output —
   4x deeper reasoning than explore for code changes. Full output for patches.
@@ -195,7 +190,7 @@ It does **NOT** handle:
 - **edits / shell / orchestration** - those run on the edit, main and
   coordinator models
 
-Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.2 — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Searching and findings-writes go to the free Qwen3.8-Flash-Next HF endpoint.
+Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.2 — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Searching and findings-writes go to the camelai/auto fleet.
 
 ## How nesting + parallelization works
 
@@ -209,7 +204,7 @@ Rationale: compaction is rare but high-stakes (a lossy summary degrades everythi
    INDEPENDENT edits (different files / non-overlapping regions), it issues
    MULTIPLE `edit` spawns in ONE message (parallel). Same-file/overlapping
    edits stay in a single call to avoid write conflicts.
-4. `coordinator` spawns `research` subagents (free Agnes) for any lookups it needs,
+4. `coordinator` spawns `research` subagents (camelai/auto fleet) for any lookups it needs,
    also parallelized when independent.
 5. After parallel edits return, one `edit` subagent builds/verifies the
    combined result.
@@ -243,11 +238,11 @@ Subagent sessions are tagged in their title for easy identification:
 ## Data retention note
 
 All code editing in this setup runs on **Agnes 2.5 Flash** (free tier); all
-searching and findings-writes run on **Qwen3.8-Flash-Next** (free HF endpoint).
-Before pointing this at a private repository, review Agnes AI's data-retention
-and training-usage terms at https://agnes-ai.com/ and Hugging Face's terms for
-the Qwen endpoint, to confirm whether API inputs
-are stored or used for model training. The paid models (GLM-5.3-Flash for primary + detective + coordination) run through OpenFerence — review their
+searching and findings-writes run on **camelai/auto** (fleet). Before pointing
+this at a private repository, review Agnes AI's data-retention and training-usage
+terms at https://agnes-ai.com/ and camelai's terms, to confirm whether API
+inputs are stored or used for model training. The paid models (GLM-5.3-Flash
+for primary + detective + coordination) run through OpenFerence — review their
 terms separately.
 
 ## Mind MCP server (persistent memory, optional)
@@ -277,7 +272,7 @@ without the MCP server — it only activates when mind tools are available.
 - Main model: GLM-5.3-Flash (current)
 - Coordinator (sub-orchestrator): GLM-5.3-Flash (upgraded from DeepSeek-V4-Pro-0813)
 - Detective: GLM-5.3-Flash (max thinking, coordinates research workers)
-- Research + Summarizer: Qwen3.8-Flash-Next via free HF endpoint (current, was Agnes)
+- Research + Summarizer: camelai/auto fleet (current)
 
 ## Verify
 
@@ -292,7 +287,7 @@ Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern
 'agent=edit'
 # expect: providerID=agnes modelID=agnes-2.5-flash
 
-Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String 
+Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String
 'agent=research'
-# expect: providerID=agnes modelID=agnes-2.5-flash
+# expect: providerID=camelai modelID=auto
 ```

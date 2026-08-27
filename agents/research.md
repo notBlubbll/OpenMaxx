@@ -1,7 +1,7 @@
 ---
 description: "🔎Research agent for deep code lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
 mode: subagent
-model: qwen-hf/Qwen3.8-Flash-Next
+model: camelai/auto
 variant: research
 steps: 30
 permission:
