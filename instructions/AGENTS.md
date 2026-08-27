@@ -4,6 +4,7 @@
 
 **All code modifications, file reads, searches, exploratory tasks, and shell commands MUST be delegated to subagents.** The primary agent must never call edit, read, grep, glob, or bash directly for implementation work. Instead:
 
+- task_id RULE: NEVER pass task_id when spawning a NEW subagent via Task — omit it entirely. task_id is only for resuming an existing session by its real ses_... id; labels like 'ad1-summarizer-20260827' fail with 'Expected a string starting with "ses"'.
 - PRE-EXPLORE DISCIPLINE (HIGHEST PRIORITY): Before delegating ANY implementation task to `coordinator`, the primary MUST first spawn a `detective` subagent to gather exact file paths and line references via its research workers. The task handed to `coordinator` must already contain these paths. Self-check before delegating: "Do I have exact file:line references from research? If NO, spawn detective NOW before delegating to coordinator." This is the rule most likely to decay in long sessions — re-read this before every delegation.
 - Both `coordinator` and `general` subagent types have identical deny blocks (edit/bash/glob/grep deny, task: {research, edit} allow) — defense in depth so a wrong `subagent_type` choice by the primary cannot bypass the no-direct-edit rule.
 - For ANY implementation task, ALWAYS use the Task tool with subagent_type: "coordinator" as a sub-orchestrator/planner. The primary delegates the GOAL to coordinator; coordinator breaks it down, plans the edit sequence, and spawns `edit` and `research` subagents to execute.
