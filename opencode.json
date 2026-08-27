@@ -33,13 +33,13 @@
       }
     },
     "summarizer": {
-      "model": "qwen-hf/Qwen3.8-Flash-Next",
+      "model": "camelai/auto",
       "steps": 3,
       "color": "#c0c0c0",
       "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "research": {
-      "model": "qwen-hf/Qwen3.8-Flash-Next",
+      "model": "camelai/auto",
       "steps": 30,
       "color": "#7aa2f7",
       "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
@@ -88,7 +88,9 @@
       "npm": "@ai-sdk/openai-compatible",
       "options": {
         "baseURL": "https://api.openference.com/v1",
-        "apiKey": "{env:OPENFERENCE_API_KEY}"
+        "apiKey": "{env:OPENFERENCE_API_KEY}",
+        "timeout": 1800000,
+        "chunkTimeout": 300000
       },
       "models": {
 
@@ -105,8 +107,8 @@
       "options": {
         "baseURL": "https://api.openference.com/v1",
         "apiKey": "{env:OPENFERENCE_API_KEY}",
-        "timeout": 600000,
-        "chunkTimeout": 30000,
+        "timeout": 1800000,
+        "chunkTimeout": 300000,
         "headers": {
           "Authorization": "Bearer {env:OPENFERENCE_API_KEY}",
           "anthropic-version": "2023-06-01"
@@ -151,7 +153,9 @@
       "npm": "@ai-sdk/openai-compatible",
       "options": {
         "baseURL": "https://pnywsahxhac1qjbo.us-east-2.aws.endpoints.huggingface.cloud/v1",
-        "apiKey": "not-needed"
+        "apiKey": "not-needed",
+        "timeout": 1800000,
+        "chunkTimeout": 300000
       },
       "models": {
         "Qwen3.8-Flash-Next": {
@@ -172,8 +176,8 @@
       "options": {
         "baseURL": "https://apihub.agnes-ai.com/v1",
         "apiKey": "{env:AGNES_API_KEY}",
-        "timeout": 600000,
-        "chunkTimeout": 30000
+        "timeout": 1800000,
+        "chunkTimeout": 300000
       },
       "models": {
         "agnes-2.5-flash": {
@@ -188,6 +192,24 @@
             "edit": { "thinking": { "type": "enabled", "budget_tokens": 8192 } }
           },
           "limit": { "context": 512000, "output": 65536 }
+        }
+      }
+    },
+    "camelai": {
+      "name": "camelStream",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://stream.camelai.com/v1",
+        "apiKey": "qaml_live_4bEFmdqFDWnUOK8Dlwc-2gP8mAA4yWB1PdI89Kfdr34",
+        "timeout": 1800000,
+        "chunkTimeout": 300000
+      },
+      "models": {
+        "auto": {
+          "name": "Camel Auto (fleet)",
+          "tool_call": true,
+          "reasoning": true,
+          "limit": { "context": 262144, "output": 65536 }
         }
       }
     }

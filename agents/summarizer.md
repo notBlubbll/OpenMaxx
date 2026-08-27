@@ -1,8 +1,7 @@
 ---
 description: "💭Summarizer agent for writing findings files to disk. Receives findings content from research, writes to .opencode-findings/, returns the file path."
 mode: subagent
-model: qwen-hf/Qwen3.8-Flash-Next
-variant: explore
+model: camelai/auto
 steps: 3
 permission:
   edit: allow
