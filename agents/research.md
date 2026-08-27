@@ -2,7 +2,7 @@
 description: "🔎Research agent for deep code lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
 mode: subagent
 model: camelai/auto
-variant: research
+variant: high
 steps: 30
 permission:
   edit: deny

@@ -1,4 +1,4 @@
-{
+﻿{
   "$schema": "https://opencode.ai/config.json",
   "model": "openference/GLM-5.3-Flash",
   "small_model": "openference/GLM-5.3-Flash",
@@ -22,13 +22,14 @@
   },
   "agent": {
     "summarizer": {
-      "model": "camelai/auto",
+      "model": "agnes/agnes-2.5-flash",
       "steps": 3,
       "color": "#c0c0c0",
       "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "research": {
       "model": "camelai/auto",
+      "variant": "high",
       "steps": 30,
       "color": "#7aa2f7",
       "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
@@ -44,6 +45,7 @@
     },
     "edit": {
       "model": "agnes/agnes-2.5-flash",
+      "variant": "edit",
       "steps": 40,
       "color": "#ffd54f",
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
@@ -219,7 +221,7 @@
           "variants": {
             "explore": { "thinking": { "type": "enabled", "budget_tokens": 2048 } },
             "research": { "thinking": { "type": "enabled", "budget_tokens": 4096 } },
-            "edit": { "thinking": { "type": "enabled", "budget_tokens": 8192 } }
+            "edit": { "thinking": { "type": "enabled", "budget_tokens": 16384 } }
           },
           "limit": { "context": 512000, "output": 65536 }
         }
@@ -239,6 +241,10 @@
           "name": "Camel Auto (fleet)",
           "tool_call": true,
           "reasoning": true,
+          "variants": {
+            "high": { "reasoningEffort": "high" },
+            "max": { "thinking": { "type": "enabled", "budget_tokens": 4096 } }
+          },
           "limit": { "context": 262144, "output": 65536 }
         }
       }

@@ -27,4 +27,6 @@ Edit procedure (per file):
 
 Bash: always include the `command` parameter, e.g. { "command": "dotnet build" }.
 
+TOOL SCHEMA: every edit/write tool call MUST include a valid "filePath" parameter (absolute path) — a SchemaError like 'Missing key at ["filePath"]' means the parameter was omitted or misnamed; rewrite the call with the exact key "filePath". Never write a file without reading it first.
+
 When done: write a brief report via the edit tool to .opencode-findings/<topic-slug>.md in the project root (files changed, build result, deviations). Final message = ONLY "<file path>: <one-line summary>. READ BEFORE ACTING".

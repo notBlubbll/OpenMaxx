@@ -2,11 +2,10 @@
 
 Routes opencode work across providers by cost: paid GLM-5.3-Flash for primary
 orchestration, detective research, and coordination reasoning (max thinking);
-camelai/auto (fleet) for all searching and findings-writes; agnes/agnes-2.5-flash
-for code edits and session titles. GLM-5.3-Flash routes via the OpenAI-compatible
-SDK (`openference` provider) against the OpenFerence `/v1/chat/completions`
-endpoint using Bearer auth; camelai/auto routes via the `camelai` provider
-(camelStream https://stream.camelai.com/v1); agnes uses the `agnes` provider.
+agnes/agnes-2.5-flash for summarizer findings-writes and code edits and session
+titles. GLM-5.3-Flash routes via the OpenAI-compatible SDK (`openference`
+provider) against the OpenFerence `/v1/chat/completions` endpoint using Bearer
+auth; agnes uses the `agnes` provider.
 
 # tree example
 
@@ -55,7 +54,7 @@ The camelai provider (camelStream) handles all searching and findings-writes.
 ├── agents/
 │   ├── research.md     # deep search -> camelai/auto variant:research (fleet, spawns summarizer)
     │   ├── detective.md  # complex research -> GLM-5.3-Flash variant:max (paid, max thinking, spawns research workers) [OpenAI-compatible SDK via openference provider]
-│   ├── summarizer.md   # writes findings to disk -> camelai/auto variant:explore (fleet, write-only)
+│   ├── summarizer.md   # writes findings to disk -> agnes/agnes-2.5-flash variant:explore (free, write-only)
 │   ├── edit.md         # code edits + shell/builds -> agnes/agnes-2.5-flash variant:edit (free)
 │   ├── coordinator.md    # sub-orchestrator -> GLM-5.3-Flash; plans + delegates, cannot edit/bash itself [OpenAI-compatible SDK via openference provider]
 │   └── title.md        # session titles -> agnes/agnes-2.5-flash variant:explore (free)  [overrides small_model]
@@ -72,14 +71,14 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ```
 Primary (GLM-5.3-Flash, paid, openference provider)          receives request, delegates GOAL
   ├── research (camelai/auto, fleet)       trivial single-file lookups only
-  │   └── summarizer (camelai/auto, fleet)     writes findings to disk
+  │   └── summarizer (agnes/agnes-2.5-flash, free)     writes findings to disk
   ├── detective (GLM-5.3-Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [OpenAI-compatible SDK]
   │   └── research (camelai/auto, fleet)      spawns workers for parallel search
-  │       └── summarizer (camelai/auto, fleet)     writes findings to disk
+  │       └── summarizer (agnes/agnes-2.5-flash, free)     writes findings to disk
   └── coordinator (GLM-5.3-Flash, paid)    sub-orchestrator: plans, sequences, fans out [OpenAI-compatible SDK]
       ├── edit (Agnes, free)     applies edits + builds (parallel if independent)
       └── research (camelai/auto, fleet) deep code tracing inside coordinator sessions
-          └── summarizer (camelai/auto, fleet)     writes findings to disk
+          └── summarizer (agnes/agnes-2.5-flash, free)     writes findings to disk
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
@@ -135,7 +134,7 @@ converting the rule to a permission-denied enforcement if possible.
 | edit (ALL code edits + shell/builds) | agnes/agnes-2.5-flash | edit | 8,192 | 65,536 | free |
 | research (deep search, all lookups) | camelai/auto | research | medium | 65,536 | fleet |
 | detective (complex research coord) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
-| summarizer (writes findings files) | camelai/auto | explore | low | 65,536 | fleet |
+| summarizer (writes findings files) | agnes/agnes-2.5-flash | explore | low | 65,536 | free |
 | session titles | agnes/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | small_model (compaction summaries) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
 
@@ -149,7 +148,7 @@ tokens available for the response including thinking):
 - **GLM-5.3-Flash (detective)**: 65K thinking / 128K output — max deep reasoning for complex multi-file research coordination.
 - **GLM-5.3-Flash (sub-orchestrator)**: 65K thinking / 384K output — deep
   reasoning for task decomposition, full delegation output.
-- **camelai/auto variant:explore (summarizer)**: low reasoning effort / 65K
+- **agnes/agnes-2.5-flash variant:explore (summarizer)**: low reasoning effort / 65K
   output — light reasoning, full output for findings file-writes.
 - **camelai/auto variant:research (deep search)**: medium reasoning effort /
   65K output — balanced reasoning for tracing call paths across files.
@@ -190,7 +189,7 @@ It does **NOT** handle:
 - **edits / shell / orchestration** - those run on the edit, main and
   coordinator models
 
-Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.2 — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Searching and findings-writes go to the camelai/auto fleet.
+Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.2 — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Summarizer findings-writes also go to the free Agnes tier.
 
 ## How nesting + parallelization works
 
@@ -238,7 +237,7 @@ Subagent sessions are tagged in their title for easy identification:
 ## Data retention note
 
 All code editing in this setup runs on **Agnes 2.5 Flash** (free tier); all
-searching and findings-writes run on **camelai/auto** (fleet). Before pointing
+searching runs on **camelai/auto** (fleet). Before pointing
 this at a private repository, review Agnes AI's data-retention and training-usage
 terms at https://agnes-ai.com/ and camelai's terms, to confirm whether API
 inputs are stored or used for model training. The paid models (GLM-5.3-Flash
@@ -272,7 +271,8 @@ without the MCP server — it only activates when mind tools are available.
 - Main model: GLM-5.3-Flash (current)
 - Coordinator (sub-orchestrator): GLM-5.3-Flash (upgraded from DeepSeek-V4-Pro-0813)
 - Detective: GLM-5.3-Flash (max thinking, coordinates research workers)
-- Research + Summarizer: camelai/auto fleet (current)
+- Research: camelai/auto fleet (current)
+- Summarizer: agnes/agnes-2.5-flash (switched from camelai/auto)
 
 ## Verify
 

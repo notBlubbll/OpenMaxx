@@ -1,7 +1,8 @@
 ---
 description: "💭Summarizer agent for writing findings files to disk. Receives findings content from research, writes to .opencode-findings/, returns the file path."
 mode: subagent
-model: camelai/auto
+model: agnes/agnes-2.5-flash
+variant: explore
 steps: 3
 permission:
   edit: allow
