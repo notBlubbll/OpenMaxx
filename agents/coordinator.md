@@ -1,7 +1,7 @@
 ---
 description: "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation across edit and research subagents. Cannot edit or run shell itself."
 mode: subagent
-model: openference-anthropic/DeepSeek-V4-Pro-0813
+model: openference/DeepSeek-V4-Pro-0813
 permission:
   edit: deny
   bash: deny
