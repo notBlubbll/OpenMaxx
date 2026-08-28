@@ -59,7 +59,7 @@
       }
     },
     "coordinator": {
-      "model": "openference/GLM-5.3-Flash",
+      "model": "openference/GLM-5.3",
       "variant": "high",
       "color": "#555555",
       "permission": {
