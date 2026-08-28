@@ -38,8 +38,8 @@
       }
     },
     "edit": {
-      "model": "camelai/auto",
-      "variant": "high",
+      "model": "agnes-execute/agnes-2.5-flash",
+      "variant": "edit",
       "steps": 40,
       "color": "#ffd54f",
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
@@ -112,10 +112,23 @@
           },
           "limit": { "context": 1048576, "output": 128000 }
         },
+        "GLM-5.3": {
+          "name": "GLM 5.3 (flagship)",
+          "reasoning": true,
+          "tool_call": true,
+          "variants": {
+            "max": { "reasoningEffort": "max" },
+            "high": { "reasoningEffort": "high" },
+            "medium": { "reasoningEffort": "medium" },
+            "low": { "reasoningEffort": "low" }
+          },
+          "limit": { "context": 524288, "output": 128000 }
+        },
         "GLM-5.3-Flash": {
           "name": "GLM 5.3 Flash",
           "reasoning": true,
           "tool_call": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
           "variants": {
             "max": { "reasoningEffort": "max" },
             "high": { "reasoningEffort": "high" },
