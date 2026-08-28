@@ -28,7 +28,7 @@
       "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "research": {
-      "model": "agnes/agnes-2.5-flash",
+      "model": "agnes-research/agnes-2.5-flash",
       "variant": "research",
       "steps": 30,
       "color": "#7aa2f7",
@@ -44,7 +44,7 @@
       }
     },
     "edit": {
-      "model": "agnes/agnes-2.5-flash",
+      "model": "agnes-execute/agnes-2.5-flash",
       "variant": "edit",
       "steps": 40,
       "color": "#ffd54f",
@@ -202,8 +202,8 @@
         }
       }
     },
-    "agnes": {
-      "name": "Agnes AI",
+    "agnes-research": {
+      "name": "Agnes AI (research)",
       "npm": "@ai-sdk/openai-compatible",
       "options": {
         "baseURL": "https://apihub.agnes-ai.com/v1",
@@ -213,14 +213,36 @@
       },
       "models": {
         "agnes-2.5-flash": {
-          "name": "Agnes 2.5 Flash",
+          "name": "Agnes 2.5 Flash (research)",
           "reasoning": true,
           "tool_call": true,
           "attachment": true,
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "variants": {
             "explore": { "thinking": { "type": "enabled", "budget_tokens": 2048 } },
-            "research": { "thinking": { "type": "enabled", "budget_tokens": 4096 } },
+            "research": { "thinking": { "type": "enabled", "budget_tokens": 4096 } }
+          },
+          "limit": { "context": 512000, "output": 65536 }
+        }
+      }
+    },
+    "agnes-execute": {
+      "name": "Agnes AI (execute)",
+      "npm": "@ai-sdk/openai-compatible",
+      "options": {
+        "baseURL": "https://apihub.agnes-ai.com/v1",
+        "apiKey": "{env:AGNES_EXECUTE_API_KEY}",
+        "timeout": 1800000,
+        "chunkTimeout": 300000
+      },
+      "models": {
+        "agnes-2.5-flash": {
+          "name": "Agnes 2.5 Flash (execute)",
+          "reasoning": true,
+          "tool_call": true,
+          "attachment": true,
+          "modalities": { "input": ["text", "image"], "output": ["text"] },
+          "variants": {
             "edit": { "thinking": { "type": "enabled", "budget_tokens": 16384 } }
           },
           "limit": { "context": 512000, "output": 65536 }
