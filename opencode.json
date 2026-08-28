@@ -243,7 +243,8 @@
           "attachment": true,
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "variants": {
-            "edit": { "thinking": { "type": "enabled", "budget_tokens": 16384 } }
+            "edit": { "thinking": { "type": "enabled", "budget_tokens": 16384 } },
+            "edit-fast": { "thinking": { "type": "enabled", "budget_tokens": 4096 } }
           },
           "limit": { "context": 512000, "output": 65536 }
         }
