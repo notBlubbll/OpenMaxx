@@ -22,7 +22,7 @@
   },
   "agent": {
     "research": {
-      "model": "openference/DeepSeek-V4-Flash-0731",
+      "model": "agnes-research/agnes-2.5-flash",
       "variant": "research",
       "steps": 30,
       "color": "#7aa2f7",
@@ -38,7 +38,7 @@
       }
     },
     "edit": {
-      "model": "agnes-execute/agnes-2.5-flash",
+      "model": "openference/DeepSeek-V4-Flash-0731",
       "variant": "edit",
       "steps": 40,
       "color": "#ffd54f",
@@ -239,8 +239,7 @@
           "attachment": true,
           "modalities": { "input": ["text", "image"], "output": ["text"] },
           "variants": {
-            "edit": { "thinking": { "type": "enabled", "budget_tokens": 16384 } },
-            "edit-fast": { "thinking": { "type": "enabled", "budget_tokens": 4096 } }
+            "edit": { "thinking": { "type": "enabled", "budget_tokens": 16384 } }
           },
           "limit": { "context": 512000, "output": 65536 }
         }

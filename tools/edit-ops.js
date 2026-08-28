@@ -18,17 +18,21 @@
 
 import { readFile, writeFile, appendFile, rename, unlink, mkdir, readdir } from "node:fs/promises"
 import { existsSync } from "node:fs"
-import { dirname, join } from "node:path"
+import { dirname, join, resolve } from "node:path"
 import { tool } from "@opencode-ai/plugin"
 
-function norm(p) {
+function norm(p, cwd) {
   let s = String(p || "").trim()
-  // glue-fix .opencode-findings style segments and collapse doubles
   s = s.replace(/(?<![\\/])\.opencode-findings/g, "\\.opencode-findings")
   s = s.replace(/([a-zA-Z]:)[\\/]+/g, "$1\\")
   s = s.replace(/\\\\/g, "\\")
+  // relative paths resolve against cwd arg (saves repeating absolute prefixes)
+  if (cwd && !/^[a-zA-Z]:[\\/]/.test(s)) s = resolve(String(cwd), s)
   return s
 }
+
+// op alias map: 1-2 char aliases save tokens on large batches
+const ALIAS = { r: "replace", rd: "read", w: "write", rr: "regex_replace", a: "append", pre: "prepend", il: "insert_at_line", dl: "delete_lines", mv: "move", rm: "delete_file", md: "mkdir", ls: "list" }
 
 async function ensureDir(p) {
   const d = dirname(p)
@@ -47,6 +51,7 @@ export default tool({
     "replace matches oldString EXACTLY (character-for-character, including whitespace/line endings). " +
     "Returns per-op results: OK/<n> or FAIL:<reason>. Use this instead of spawning an edit subagent.",
   args: {
+    cwd: tool.schema.string().optional().describe("Optional working directory; ops with relative paths resolve against this. Saves repeating absolute path prefixes per op."),
     ops: tool.schema.string().describe(
       'JSON array of operations, e.g. [{"op":"write","path":"C:\\proj\\file.txt","content":"hello"},{"op":"replace","path":"C:\\proj\\a.cs","oldString":"int x = 1;","newString":"int x = 2;"}]'
     ),
@@ -64,14 +69,15 @@ export default tool({
       return "FAIL: ops is not valid JSON: " + (e && e.message ? e.message : String(e))
     }
 
+    const cwd = args.cwd ? norm(args.cwd) : undefined
     const results = []
     for (let i = 0; i < ops.length; i++) {
       const o = ops[i] || {}
-      const kind = String(o.op || o.type || "").toLowerCase()
+      const kind = ALIAS[String(o.op || o.type || "").toLowerCase()] || String(o.op || o.type || "").toLowerCase()
       try {
         switch (kind) {
           case "read": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             let content = await readFile(p, "utf8")
             if (o.offset !== undefined || o.limit !== undefined) {
               const lines = lineSplit(content)
@@ -79,18 +85,18 @@ export default tool({
               const end = o.limit ? start + o.limit : lines.length
               content = lines.slice(start, end).join("\n")
             }
-            results.push(`[${i}] READ OK ${p} (${content.length} chars): \n${content}`)
+            results.push(`[${i}] READ OK ${p} (${content.length} chars):\n${content.length > 60000 ? content.slice(0, 60000) + "\n...[TRUNCATED " + (content.length - 4000) + " chars - re-read with offset/limit for more]" : content}`)
             break
           }
           case "write": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             await ensureDir(p)
             await writeFile(p, String(o.content ?? ""), "utf8")
             results.push(`[${i}] WRITE OK ${p} (${Buffer.byteLength(String(o.content ?? ""), "utf8")} bytes)`)
             break
           }
           case "replace": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             const src = await readFile(p, "utf8")
             const oldS = String(o.oldString ?? "")
             const newS = String(o.newString ?? "")
@@ -104,7 +110,7 @@ export default tool({
             break
           }
           case "regex_replace": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             const src = await readFile(p, "utf8")
             const flags = o.all === false ? "" : "g"
             const re = new RegExp(o.pattern, flags + "m")
@@ -115,21 +121,21 @@ export default tool({
             break
           }
           case "append": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             await ensureDir(p)
             await appendFile(p, String(o.content ?? ""), "utf8")
             results.push(`[${i}] APPEND OK ${p}`)
             break
           }
           case "prepend": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             const src = existsSync(p) ? await readFile(p, "utf8") : ""
             await writeFile(p, String(o.content ?? "") + src, "utf8")
             results.push(`[${i}] PREPEND OK ${p}`)
             break
           }
           case "insert_at_line": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             const lines = lineSplit(await readFile(p, "utf8"))
             const line = Math.max(1, parseInt(o.line, 10))
             lines.splice(line - 1, 0, String(o.content ?? ""))
@@ -138,7 +144,7 @@ export default tool({
             break
           }
           case "delete_lines": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             const lines = lineSplit(await readFile(p, "utf8"))
             const s = Math.max(1, parseInt(o.startLine, 10))
             const e2 = Math.min(lines.length, parseInt(o.endLine, 10))
@@ -149,27 +155,27 @@ export default tool({
             break
           }
           case "move": {
-            const from = norm(o.from)
-            const to = norm(o.to)
+            const from = norm(o.from, cwd)
+            const to = norm(o.to, cwd)
             await ensureDir(to)
             await rename(from, to)
             results.push(`[${i}] MOVE OK ${from} -> ${to}`)
             break
           }
           case "delete_file": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             await unlink(p)
             results.push(`[${i}] DELETE_FILE OK ${p}`)
             break
           }
           case "mkdir": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             await mkdir(p, { recursive: true })
             results.push(`[${i}] MKDIR OK ${p}`)
             break
           }
           case "list": {
-            const p = norm(o.path)
+            const p = norm(o.path, cwd)
             const entries = await readdir(p)
             const filtered = o.pattern ? entries.filter(e => e.includes(String(o.pattern))) : entries
             results.push(`[${i}] LIST OK ${p}: ${filtered.join(", ")}`)

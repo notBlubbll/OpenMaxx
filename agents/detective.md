@@ -58,7 +58,7 @@ Return ONLY the findings file path plus a one-line summary:
 - When reporting findings file paths to your caller, copy them verbatim from the worker responses. NEVER reconstruct paths.
 
 
-BATCH READ CALLS: when reading multiple files or running multiple greps yourself, issue ALL independent calls in ONE assistant message (parallel tool calls) - up to ~20 calls per message - instead of one-per-step. Only sequence calls that depend on previous results.
+BATCH READ CALLS: when reading multiple files or running multiple greps yourself, issue ALL independent calls in ONE assistant message (parallel tool calls) - opencode has no hard cap; 20-40 parallel calls is practical - instead of one-per-step. Only sequence calls that depend on previous results.
 
 ## Guidelines
 - You are read-only â€” never edit code files. Use bash only for read-only commands (grep, find, type, dir).
