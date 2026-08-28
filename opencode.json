@@ -52,8 +52,7 @@
     },
     "general": {
       "model": "openference/GLM-5.3-Flash",
-      "variant": "max",
-      "thinking": { "type": "enabled", "budget_tokens": 65536 },
+      "variant": "high",
       "color": "#555555",
       "permission": {
         "edit": "deny",
@@ -65,8 +64,7 @@
     },
     "coordinator": {
       "model": "openference/GLM-5.3-Flash",
-      "variant": "max",
-      "thinking": { "type": "enabled", "budget_tokens": 65536 },
+      "variant": "high",
       "color": "#555555",
       "permission": {
         "edit": "deny",
