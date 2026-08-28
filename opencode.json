@@ -22,8 +22,8 @@
   },
   "agent": {
     "research": {
-      "model": "camelai/auto",
-      "variant": "high",
+      "model": "openference/DeepSeek-V4-Flash-0731",
+      "variant": "research",
       "steps": 30,
       "color": "#7aa2f7",
       "permission": { "edit": "deny", "bash": "allow", "write_findings": "allow" }
@@ -53,6 +53,8 @@
         "bash": "deny",
         "glob": "deny",
         "grep": "deny",
+        "edit-ops": "allow",
+        "write_findings": "allow",
         "task": { "research": "allow", "edit": "allow" }
       }
     },
@@ -65,6 +67,8 @@
         "bash": "deny",
         "glob": "deny",
         "grep": "deny",
+        "edit-ops": "allow",
+        "write_findings": "allow",
         "task": { "research": "allow", "edit": "allow" }
       }
     }

@@ -3,7 +3,7 @@
 Routes opencode work across providers by cost: paid GLM-5.3-Flash for primary
 orchestration, detective research, and coordination reasoning (max thinking);
 agnes-research/agnes-2.5-flash for research titles and read-only lookups;
-agnes-execute/agnes-2.5-flash for code edits and shell work; fakellm/fake-mechanical-reader-0.0B for summarizer findings-writes. GLM-5.3-Flash routes via the OpenAI-compatible SDK (`openference`
+agnes-execute/agnes-2.5-flash for code edits and shell work; write_findings custom tool for findings writes (no subagent). GLM-5.3-Flash routes via the OpenAI-compatible SDK (`openference`
 provider) against the OpenFerence `/v1/chat/completions` endpoint using Bearer
 auth; agnes-research and agnes-execute each use their own provider pointing at the same `apihub.agnes-ai.com` endpoint with different API keys.
 
@@ -43,7 +43,7 @@ The OpenAI-compatible SDK handles streaming responses cleanly and returns
 usage fields natively.
 
 The openference provider (OpenAI-compatible SDK) is used for all GLM models.
-Searching now runs on agnes-research (free tier via apihub.agnes-ai.com); camelai is registered in config but currently unused. Findings-writes are done by the fakellm summarizer.
+Searching now runs on openference/DeepSeek-V4-Flash-0731 (free tier via apihub.agnes-ai.com); camelai is registered in config but currently unused. Findings are saved via the write_findings custom tool (no summarizer subagent).
 
 
 ## Layout
@@ -52,9 +52,8 @@ Searching now runs on agnes-research (free tier via apihub.agnes-ai.com); camela
 ~/.config/opencode/
 ├── opencode.json
 ├── agents/
-    │   ├── research.md     # deep search -> agnes-research/agnes-2.5-flash variant:research (spawns summarizer)
+    │   ├── research.md     # deep search -> openference/DeepSeek-V4-Flash-0731 variant:research (reasoningEffort high, batches parallel read calls)
     │   ├── detective.md  # complex research -> GLM-5.3-Flash variant:max (paid, max thinking, spawns research workers) [OpenAI-compatible SDK via openference provider]
-│   ├── summarizer.md   # writes findings to disk -> fakellm/fake-mechanical-reader-0.0B (local fake LLM, instant, no variant)
 │   ├── edit.md         # code edits + shell/builds -> agnes-execute/agnes-2.5-flash variant:edit (free)
 │   ├── coordinator.md    # sub-orchestrator -> GLM-5.3-Flash; plans + delegates, cannot edit/bash itself [OpenAI-compatible SDK via openference provider]
 │   └── title.md        # session titles -> agnes-research/agnes-2.5-flash variant:explore (free)  [overrides small_model]
@@ -70,15 +69,12 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 
 ```
 Primary (GLM-5.3-Flash, paid, openference provider)          receives request, delegates GOAL
-  ├── research (agnes-research/agnes-2.5-flash, variant:research)   trivial single-file lookups only
-  │   └── summarizer (fakellm/fake-mechanical-reader-0.0B, local, instant)     writes findings to disk
-  ├── detective (GLM-5.3-Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [OpenAI-compatible SDK]
-  │   └── research (agnes-research/agnes-2.5-flash, variant:research)      spawns workers for parallel search
-  │       └── summarizer (fakellm/fake-mechanical-reader-0.0B, local, instant)     writes findings to disk
+  ├── research (openference/DeepSeek-V4-Flash-0731, variant:research)   trivial single-file lookups only
+  └── detective (GLM-5.3-Flash, paid, max thinking)    complex multi-file research (PREFERRED for lookups) [OpenAI-compatible SDK]
+  │   └── research (openference/DeepSeek-V4-Flash-0731, variant:research)      spawns workers for parallel search
   └── coordinator (GLM-5.3-Flash, paid)    sub-orchestrator: plans, sequences, fans out [OpenAI-compatible SDK]
       ├── edit (Agnes execute, free)     applies edits + builds (parallel if independent)
-      └── research (agnes-research/agnes-2.5-flash, variant:research) deep code tracing inside coordinator sessions
-          └── summarizer (fakellm/fake-mechanical-reader-0.0B, local, instant)     writes findings to disk
+      └── research (openference/DeepSeek-V4-Flash-0731, variant:research) deep code tracing inside coordinator sessions
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
@@ -90,8 +86,8 @@ The `general` agent is also restricted (edit/bash/glob/grep deny, task: {researc
 The split is by cost, with one principle: the free tier handles all the
 search work, paid models only do reasoning and orchestration.
 
-- **camelai/auto (variant:high) — now replaced**: searching and
-  deep code tracing were previously routed here; they now run on agnes-research/agnes-2.5-flash (free tier). camelai is registered in config but currently unused.
+- **openference/DeepSeek-V4-Flash-0731 (variant:research, reasoningEffort high) — searching**: deep search
+  and code tracing now run here; previously routed to camelai/auto then agnes-research. camelai is registered in config but currently unused.
   Code edits still go to Agnes (free) via the `edit` agent.
 
 - **GLM-5.3-Flash (paid) for coordination**: task decomposition, edit sequencing,
@@ -132,9 +128,8 @@ converting the rule to a permission-denied enforcement if possible.
 | main (orchestration) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
 | coordinator (sub-orchestrator) | openference/GLM-5.3-Flash | max | 65,536 | 384,000 | paid quota |
 | edit (ALL code edits + shell/builds) | agnes-execute/agnes-2.5-flash | edit | 16,384 | 65,536 | free |
-| research (deep search, all lookups) | agnes-research/agnes-2.5-flash | research | 4,096 | 65,536 | free |
+| research (deep search, all lookups) | openference/DeepSeek-V4-Flash-0731 | research | 920,752 | 32,768 | free tier |
 | detective (complex research coord) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
-| summarizer (writes findings files) | fakellm/fake-mechanical-reader-0.0B | — | — | 65,536 | zero (local) |
 | session titles | agnes-research/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
 | small_model (compaction summaries) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid quota |
 
@@ -148,18 +143,21 @@ tokens available for the response including thinking):
 - **GLM-5.3-Flash (detective)**: 65K thinking / 128K output — max deep reasoning for complex multi-file research coordination.
 - **GLM-5.3-Flash (sub-orchestrator)**: 65K thinking / 384K output — deep
   reasoning for task decomposition, full delegation output.
-- **fakellm/fake-mechanical-reader-0.0B (summarizer)**: local OpenAI-compatible C# server on 127.0.0.1:8000; parses <<<FINDINGS>>> block, writes the file, returns WRITTEN: <path>; ~130 ms round-trip, zero token cost; BLOCK-MISSING on malformed input.
-- **agnes-research/agnes-2.5-flash variant:research (deep search)**: 4K thinking /
-  65K output — deep reasoning for tracing call paths across files.
+- **openference/DeepSeek-V4-Flash-0731 variant:research (deep search)**: 920K context / 32K output — high effort reasoning for tracing call paths across files, parallel read batching.
+- **agnes-research/agnes-2.5-flash variant:explore (session titles)**: 2K thinking / 65K output — lightweight titles.
 - **agnes-execute/agnes-2.5-flash variant:edit (code edits)**: 16K thinking / 65K output —
   deep reasoning for code changes. Full output for patches.
 - **agnes-execute/agnes-2.5-flash variant:edit-fast (trivial edits)**: 4K thinking / 65K output —
   fast path for simple one-file config/JSON tweaks, comment edits, one-line fixes, and simple renames.
 - **GLM-5.3-Flash (small_model)**: 128K output — compaction summaries on a high-context model. Explicitly pinned so it never inherits the host session model.
 
-## Fakellm summarizer
+## write_findings tool
 
-`fakellm` is a local OpenAI-compatible C# server on 127.0.0.1:8000 that replaces real LLM calls for findings writes. It parses a `<<<FINDINGS>>>` / `PATH:` / `BODY:` / `<<<END>>>` block from the prompt, writes the BODY verbatim to the PATH, and returns `WRITTEN: <path>`. Auto-started by `plugins/fakellm-keeper.js` (Node) and the `fakellm_ensure` MCP tool. Returns `BLOCK-MISSING` if the prompt lacks the contract block. Source: [notBlubbll/fakellm-writer](https://github.com/notBlubbll/fakellm-writer). Full docs: `C:\Users\User\.config\opencode\fakellm\README.md`.
+The `write_findings` custom tool replaces the former summarizer subagent entirely. It is implemented in `plugins/write-findings.js` and takes two arguments:
+- `path` — absolute file path (must contain `.opencode-findings`)
+- `body` — verbatim markdown content
+
+Returns `WRITTEN: <path> (<n> bytes)`. No subagent layer, no LLM call — direct file write.
 
 ## How variants work
 
@@ -200,29 +198,29 @@ It does **NOT** handle:
 - **edits / shell / orchestration** - those run on the edit, main and
   coordinator models
 
-Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.3-Flash — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Summarizer findings-writes go to the fakellm local fake LLM (zero cost, instant).
+Rationale: compaction is rare but high-stakes (a lossy summary degrades everything after it), so it gets GLM-5.3-Flash — paid, with 1M context headroom and explicitly pinned so it never inherits the host session model. Titles are frequent but trivial, so they go to the free Agnes tier. Findings are saved via the write_findings custom tool (replaced the summarizer subagent entirely).
 
 ## How nesting + parallelization works
 
 1. Primary receives the request and delegates the GOAL to `coordinator`
-   (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
-   go through `coordinator`. The primary spawns `detective` for multi-file lookups and `research` for trivial single-file reads.
+    (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
+    go through `coordinator`. The primary spawns `detective` for multi-file lookups and `research` for trivial single-file reads.
 2. `coordinator` (paid GLM-5.3-Flash) plans the implementation: breaks the goal into
-   precise edit steps with exact file paths, and sequences the work. Its own
-   edit/bash tools are permission-denied, so it can ONLY delegate.
+    precise edit steps with exact file paths, and sequences the work. Its own
+    edit/bash tools are permission-denied, so it can ONLY delegate.
 3. `coordinator` spawns `edit` subagents (free Agnes execute) to apply each change. For
-   INDEPENDENT edits (different files / non-overlapping regions), it issues
-   MULTIPLE `edit` spawns in ONE message (parallel). Same-file/overlapping
-   edits stay in a single call to avoid write conflicts.
-4. `coordinator` spawns `research` subagents (agnes-research/agnes-2.5-flash, variant:research) for any lookups it needs,
-   also parallelized when independent.
+    INDEPENDENT edits (different files / non-overlapping regions), it issues
+    MULTIPLE `edit` spawns in ONE message (parallel). Same-file/overlapping
+    edits stay in a single call to avoid write conflicts.
+4. `coordinator` spawns `research` subagents (openference/DeepSeek-V4-Flash-0731, variant:research) for any lookups it needs,
+    also parallelized when independent.
 5. After parallel edits return, one `edit` subagent builds/verifies the
-   combined result.
+    combined result.
 6. `subagent_depth: 3` allows deeper nesting; research has no task
-   permission, so recursion hard-stops at depth 2.
+    permission, so recursion hard-stops at depth 2.
 7. Pre-explore discipline: primary may front-load exploration via a `detective`
-   spawn (which fans out research workers) before delegating to `coordinator`,
-   so the goal already contains exact paths and context.
+    spawn (which fans out research workers) before delegating to `coordinator`,
+    so the goal already contains exact paths and context.
 
 ## Snippet proof (verification, not enforcement)
 
@@ -243,12 +241,12 @@ just in the injected instructions.
 ## Subsession title tags
 
 Subagent sessions are tagged in their title for easy identification:
-`[✏️Edit]`, `[🤖Coordinate]`, `[🔎Research]`, `[🕵🏼‍♂️Detective]`, `[💭Summarizer]`. Primary sessions are not tagged.
+`[✏️Edit]`, `[🤖Coordinate]`, `[🔎Research]`, `[🕵🏼‍♂️Detective]`. Primary sessions are not tagged.
 
 ## Data retention note
 
 All code editing in this setup runs on **Agnes 2.5 Flash** (free tier) via the `agnes-execute` provider; all
-searching runs on **Agnes 2.5 Flash** (free tier) via the `agnes-research` provider. Before pointing
+searching runs on **DeepSeek-V4-Flash-0731** (free tier) via the `openference` provider. Before pointing
 this at a private repository, review Agnes AI's data-retention and training-usage
 terms at https://agnes-ai.com/ to confirm whether API
 inputs are stored or used for model training. The paid models (GLM-5.3-Flash
@@ -282,8 +280,8 @@ without the MCP server — it only activates when mind tools are available.
 - Main model: GLM-5.3-Flash (current)
 - Coordinator (sub-orchestrator): GLM-5.3-Flash (upgraded from DeepSeek-V4-Pro-0813)
 - Detective: GLM-5.3-Flash (max thinking, coordinates research workers)
-- Research: agnes-research/agnes-2.5-flash variant:research (switched from camelai/auto)
-- Summarizer: fakellm/fake-mechanical-reader-0.0B local fake LLM (switched from agnes)
+- Research: openference/DeepSeek-V4-Flash-0731 variant:research (switched from camelai/auto)
+- write_findings tool: replaced the summarizer subagent entirely (custom tool, no subagent layer)
 
 ## Verify
 
@@ -300,5 +298,5 @@ Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern
 
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' | Select-String
 'agent=research'
-# expect: providerID=agnes-research modelID=agnes-2.5-flash
+# expect: providerID=openference modelID=DeepSeek-V4-Flash-0731
 ```
