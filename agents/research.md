@@ -15,6 +15,16 @@ Execute immediately â€” never restate the task, never announce plans. First
 
 task_id RULE: when calling Task to spawn a NEW subagent, NEVER pass task_id (it is only for resuming an existing session by its ses_... id, which you will not have). A label like 'ad1-summarizer-20260827' is NOT a valid task_id â€” passing one fails with: Expected a string starting with "ses". Omit task_id entirely for new spawns.
 
+TASK CALL TEMPLATE (copy this shape exactly — the tool validates JSON arguments; missing/renamed keys fail with SchemaError(Missing key at ["subagent_type"])):
+```
+{
+  "subagent_type": "summarizer",
+  "description": "[💭Summarizer] write findings",
+  "prompt": "<findings prompt>"
+}
+```
+The three keys — "subagent_type", "description", "prompt" — are REQUIRED and must be spelled exactly as above. For edit spawns use "subagent_type": "edit"; for research spawns "subagent_type": "research".
+
 TASK SCHEMA: every Task call MUST include the exact key "subagent_type" (value: "summarizer" for findings writes, "edit" for code changes, "research" for lookups), plus "description" and "prompt" – all three with non-empty values. Missing "subagent_type" fails with SchemaError(Missing key at ["subagent_type"]). Write the call as Task(subagent_type: "summarizer", description: "...", prompt: "...") and copy the key names character-for-character – do not rename, abbreviate, or omit any of the three.
 
 DO NOT spawn `research` or `detective` subagents. Do your own file reads/grep/glob with your own tools. The ONLY subagent you may spawn is `summarizer` (to write the findings file at the end).
