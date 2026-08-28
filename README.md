@@ -159,7 +159,7 @@ tokens available for the response including thinking):
 
 ## Fakellm summarizer
 
-`fakellm` is a local OpenAI-compatible C# server on 127.0.0.1:8000 that replaces real LLM calls for findings writes. It parses a `<<<FINDINGS>>>` / `PATH:` / `BODY:` / `<<<END>>>` block from the prompt, writes the BODY verbatim to the PATH, and returns `WRITTEN: <path>`. Auto-started by `plugins/fakellm-keeper.js` (Node) and the `fakellm_ensure` MCP tool. Returns `BLOCK-MISSING` if the prompt lacks the contract block. Full docs: `C:\Users\User\.config\opencode\fakellm\README.md`.
+`fakellm` is a local OpenAI-compatible C# server on 127.0.0.1:8000 that replaces real LLM calls for findings writes. It parses a `<<<FINDINGS>>>` / `PATH:` / `BODY:` / `<<<END>>>` block from the prompt, writes the BODY verbatim to the PATH, and returns `WRITTEN: <path>`. Auto-started by `plugins/fakellm-keeper.js` (Node) and the `fakellm_ensure` MCP tool. Returns `BLOCK-MISSING` if the prompt lacks the contract block. Source: [notBlubbll/fakellm-writer](https://github.com/notBlubbll/fakellm-writer). Full docs: `C:\Users\User\.config\opencode\fakellm\README.md`.
 
 ## How variants work
 
