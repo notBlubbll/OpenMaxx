@@ -21,18 +21,12 @@
     }
   },
   "agent": {
-    "summarizer": {
-      "model": "fakellm/fake-mechanical-reader-0.0B",
-      "steps": 3,
-      "color": "#c0c0c0",
-      "permission": { "edit": "allow", "bash": "deny", "task": {} }
-    },
     "research": {
-      "model": "agnes-research/agnes-2.5-flash",
-      "variant": "research",
+      "model": "camelai/auto",
+      "variant": "high",
       "steps": 30,
       "color": "#7aa2f7",
-      "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
+      "permission": { "edit": "deny", "bash": "allow", "write_findings": "allow" }
     },
     "detective": {
       "model": "openference/GLM-5.3-Flash",
@@ -40,7 +34,7 @@
       "permission": {
         "edit": "deny",
         "bash": "allow",
-        "task": { "research": "allow", "summarizer": "allow" }
+        "task": { "research": "allow", "write_findings": "allow" }
       }
     },
     "edit": {
