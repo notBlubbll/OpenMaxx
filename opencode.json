@@ -28,8 +28,8 @@
       "permission": { "edit": "allow", "bash": "deny", "task": {} }
     },
     "research": {
-      "model": "camelai/auto",
-      "variant": "high",
+      "model": "agnes/agnes-2.5-flash",
+      "variant": "research",
       "steps": 30,
       "color": "#7aa2f7",
       "permission": { "edit": "deny", "bash": "allow", "task": { "summarizer": "allow" } }
