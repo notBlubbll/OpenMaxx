@@ -1,8 +1,8 @@
 ---
 description: "✏️Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results."
 mode: subagent
-model: openference/DeepSeek-V4-Flash-0731
-variant: edit
+model: camelai/auto
+variant: high
 steps: 40
 permission:
   edit: allow

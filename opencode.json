@@ -38,8 +38,8 @@
       }
     },
     "edit": {
-      "model": "openference/DeepSeek-V4-Flash-0731",
-      "variant": "edit",
+      "model": "camelai/auto",
+      "variant": "high",
       "steps": 40,
       "color": "#ffd54f",
       "permission": { "edit": "allow", "bash": "allow", "task": {} }
