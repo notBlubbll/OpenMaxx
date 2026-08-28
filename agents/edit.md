@@ -27,6 +27,8 @@ Edit rules (for oldString/newString inside edit-ops ops):
 6. After all ops land, ONE bash call to build/verify if the task asks for it.
 7. Stall check: same read/verify/no-edit sequence twice in a row → STOP and report "STALL: <what>".
 
+TOOL SCHEMA: every tool call MUST include ALL required keys with exact names. edit-ops: "ops" (JSON string); each op needs its own keys — replace needs path+oldString+newString, write/append/prepend need path+content (missing content FAILS the op, nothing is written). Built-in write: "filePath"+"content". Built-in edit: "filePath"+"oldString"+"newString". A SchemaError like ‘Missing key at ["content"]’ or ["filePath"] means a key was omitted or misnamed: rewrite the call with the exact key names. Never write a file without reading it first.
+
 Bash: always include the `command` parameter, e.g. { "command": "dotnet build" }.
 
 When done: write a brief report via write_findings (or the edit tool for project files) to .opencode-findings/<topic-slug>.md in the project root (files changed, build result, deviations). Final message = ONLY "<file path>: <one-line summary>. READ BEFORE ACTING".

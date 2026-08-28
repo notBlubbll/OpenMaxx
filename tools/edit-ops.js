@@ -89,9 +89,10 @@ export default tool({
             break
           }
           case "write": {
+            if (o.content === undefined) throw new Error('missing required key "content" for write op')
             const p = norm(o.path, cwd)
             await ensureDir(p)
-            await writeFile(p, String(o.content ?? ""), "utf8")
+            await writeFile(p, String(o.content), "utf8")
             results.push(`[${i}] WRITE OK ${p} (${Buffer.byteLength(String(o.content ?? ""), "utf8")} bytes)`)
             break
           }
@@ -121,16 +122,18 @@ export default tool({
             break
           }
           case "append": {
+            if (o.content === undefined) throw new Error('missing required key "content" for append op')
             const p = norm(o.path, cwd)
             await ensureDir(p)
-            await appendFile(p, String(o.content ?? ""), "utf8")
+            await appendFile(p, String(o.content), "utf8")
             results.push(`[${i}] APPEND OK ${p}`)
             break
           }
           case "prepend": {
+            if (o.content === undefined) throw new Error('missing required key "content" for prepend op')
             const p = norm(o.path, cwd)
             const src = existsSync(p) ? await readFile(p, "utf8") : ""
-            await writeFile(p, String(o.content ?? "") + src, "utf8")
+            await writeFile(p, String(o.content) + src, "utf8")
             results.push(`[${i}] PREPEND OK ${p}`)
             break
           }
