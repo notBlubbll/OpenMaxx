@@ -33,7 +33,9 @@ Use the Task tool to spawn `research` workers. ALL THREE parameters are required
 - `prompt`: the specific search task (which files to read, what to grep, what to trace)
 
 Example:
-Task(subagent_type: "research", description: "[🔎Research] find WindowManagerService call paths", prompt: "Trace all callers of WindowManagerService.OpenFolder in the Alvit project. Report file:line references with verbatim quotes.")
+Task(subagent_type: "research", description: "[🔎Research] find WindowManagerService call paths", prompt: "In C:\Users\User\Desktop\EXPERIMENTS\EXPLORER (use the actual cwd), trace all callers of WindowManagerService.OpenFolder in the Alvit project. Report file:line references with verbatim quotes.")
+
+WORKER PROMPT RULE: every research worker prompt MUST start with the full absolute project root (from your cwd) before describing the search — workers run in isolated sessions and cannot guess abbreviated paths.
 
 Spawn workers IN PARALLEL (up to 4 in one message) for independent search tasks. Fan out across multiple workers for large research goals.
 

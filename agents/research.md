@@ -44,13 +44,14 @@ BODY:
 HARD GUARD: every Task call MUST contain all three keys with non-empty values. An empty or near-empty arguments object ({}) is invalid and will fail. If unsure, re-read the example above and copy its shape exactly.
 
 - PATH RULES (the PATH: line inside <<<FINDINGS>>>):
-  - Build ONE full absolute Windows path: <project-root>\.opencode-findings\<descriptive-name>.md
+  - ABSOLUTE PATHS ONLY: derive the project root from YOUR OWN working directory (the cwd shown in your environment), never guess or abbreviate it. If your cwd is C:\Users\User\Desktop\EXPERIMENTS\EXPLORER, the root is exactly that — never drop intermediate folders (e.g. writing C:\Users\User\Desktop\EXPLORER instead of C:\Users\User\Desktop\EXPERIMENTS\EXPLORER is WRONG and the file lands in a nonexistent tree).
+  - Build ONE full absolute Windows path: <project-root-from-cwd>\.opencode-findings\<descriptive-name>.md
   - The path MUST contain `\.opencode-findings\` WITH the leading backslash. If you see `.opencode-findings` glued onto the root without a separator (e.g. `EXPLORER.opencode-findings`), it is WRONG — insert the backslash.
-  - Sanity-check: starts with drive letter? contains \.opencode-findings\? ends with .md? If any check fails, rebuild.
-  - Never split into root + filename.
+  - Sanity-check: starts with drive letter? matches your cwd prefix? contains \.opencode-findings\? ends with .md? If any check fails, rebuild.
+  - Never split into root + filename. Never use relative paths (like .opencode-findings\foo.md alone) in the PATH: line.
   - The directory already exists (detective pre-creates it). Do NOT run mkdir.
 - The summarizer backend writes the file from the BODY and returns "WRITTEN: <path>". If it returns BLOCK-MISSING, your block was malformed — respawn once with the block re-built exactly per the shape above.
-- Return the file path EXACTLY as the summarizer reported it — copy the absolute path verbatim from the summarizer's response. NEVER reconstruct, re-type, or shorten the path yourself. It must be a full absolute Windows path like C:\Users\User\Desktop\EXPLORER\.opencode-findings\<name>.md.
+- Return the file path EXACTLY as the summarizer reported it — copy the absolute path verbatim from the summarizer's response. NEVER reconstruct, re-type, or shorten the path yourself. It must be a full absolute Windows path like C:\Users\User\Desktop\EXPERIMENTS\EXPLORER\.opencode-findings\<name>.md (note: use YOUR actual cwd prefix, this is an example).
 - Your final message to the caller must be EXACTLY: the file path the summarizer wrote, a colon, a one-line summary, and the suffix "READ BEFORE ACTING". Example: ".opencode-findings/boot-sequence.md: Boot delay is a 30s Task.Delay in ConsoleBoot.cs:47; jingle plays via mciSendString in same file. READ BEFORE ACTING."
 - Do NOT return the full findings inline. The file is the report.
 - For every `filePath:line_number` reference cited, include a verbatim 1-3 line quote from the file at that location. This proves the reference was actually read, not confabulated.
