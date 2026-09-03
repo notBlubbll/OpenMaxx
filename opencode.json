@@ -22,8 +22,8 @@
       }
     },
     "research": {
-      "model": "ifm/IFM/K2-Horizon-375B-A23B",
-      "variant": "research",
+      "model": "camelai/auto",
+      "variant": "high",
       "steps": 30,
       "color": "#7aa2f7",
       "permission": {
@@ -33,7 +33,7 @@
       }
     },
     "detective": {
-      "model": "openference/GLM-5.3",
+      "model": "openference/GLM-5.3-Flash",
       "variant": "high",
       "color": "#8b5a2b",
       "permission": {
@@ -46,7 +46,7 @@
       }
     },
     "edit": {
-      "model": "ifm/IFM/K2-Horizon-375B-A23B",
+      "model": "agnes-execute/agnes-2.5-flash",
       "variant": "edit",
       "steps": 40,
       "color": "#ffd54f",
@@ -85,18 +85,6 @@
         "chunkTimeout": 300000
       },
       "models": {
-        "GLM-5.3": {
-          "name": "GLM 5.3 (flagship)",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "max": { "reasoningEffort": "max" },
-            "high": { "reasoningEffort": "high" },
-            "medium": { "reasoningEffort": "medium" },
-            "low": { "reasoningEffort": "low" }
-          },
-          "limit": { "context": 524288, "output": 128000 }
-        },
         "GLM-5.3-Flash": {
           "name": "GLM 5.3 Flash",
           "reasoning": true,
@@ -174,25 +162,27 @@
         }
       }
     },
-    "ifm": {
-      "name": "IFM",
+    "camelai": {
+      "name": "camelStream",
       "npm": "@ai-sdk/openai-compatible",
       "options": {
-        "baseURL": "https://api.ifm.ai/v1",
-        "apiKey": "{env:IFM_API_KEY}",
+        "baseURL": "https://stream.camelai.com/v1",
+        "apiKey": "REPLACE_WITH_REAL_KEY",
         "timeout": 1800000,
         "chunkTimeout": 300000
       },
       "models": {
-        "IFM/K2-Horizon-375B-A23B": {
-          "name": "K2 Horizon 375B A23B",
-          "reasoning": true,
+        "auto": {
+          "name": "Camel Auto (fleet)",
           "tool_call": true,
+          "reasoning": true,
           "variants": {
-            "research": { "reasoningEffort": "high" },
-            "edit": { "reasoningEffort": "high" }
+            "high": { "reasoningEffort": "high" },
+            "max": {
+              "thinking": { "type": "enabled", "budget_tokens": 4096 }
+            }
           },
-          "limit": { "context": 524288, "output": 32768 }
+          "limit": { "context": 262144, "output": 65536 }
         }
       }
     }

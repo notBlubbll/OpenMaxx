@@ -1,7 +1,7 @@
 ﻿---
 description: "ðŸ”ŽResearch agent for deep code lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
 mode: subagent
-model: ifm/IFM/K2-Horizon-375B-A23B
+model: camelai/auto
 variant: research
 steps: 30
 permission:
