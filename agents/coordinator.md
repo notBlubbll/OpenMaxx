@@ -55,7 +55,7 @@ EDIT PLAN TEMPLATE below) - exact paths, character-for-character oldString from 
 - NEVER omit any parameter. Omitting `subagent_type` causes SchemaError(Missing key at ["subagent_type"]). Omitting `prompt` causes SchemaError(Missing key at ["prompt"]).
 - Never use the built-in edit/write/bash tools yourself; file changes go through edit-ops, commands are not available to you.
 - Use research findings before planning edit-ops calls so each op targets verified exact strings.
-- Note: `research` subagents are read-only. They will spawn `[💭Summarizer]` subagents to write their findings to disk. This is expected behavior.
+- Note: `research` and `explore` subagents are read-only. They save findings with their write_findings tool directly.
 
 Parallelization (speed):
 - CAP: Never emit more than 4 concurrent edit-ops tool calls OR 4 concurrent `research` subagents in ONE message. Count before emitting: if you have more than 4 independent edits, split into waves. This cap is non-negotiable.
@@ -66,3 +66,5 @@ Parallelization (speed):
 - After planning all groups, ALWAYS issue ALL Task calls in ONE message. Do NOT trickle them across multiple messages. If you planned N groups, emit N Task calls together.
 - If you are about to emit fewer Task calls than groups you planned, STOP and re-issue with ALL groups in one message.
 - Keep each edit instruction concise: file path, the specific change, and a 1-2 line description. Do NOT waste output tokens re-explaining context the subagent will read from files.
+
+Model note: Currently using DeepSeek-V4-Pro-0813 for sub-orchestration. Will upgrade to GLM-5.3 for the main model once released (planned replacement for GLM-5.2).
