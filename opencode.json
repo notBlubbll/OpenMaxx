@@ -1,7 +1,7 @@
 {
   "$schema": "https://opencode.ai/config.json",
-  "model": "openference/GLM-5.3-Flash",
-  "variant": "max",
+  "model": "ifm/IFM/K2-Horizon-375B-A23B",
+  "variant": "research",
   "small_model": "openference/GLM-5.3",
   "subagent_depth": 3,
   "instructions": [
@@ -33,7 +33,7 @@
       }
     },
     "detective": {
-      "model": "openference/GLM-5.3-Flash",
+      "model": "openference/DeepSeek-V4-Flash-0731",
       "variant": "high",
       "color": "#8b5a2b",
       "permission": {
@@ -57,7 +57,7 @@
       }
     },
     "coordinator": {
-      "model": "openference/GLM-5.3-Flash",
+      "model": "openference/DeepSeek-V4-Pro-0813",
       "variant": "high",
       "color": "#555555",
       "permission": {
@@ -85,6 +85,26 @@
         "chunkTimeout": 300000
       },
       "models": {
+        "DeepSeek-V4-Pro-0813": {
+          "name": "DeepSeek V4 Pro 0813",
+          "reasoning": true,
+          "tool_call": true,
+          "variants": {
+            "high": { "reasoningEffort": "high" },
+            "max": { "reasoningEffort": "max" }
+          },
+          "limit": { "context": 664576, "output": 384000 }
+        },
+        "DeepSeek-V4-Flash-0731": {
+          "name": "DeepSeek V4 Flash 0731",
+          "reasoning": true,
+          "tool_call": true,
+          "variants": {
+            "high": { "reasoningEffort": "high" },
+            "max": { "reasoningEffort": "max" }
+          },
+          "limit": { "context": 920576, "output": 32768 }
+        },
         "GLM-5.3-Flash": {
           "name": "GLM 5.3 Flash",
           "reasoning": true,
