@@ -3,6 +3,7 @@
 // paths to https://api.ifm.ai + req.url, injects "reasoning": "" into every
 // assistant message missing all thinking-ish fields, streams SSE chunk-by-chunk.
 import { createServer } from "node:http";
+import { createHash } from "node:crypto";
 
 const UPSTREAM = "https://api.ifm.ai";
 const HOST = "127.0.0.1";
@@ -12,7 +13,52 @@ const PORT = 8089;
 // Strip every sibling thinking-ish field and always keep `reasoning` a string.
 const THINK_FIELDS = ["think", "reasoning_content", "think_fast", "think_faster", "thinking"];
 const IFM_KEYS = ["REPLACE_WITH_REAL_KEY"];
-let keyIdx = 0;
+
+// Per-session key pinning: each conversation fingerprint pins one key for
+// the session's lifetime; failover on 429/401/403 with a 30s key cooldown.
+let rrIdx = 0; // global round-robin cursor for NEW sessions
+const conversationMap = new Map(); // fingerprint -> { tokenIndex, requestCount }
+const CONVERSATION_MAP_MAX = 10000;
+const keyHealth = IFM_KEYS.map(() => ({ healthy: true, lastError: 0 }));
+const KEY_COOLDOWN_MS = 30000;
+
+function fingerprintPayload(payload) {
+  const msgs = payload?.messages;
+  if (!Array.isArray(msgs)) return null;
+  const text = (m) => typeof m.content === "string" ? m.content : (Array.isArray(m.content) ? m.content.find(p => p?.type === "text")?.text || "" : "");
+  const idx = msgs.findIndex(m => m.role === "user");
+  if (idx < 0) return null;
+  return createHash("md5").update(text(msgs[idx])).digest("hex").slice(0, 12);
+}
+
+function touchConversation(fp) {
+  const s = conversationMap.get(fp);
+  if (s) { conversationMap.delete(fp); conversationMap.set(fp, s); } // LRU touch
+  return s;
+}
+
+function trackConversationSession(fp, session) {
+  conversationMap.set(fp, session);
+  if (conversationMap.size > CONVERSATION_MAP_MAX) {
+    const excess = conversationMap.size - Math.floor(CONVERSATION_MAP_MAX * 0.8);
+    let i = 0;
+    for (const k of conversationMap.keys()) { if (i++ >= excess) break; conversationMap.delete(k); }
+  }
+}
+
+function pickKey(preferredIndex) {
+  const now = Date.now();
+  if (preferredIndex != null) {
+    const h = keyHealth[preferredIndex];
+    if (h && (h.healthy || now - h.lastError > KEY_COOLDOWN_MS)) return preferredIndex;
+  }
+  for (let attempt = 0; attempt < IFM_KEYS.length; attempt++) {
+    const idx = rrIdx++ % IFM_KEYS.length;
+    const h = keyHealth[idx];
+    if (h.healthy || now - h.lastError > KEY_COOLDOWN_MS) return idx;
+  }
+  return rrIdx++ % IFM_KEYS.length; // all cooling: fall back to rr anyway
+}
 
 function collect(req) {
   return new Promise((resolve, reject) => {
@@ -24,15 +70,15 @@ function collect(req) {
 }
 
 function maybePatchBody(raw, contentType) {
-  if (!raw || !raw.length) return raw;
-  if (!String(contentType || "").toLowerCase().includes("json")) return raw;
+  if (!raw || !raw.length) return { body: raw, parsed: null };
+  if (!String(contentType || "").toLowerCase().includes("json")) return { body: raw, parsed: null };
   let parsed;
   try {
     parsed = JSON.parse(raw.toString("utf8"));
   } catch {
-    return raw; // not JSON — forward byte-identical
+    return { body: raw, parsed: null }; // not JSON — forward byte-identical
   }
-  if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.messages)) return raw;
+  if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.messages)) return { body: raw, parsed };
   let changed = false;
   for (const m of parsed.messages) {
     if (!m || typeof m !== "object" || m.role !== "assistant") continue;
@@ -49,7 +95,7 @@ function maybePatchBody(raw, contentType) {
     }
     if (mutated) changed = true;
   }
-  return changed ? Buffer.from(JSON.stringify(parsed)) : raw;
+  return { body: changed ? Buffer.from(JSON.stringify(parsed)) : raw, parsed };
 }
 
 const server = createServer(async (req, res) => {
@@ -62,16 +108,18 @@ const server = createServer(async (req, res) => {
     }
 
     const raw = await collect(req);
-    const body = maybePatchBody(raw, req.headers["content-type"]);
+    const { body, parsed: parsedPayload } = maybePatchBody(raw, req.headers["content-type"]);
+    // Per-session pinning: MD5-12 fingerprint of the first user message.
+    // No messages[] (e.g. GET /v1/models) -> fingerprint is null.
+    const fingerprint = fingerprintPayload(parsedPayload);
+    const cachedSession = fingerprint != null ? touchConversation(fingerprint) : undefined;
+    let usedIdx = pickKey(cachedSession ? cachedSession.tokenIndex : undefined);
 
     const headers = { ...req.headers };
     delete headers["host"];
     delete headers["content-length"];
-    // Sticky IFM key: reuse current key; advance only on upstream failure.
     // Incoming auth passes through only when upstream is NOT api.ifm.ai.
-    if (UPSTREAM.includes("api.ifm.ai")) {
-      headers["authorization"] = `Bearer ${IFM_KEYS[keyIdx]}`;
-    }
+    // The Bearer stamp is applied per-attempt inside the retry loop below.
 
     const init = { method: req.method, headers };
     if (body && body.length && req.method !== "GET" && req.method !== "HEAD") {
@@ -85,7 +133,7 @@ const server = createServer(async (req, res) => {
     let lastErr = null;
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       if (isIfm) {
-        headers["authorization"] = `Bearer ${IFM_KEYS[keyIdx]}`;
+        headers["authorization"] = `Bearer ${IFM_KEYS[usedIdx]}`;
         init.headers = headers;
       }
       try {
@@ -93,13 +141,16 @@ const server = createServer(async (req, res) => {
       } catch (err) {
         lastErr = err;
         if (!isIfm) break;
-        keyIdx = (keyIdx + 1) % IFM_KEYS.length;
+        keyHealth[usedIdx] = { healthy: false, lastError: Date.now() };
+        usedIdx = pickKey(undefined);
         continue;
       }
       const retryable = upstream.status === 429 || upstream.status === 401 || upstream.status === 403;
       if (retryable && attempt + 1 < maxAttempts) {
         await upstream.body?.cancel?.();
-        keyIdx = (keyIdx + 1) % IFM_KEYS.length;
+        keyHealth[usedIdx] = { healthy: false, lastError: Date.now() };
+        usedIdx = pickKey(undefined);
+        if (cachedSession) cachedSession.tokenIndex = usedIdx;
         continue;
       }
       break;
@@ -110,7 +161,19 @@ const server = createServer(async (req, res) => {
       return;
     }
 
+    // Persist the pinned key for this conversation fingerprint.
+    if (fingerprint != null) {
+      if (!cachedSession) {
+        trackConversationSession(fingerprint, { tokenIndex: usedIdx, requestCount: 1 });
+      } else {
+        cachedSession.requestCount++;
+        cachedSession.tokenIndex = usedIdx;
+        trackConversationSession(fingerprint, cachedSession);
+      }
+    }
+
     const outHeaders = {};
+
     const ctype = upstream.headers.get("content-type");
     if (ctype) outHeaders["content-type"] = ctype;
     res.writeHead(upstream.status, outHeaders);
