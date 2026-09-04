@@ -67,10 +67,10 @@ const server = createServer(async (req, res) => {
     const headers = { ...req.headers };
     delete headers["host"];
     delete headers["content-length"];
-    // Rotate IFM keys round-robin on EVERY upstream request (incl. /v1/models).
+    // Sticky IFM key: reuse current key; advance only on upstream failure.
     // Incoming auth passes through only when upstream is NOT api.ifm.ai.
     if (UPSTREAM.includes("api.ifm.ai")) {
-      headers["authorization"] = `Bearer ${IFM_KEYS[keyIdx++ % IFM_KEYS.length]}`;
+      headers["authorization"] = `Bearer ${IFM_KEYS[keyIdx]}`;
     }
 
     const init = { method: req.method, headers };
@@ -79,12 +79,34 @@ const server = createServer(async (req, res) => {
       init.duplex = "half";
     }
 
-    let upstream;
-    try {
-      upstream = await fetch(UPSTREAM + path, init);
-    } catch (err) {
+    const isIfm = UPSTREAM.includes("api.ifm.ai");
+    const maxAttempts = isIfm ? IFM_KEYS.length : 1;
+    let upstream = null;
+    let lastErr = null;
+    for (let attempt = 0; attempt < maxAttempts; attempt++) {
+      if (isIfm) {
+        headers["authorization"] = `Bearer ${IFM_KEYS[keyIdx]}`;
+        init.headers = headers;
+      }
+      try {
+        upstream = await fetch(UPSTREAM + path, init);
+      } catch (err) {
+        lastErr = err;
+        if (!isIfm) break;
+        keyIdx = (keyIdx + 1) % IFM_KEYS.length;
+        continue;
+      }
+      const retryable = upstream.status === 429 || upstream.status === 401 || upstream.status === 403;
+      if (retryable && attempt + 1 < maxAttempts) {
+        await upstream.body?.cancel?.();
+        keyIdx = (keyIdx + 1) % IFM_KEYS.length;
+        continue;
+      }
+      break;
+    }
+    if (upstream === null) {
       if (!res.headersSent) res.writeHead(502, { "content-type": "text/plain" });
-      res.end(`Proxy error: ${err && err.message ? err.message : String(err)}`);
+      res.end(`Proxy error: ${lastErr && lastErr.message ? lastErr.message : String(lastErr)}`);
       return;
     }
 

@@ -2,13 +2,15 @@
 
 Repo: [notBlubbll/OpenMaxx](https://github.com/notBlubbll/OpenMaxx)
 
-Routes opencode work across providers by cost and role: paid GLM-5.3-Flash for primary orchestration
-and coordination reasoning; GLM-5.3 (flagship) for detective work and compaction; IFM/K2-Horizon-375B-A23B (524K context) for deep research
-and code edits; agnes-research/agnes-2.5-flash for session titles and explore lookups; findings are saved
-directly via the deterministic write_findings custom tool (no subagent, no LLM). GLM models route via the
-OpenAI-compatible SDK (`openference` provider) against the OpenFerence /v1/chat/completions endpoint with
-Bearer auth; IFM uses the `ifm` provider (api.ifm.ai); agnes-research and agnes-execute each point at the
-same apihub.agnes-ai.com endpoint with different API keys.
+Routes opencode work across providers by cost and role: K2 (IFM, 524K context, via the
+127.0.0.1:8089 local proxy with reasoning fix + key rotation) for primary orchestration,
+coordination and code edits; GLM-5.3 (flagship) via the hyper provider for detective work
+and compaction; agnes-research/agnes-2.5-flash for deep research; hyper/gpt-oss-120b for
+session titles. Findings are saved directly via the deterministic write_findings custom tool
+(no subagent, no LLM). GLM flash models route via the hyper provider, NOT openference — there is
+no OpenAI-compatible /v1/chat/completions endpoint with Bearer auth; IFM uses the `ifm` provider
+(api.ifm.ai) through the local proxy; agnes-research and agnes-execute each point at the same
+apihub.agnes-ai.com endpoint with different API keys.
 
 # tree example
 
@@ -46,14 +48,15 @@ IFM_API_KEY=...
 
 ## OpenAI-Compatible SDK on OpenFerence (stability)
 
-GLM-5.3-Flash (primary + coordinator) and GLM-5.3 (detective + small_model) route
-via the openference provider using @ai-sdk/openai-compatible against the
-OpenFerence /v1/chat/completions endpoint with Bearer auth.
+IFM/K2-Horizon-375B-A23B (primary + coordinator + edit) routes via the `ifm` provider (api.ifm.ai)
+through the 127.0.0.1:8089 local proxy (reasoning fix + key rotation, 524K context); agnes-research/agnes-2.5-flash
+(research) points at the apihub.agnes-ai.com endpoint; the remaining GLM models (detective + small_model) route
+via the hyper provider, not openference.
 
 The OpenAI-compatible SDK handles streaming responses cleanly and returns
 usage fields natively.
 
-The openference provider (OpenAI-compatible SDK) is used for all GLM models. Deep research and code edits run on the `ifm` provider (api.ifm.ai, K2-Horizon-375B-A23B, 524K context).
+The `ifm` provider serves the primary, coordinator and edit models (K2-Horizon-375B-A23B, 524K context, via the 127.0.0.1:8089 proxy with reasoning fix + key rotation). No GLM model uses openference anymore — detective and small_model route via the hyper provider.
 
 
 ## Layout
@@ -80,13 +83,13 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ## Architecture
 
 ```
-Primary (GLM-5.3-Flash, paid, openference provider)          receives request, delegates GOAL
-  ├── research (ifm/IFM/K2-Horizon-375B-A23B, variant:research)   deep lookups, saves via write_findings tool
-  ├── detective (GLM-5.3 flagship, paid, high thinking)    complex multi-file research (PREFERRED for lookups) [OpenAI-compatible SDK]
-  │   └── research (ifm/IFM/K2-Horizon-375B-A23B, variant:research)      spawns workers for parallel search
-  └── coordinator (GLM-5.3-Flash, paid)    sub-orchestrator: plans, sequences, fans out [OpenAI-compatible SDK]
+Primary (ifm/IFM/K2-Horizon-375B-A23B, variant:research)      receives request, delegates GOAL
+  ├── research (agnes-research/agnes-2.5-flash, variant:research)   deep lookups, saves via write_findings tool
+  ├── detective (hyper/glm-5.3-flash, high thinking)             complex multi-file research (PREFERRED for lookups) [hyper]
+  │   └── research (agnes-research/agnes-2.5-flash, variant:research)      spawns workers for parallel search
+  └── coordinator (ifm/IFM/K2-Horizon-375B-A23B, variant:research)    sub-orchestrator: plans, sequences, fans out [ifm]
       ├── edit (IFM K2-Horizon)     applies edits via edit-ops batch tool + builds
-      └── research (ifm/IFM/K2-Horizon-375B-A23B, variant:research) deep code tracing inside coordinator sessions
+      └── research (agnes-research/agnes-2.5-flash, variant:research) deep code tracing inside coordinator sessions
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
@@ -133,14 +136,14 @@ converting the rule to a permission-denied enforcement if possible.
 
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
-| main (orchestration) | openference/GLM-5.3-Flash | max | 65,536 | 128,000 | paid credits |
-| coordinator (sub-orchestrator) | openference/GLM-5.3-Flash | high | 16,384 | 128,000 | paid credits |
+| main (orchestration) | ifm/IFM/K2-Horizon-375B-A23B | research | high effort | 32,768 | IFM credits |
+| coordinator (sub-orchestrator) | ifm/IFM/K2-Horizon-375B-A23B | research | high effort | 32,768 | IFM credits |
 | edit (ALL code edits + shell/builds) | ifm/IFM/K2-Horizon-375B-A23B | edit | high effort | 32,768 | IFM credits |
-| research (deep search, all lookups) | ifm/IFM/K2-Horizon-375B-A23B | research | high effort | 32,768 | IFM credits |
-| detective (complex research coord) | openference/GLM-5.3 | high | 32,768 | 128,000 | paid credits |
+| research (deep search, all lookups) | agnes-research/agnes-2.5-flash | research | 2,048 | 65,536 | free |
+| detective (complex research coord) | hyper/glm-5.3-flash | high | 32,768 | 128,000 | paid credits |
 | findings saving | write_findings custom tool | — | — | — | zero (local, deterministic) |
-| session titles | agnes-research/agnes-2.5-flash | explore | 2,048 | 65,536 | free |
-| small_model (compaction summaries) | openference/GLM-5.3 | high | 32,768 | 128,000 | paid credits |
+| session titles | hyper/gpt-oss-120b | low | 2,048 | 65,536 | free |
+| small_model (compaction summaries) | hyper/glm-5.3 | high | 32,768 | 128,000 | paid credits |
 
 ## Thinking and output tuning
 
@@ -283,11 +286,11 @@ without the MCP server — it only activates when mind tools are available.
 
 ## Current routing summary
 
-- Main model: GLM-5.3-Flash (current)
-- Coordinator: GLM-5.3-Flash variant high
-- Detective: GLM-5.3 flagship variant high
-- small_model (compaction): GLM-5.3 flagship
-- Research + Edit: ifm/IFM/K2-Horizon-375B-A23B (524K context, reasoning_effort high)
+- Main model: ifm/IFM/K2-Horizon-375B-A23B (variant research, via 127.0.0.1:8089 proxy)
+- Coordinator: ifm/IFM/K2-Horizon-375B-A23B variant research (via 8089 proxy)
+- Detective: hyper/glm-5.3-flash variant high
+- small_model (compaction): hyper/glm-5.3
+- Research: agnes-research/agnes-2.5-flash variant research; Edit: ifm/IFM/K2-Horizon-375B-A23B (524K context, reasoning_effort high)
 - Findings saving: write_findings custom tool (deterministic, replaced the summarizer subagent)
 - Batch file edits: edit-ops custom tool (replaced the edit subagent for multi-file work)
 
