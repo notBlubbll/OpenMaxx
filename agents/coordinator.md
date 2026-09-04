@@ -1,8 +1,8 @@
 ---
 description: "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation across edit and research subagents. Cannot edit or run shell itself."
 mode: subagent
-model: hyper/deepseek-v4-flash-0731
-variant: high
+model: ifm/IFM/K2-Horizon-375B-A23B
+variant: research
 permission:
   edit: deny
   bash: deny
