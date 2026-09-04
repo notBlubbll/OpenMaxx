@@ -127,7 +127,7 @@
       "name": "IFM",
       "npm": "@ai-sdk/openai-compatible",
       "options": {
-        "baseURL": "https://api.ifm.ai/v1",
+        "baseURL": "http://127.0.0.1:8089/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
         "timeout": 1800000,
         "chunkTimeout": 300000
