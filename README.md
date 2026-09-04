@@ -36,6 +36,14 @@ Then set environment variables:
 OPENFERENCE_API_KEY=...
 ```
 
+**IFM (K2-Horizon)** — sign up at https://platform.ifm.ai/api-keys to get your API key.
+
+Then set environment variables:
+
+```
+IFM_API_KEY=...
+```
+
 ## OpenAI-Compatible SDK on OpenFerence (stability)
 
 GLM-5.3-Flash (primary + coordinator) and GLM-5.3 (detective + small_model) route
