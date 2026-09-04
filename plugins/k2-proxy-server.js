@@ -11,7 +11,7 @@ const PORT = 8089;
 // Only `reasoning` is accepted by IFM despite the error text listing others.
 // Strip every sibling thinking-ish field and always keep `reasoning` a string.
 const THINK_FIELDS = ["think", "reasoning_content", "think_fast", "think_faster", "thinking"];
-const IFM_KEYS = ["IFM-N1OMJQgibClSySgc", "IFM-H2QWzUSsbrtigGh5VM308:22", "IFM-CglW7k9J2LIxrCAj", "IFM-tHLE9W7XUbFrKDV8VM469:22", "IFM-gU636-PDVxsktWtaVM469:22", "IFM-Ply9JKAW0U42yd82", "IFM-dYsvh4ZjQfc1ipf2VM594:22", "IFM-RUKxi2JN3gLKOUm-VM594:22", "IFM-y7spoMkCQilLu_SA", "IFM-5_biyYYyYiebHEhGVM734:22", "IFM-aAB_HlJBG49y0aIyVM734:22", "IFM-zaFPj7tKPIGVXkJS", "IFM-xi-DvFCiBjxLoFZCVM929:22", "IFM-kUOmYlhy4iyr8GdGVM929:22", "IFM-0qodOyjTmT0YZpJp", "IFM-DImaEad86FTmb4RfVM988:22", "IFM-NgOVFT7vUqhjEgttVM988:22", "IFM-AYksVclQCc8VoZcK", "IFM-GAPTWa2uW5oUqTb5VM1040:22", "IFM-xFGLGgxQ0EFgNtKHVM1040:22", "IFM-wOkggoTQiczGsEkA", "IFM-sFbXZhcO40aucnb9VM1092:22", "IFM-3zEeW15dS1QkT9ifVM1092:22", "IFM-B7_ZvcC3tBKUp4AZ", "IFM-Ro95rV7IGFhyngRzVM1140:22", "IFM-w8SA5yubd0EcFyXPVM1140:22", "IFM-IJVX17Sk5_ZMnJdA", "IFM-Zscd1tQg3MvU8rA1VM1191:22", "IFM-NxoYgVu8SM_q4pvaVM1191:22", "IFM-UfiMxQ81VGid6Nl1"];
+const IFM_KEYS = ["REPLACE_WITH_REAL_KEY"];
 let keyIdx = 0;
 
 function collect(req) {
