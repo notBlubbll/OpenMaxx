@@ -236,10 +236,13 @@ Rationale: compaction is rare but high-stakes (a lossy summary degrades everythi
    edit/bash tools are permission-denied, so it can ONLY delegate.
 3. `coordinator` applies changes via edit-ops batch tool calls (airouter/Qwen3.8 emits the ops). For
    INDEPENDENT edits (different files / non-overlapping regions), it issues
-   MULTIPLE `edit` spawns in ONE message (parallel). Same-file/overlapping
+   up to 3 `edit` spawns in ONE message (parallel) — the airouter executers have a
+   3-subagent concurrency limit, so coordinator first tries to COMBINE related edits into
+   at most 3 broader tasks, otherwise batches into waves of 3. Same-file/overlapping
    edits stay in a single call to avoid write conflicts.
 4. `coordinator` spawns `research` subagents (airouter/DeepSeek-V4-Flash, variant:research) for any lookups it needs,
-   also parallelized when independent.
+   also parallelized when independent (same 3-subagent cap — combine searches into at most 3
+   multi-topic tasks when possible, else waves of 3).
 5. After the edit-ops batch lands, one build/verify command (via the edit agent's bash) confirms the result.
 6. `subagent_depth: 3` allows deeper nesting; research has no task
    permission, so recursion hard-stops at depth 2.

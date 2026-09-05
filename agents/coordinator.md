@@ -58,7 +58,7 @@ EDIT PLAN TEMPLATE below) - exact paths, character-for-character oldString from 
 - Note: `research` and `explore` subagents are read-only. They save findings with their write_findings tool directly.
 
 Parallelization (speed):
-- CAP: Never emit more than 4 concurrent edit-ops tool calls OR 4 concurrent `research` subagents in ONE message. Count before emitting: if you have more than 4 independent edits, split into waves. This cap is non-negotiable.
+- CAP: Never spawn more than 3 concurrent subagents (`edit` or `research`) in ONE message — the airouter executers have a 3-subagent concurrency limit. Prefer COMBINING: merge related lookups into at most 3 multi-scope `research` tasks and related edits into at most 3 `edit` tasks; only if combining is not possible, batch into waves of 3. The edit-ops TOOL-CALL cap stays 4 per message (those are tool calls, not subagents). Count before emitting. This cap is non-negotiable.
 - Shard INDEPENDENT edits across MULTIPLE edit-ops tool calls issued in ONE message (parallel). Two edits are independent when they touch different files or non-overlapping regions - fan those out instead of batching them into one call.
 - Edits to the SAME file (or overlapping regions) MUST stay in a single `edit` call to avoid write conflicts.
 - Shard independent searches across multiple parallel `research` subagents too.
