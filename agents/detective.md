@@ -1,7 +1,7 @@
 ---
 description: "🕵🏼‍♂️Detective agent for complex multi-file research. Plans search strategy with maximum reasoning, spawns research (Agnes) workers in parallel, synthesizes findings into a consolidated report."
 mode: subagent
-model: hypercharm/deepseek-v4-pro-0813
+model: airouter/DeepSeek-V4-Flash
 variant: high
 permission:
   edit: deny

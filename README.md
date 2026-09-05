@@ -3,7 +3,7 @@
 Repo: [notBlubbll/OpenMaxx](https://github.com/notBlubbll/OpenMaxx)
 
 Routes opencode work across providers by cost and role: GLM-5.3-Flash (hypercharm, 1M context)
-for primary orchestration; DeepSeek-V4-Pro-0813 (hypercharm) as the research orchestrator
+for primary orchestration; DeepSeek-V4-Flash (airouter) as the research orchestrator
 (detective); **airouter** (api.airouter.ch) for the executers — DeepSeek-V4-Flash for deep
 research and Qwen-3.8-27B for code edits; Qwen3.8 Flash (hypercharm) for the implementation
 coordinator; GLM-5.3 (hypercharm flagship) for compaction; hypercharm/gpt-oss-120b for session
@@ -49,7 +49,7 @@ it in `opencode.json` under `provider.airouter.options.apiKey` (baseURL
 
 ## OpenAI-Compatible SDK on OpenFerence (stability)
 
-GLM-5.3-Flash (primary) and DeepSeek-V4-Pro-0813 (detective) route via the `openference` provider;
+GLM-5.3-Flash (primary) routes via the `hypercharm` provider; DeepSeek-V4-Flash (detective) routes via the `airouter` provider;
 DeepSeek-V4-Flash (research) and Qwen3.8 (edit) route via the `airouter` provider
 (api.airouter.ch); qwen3.8-flash (coordinator), glm-5.3 (compaction) and gpt-oss-120b (titles)
 route via the `hypercharm` provider; agnes-research/agnes-2.5-flash (explore) points at the
@@ -69,7 +69,7 @@ the primary and detective. The `hypercharm` provider serves the coordinator, sma
 ├── opencode.json
 ├── agents/
     │   ├── research.md     # deep search -> airouter/DeepSeek-V4-Flash variant:research (saves via write_findings)
-    │   ├── detective.md  # research orchestrator -> hypercharm/deepseek-v4-pro-0813 variant:high (spawns research workers)
+    │   ├── detective.md  # research orchestrator -> airouter/DeepSeek-V4-Flash variant:max variant:high (spawns research workers)
 │   ├── edit.md         # code edits + shell/builds -> airouter/Qwen3.8 variant:edit (edit-ops batch tool)
 │   ├── coordinator.md    # implementation orchestrator -> hypercharm/qwen3.8-flash; plans + delegates, cannot edit/bash itself
 │   └── title.md        # session titles -> hypercharm/gpt-oss-120b  [overrides small_model]
@@ -87,7 +87,7 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 
 ```
 Primary (hypercharm/glm-5.3-flash, variant:high)      receives request, routes ALL research to detective
-  ├── detective (hypercharm/deepseek-v4-pro-0813, high thinking)   research orchestrator (PREFERRED for lookups) [hypercharm]
+  ├── detective (airouter/DeepSeek-V4-Flash, max thinking)   research orchestrator (PREFERRED for lookups) [airouter]
   │   └── research (airouter/DeepSeek-V4-Flash, variant:research)      spawns workers for parallel search
   └── coordinator (hypercharm/qwen3.8-flash, variant:high)    implementation orchestrator: plans, sequences, fans out edits [hypercharm]
       ├── edit (airouter/Qwen3.8)     applies edits via edit-ops batch tool + builds
@@ -106,7 +106,7 @@ search work, paid models only do reasoning and orchestration.
 - **GLM-5.3-Flash (paid, openference) for primary orchestration**: receives requests and
   delegates goals — large context for delegation decisions.
 
-- **DeepSeek-V4-Pro-0813 (paid, openference) for the research orchestrator (detective)**:
+- **DeepSeek-V4-Flash (airouter) for the research orchestrator (detective)**:
   coordinates complex multi-file research and fans out research workers — high-stakes,
   a missed research path degrades everything after it.
 - **Qwen3.8 Flash (hypercharm) for the implementation coordinator**: plans and sequences
@@ -127,8 +127,10 @@ text: they are **permission-denied** in `opencode.json`, so they cannot decay:
   `grep`, `bash` — the primary physically cannot do implementation work, only
   delegate.
 - **Primary cannot spawn `edit`**: `task` allows only `coordinator`, `research`, and `detective` — `edit` is absent, so the primary cannot bypass the coordinator.
-- **`coordinator` cannot edit/bash**: denied in its own permission block — it can
-  only plan and delegate to `edit` and `research`.
+- **`coordinator` cannot edit/bash/edit-ops**: all denied in its own permission block — it can
+  only plan and delegate to `edit` (implementation) and `research` (fallback lookups).
+- **`edit` owns edit-ops**: only the edit agent holds `edit-ops: allow` — all file mutations
+  flow through edit subagent spawns.
 - **`research` cannot bash**: denied — read-only search, no side effects.
 
 Text-mediated rules that CAN decay over long sessions:
@@ -146,7 +148,7 @@ converting the rule to a permission-denied enforcement if possible.
 | Role | Model ID | Variant | Thinking | Output | Cost |
 |---|---|---|---|---|---|
 | main (orchestration) | hypercharm/glm-5.3-flash | high | high effort | 131,072 | paid credits |
-| detective (research orchestrator) | hypercharm/deepseek-v4-pro-0813 | high | high effort | 262,144 | paid credits |
+| detective (research orchestrator) | airouter/DeepSeek-V4-Flash | max | max effort | 32,768 | airouter flat |
 | coordinator (implementation orchestrator) | hypercharm/qwen3.8-flash | high | high effort | 128,000 | paid credits |
 | edit (ALL code edits + shell/builds) | airouter/Qwen3.8 | edit | high effort | 65,536 | airouter flat |
 | research (deep search, all lookups) | airouter/DeepSeek-V4-Flash | research | high effort | 32,768 | airouter flat |
@@ -162,7 +164,7 @@ tokens available for the response including thinking):
 
 - **GLM-5.3-Flash (primary, hypercharm)**: 1M context / 131K output — large context for orchestration and
   delegation decisions. Paid tier. Variants: high (as configured), matching the deepseek-pro setup.
-- **DeepSeek-V4-Pro-0813 (detective)**: 1M context / 262K output — deep reasoning for research
+- **DeepSeek-V4-Flash (detective)**: 1M context / 32K output — max-effort reasoning for research
   orchestration and parallel worker fan-out.
 - **Qwen3.8 Flash (coordinator)**: 1M context / 128K output — task decomposition and edit
   sequencing on a fast lane.
@@ -235,17 +237,18 @@ Rationale: compaction is rare but high-stakes (a lossy summary degrades everythi
 2. `coordinator` (hypercharm/qwen3.8-flash) plans the implementation: breaks the goal into
    precise edit steps using the detective findings in its goal, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
-3. `coordinator` applies changes via edit-ops batch tool calls (airouter/Qwen3.8 emits the ops). For
-   INDEPENDENT edits (different files / non-overlapping regions), it issues
-   up to 3 `edit` spawns in ONE message (parallel) — the airouter executers have a
-   3-subagent concurrency limit, so coordinator first tries to COMBINE related edits into
-   at most 3 broader tasks, otherwise batches into waves of 3. Same-file/overlapping
-   edits stay in a single call to avoid write conflicts.
+3. `coordinator` delegates the changes: it spawns `edit` subagents (airouter/Qwen3.8) which apply the
+    edits via their edit-ops batch tool calls — coordinator itself has edit-ops DENIED and never
+    touches files. Edit spawns are UNLIMITED — for INDEPENDENT edits (different files / non-overlapping
+    regions) it issues as many `edit` spawns as the plan needs in ONE message; coordinator does the
+    hard planning (goal decomposition, file resolution, exact anchors, edit ordering), the edit
+    subagents do the mechanical application. Same-file/overlapping
+    edits stay in a single spawn to avoid write conflicts.
  4. `coordinator` spawns `research` subagents (airouter/DeepSeek-V4-Flash, variant:research) ONLY as a
-    fallback when the detective findings are insufficient (missing paths/context) — it must state
-    exactly what info is missing in the spawn prompt. Same 3-subagent cap — combine searches into
-    at most 3 multi-topic tasks when possible, else waves of 3.
-5. After the edit-ops batch lands, one build/verify command (via the edit agent's bash) confirms the result.
+     fallback when the detective findings are insufficient (missing paths/context) — it must state
+     exactly what info is missing in the spawn prompt. Capped at 3 concurrent spawns — combine searches
+     into at most 3 multi-topic tasks when possible, else waves of 3.
+5. After the edit spawns land, one final `edit` subagent runs the build/verify command (edit agents have bash; coordinator does not).
 6. `subagent_depth: 3` allows deeper nesting; research has no task
    permission, so recursion hard-stops at depth 2.
  7. Pre-explore discipline: the primary MUST front-load exploration via a `detective`
@@ -280,9 +283,9 @@ Code editing and deep research run on **AI Router** (api.airouter.ch: DeepSeek-V
 research, Qwen-3.8-27B for edits) — review AI Router's data-retention terms. Explore lookups run
 on **Agnes 2.5 Flash** (free tier via agnes-research) — review Agnes AI's terms at
 https://agnes-ai.com/ to confirm whether API inputs are stored or used for model
-training. The remaining models (GLM-5.3-Flash primary, DeepSeek-V4-Pro-0813 detective via
-OpenFerence; qwen3.8-flash coordinator, glm-5.3 compaction, gpt-oss-120b titles via HyperCharm)
-— review OpenFerence's and HyperCharm's terms separately.
+training. The remaining models (GLM-5.3-Flash primary + qwen3.8-flash coordinator + glm-5.3 compaction +
+gpt-oss-120b titles via HyperCharm; DeepSeek-V4-Flash detective + research + Qwen-3.8-27B edit via
+AI Router) — review HyperCharm's and AI Router's terms separately.
 
 ## Mind MCP server (persistent memory, optional)
 
@@ -309,7 +312,7 @@ without the MCP server — it only activates when mind tools are available.
 ## Current routing summary
 
 - Main model: hypercharm/glm-5.3-flash (variant high)
-- Detective (research orchestrator): hypercharm/deepseek-v4-pro-0813 variant high
+- Detective (research orchestrator): airouter/DeepSeek-V4-Flash variant max
 - Coordinator (implementation orchestrator): hypercharm/qwen3.8-flash variant high
 - small_model (compaction): hypercharm/glm-5.3
 - Research (executer): airouter/DeepSeek-V4-Flash variant research
