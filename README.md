@@ -86,17 +86,16 @@ Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any cha
 ## Architecture
 
 ```
-Primary (hypercharm/glm-5.3-flash, variant:high)      receives request, delegates GOAL
-  ├── research (airouter/DeepSeek-V4-Flash, variant:research)   deep lookups, saves via write_findings tool
+Primary (hypercharm/glm-5.3-flash, variant:high)      receives request, routes ALL research to detective
   ├── detective (hypercharm/deepseek-v4-pro-0813, high thinking)   research orchestrator (PREFERRED for lookups) [hypercharm]
   │   └── research (airouter/DeepSeek-V4-Flash, variant:research)      spawns workers for parallel search
-  └── coordinator (hypercharm/qwen3.8-flash, variant:high)    implementation orchestrator: plans, sequences, fans out [hypercharm]
+  └── coordinator (hypercharm/qwen3.8-flash, variant:high)    implementation orchestrator: plans, sequences, fans out edits [hypercharm]
       ├── edit (airouter/Qwen3.8)     applies edits via edit-ops batch tool + builds
-      └── research (airouter/DeepSeek-V4-Flash, variant:research) deep code tracing inside coordinator sessions
+      └── research (airouter/DeepSeek-V4-Flash, variant:research) ONLY as fallback for gaps in detective findings
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
-The primary spawns `detective` for multi-file lookups (PREFERRED) and `research` for trivial single-file reads only.
+The primary spawns `detective` for ALL research needs. `research` is the coordinator's fallback for gaps in detective findings — never a primary tool.
 
 ## Why this routing
 
@@ -228,11 +227,13 @@ Rationale: compaction is rare but high-stakes (a lossy summary degrades everythi
 
 ## How nesting + parallelization works
 
-1. Primary receives the request and delegates the GOAL to `coordinator`
-   (sub-orchestrator). The primary NEVER spawns `edit` directly — ALL edits
-   go through `coordinator`. The primary spawns `detective` for multi-file lookups and `research` for trivial single-file reads.
+1. Primary receives the request, front-loads ALL research through `detective`
+   (which fans out research workers), then delegates the GOAL plus findings to
+   `coordinator`. The primary NEVER spawns `edit` directly — ALL edits
+   go through `coordinator`. The primary NEVER does research itself and never
+   spawns `research` — `research` is the coordinator's fallback, not a primary tool.
 2. `coordinator` (hypercharm/qwen3.8-flash) plans the implementation: breaks the goal into
-   precise edit steps with exact file paths, and sequences the work. Its own
+   precise edit steps using the detective findings in its goal, and sequences the work. Its own
    edit/bash tools are permission-denied, so it can ONLY delegate.
 3. `coordinator` applies changes via edit-ops batch tool calls (airouter/Qwen3.8 emits the ops). For
    INDEPENDENT edits (different files / non-overlapping regions), it issues
@@ -240,15 +241,17 @@ Rationale: compaction is rare but high-stakes (a lossy summary degrades everythi
    3-subagent concurrency limit, so coordinator first tries to COMBINE related edits into
    at most 3 broader tasks, otherwise batches into waves of 3. Same-file/overlapping
    edits stay in a single call to avoid write conflicts.
-4. `coordinator` spawns `research` subagents (airouter/DeepSeek-V4-Flash, variant:research) for any lookups it needs,
-   also parallelized when independent (same 3-subagent cap — combine searches into at most 3
-   multi-topic tasks when possible, else waves of 3).
+ 4. `coordinator` spawns `research` subagents (airouter/DeepSeek-V4-Flash, variant:research) ONLY as a
+    fallback when the detective findings are insufficient (missing paths/context) — it must state
+    exactly what info is missing in the spawn prompt. Same 3-subagent cap — combine searches into
+    at most 3 multi-topic tasks when possible, else waves of 3.
 5. After the edit-ops batch lands, one build/verify command (via the edit agent's bash) confirms the result.
 6. `subagent_depth: 3` allows deeper nesting; research has no task
    permission, so recursion hard-stops at depth 2.
-7. Pre-explore discipline: primary may front-load exploration via a `detective`
-   spawn (which fans out research workers) before delegating to `coordinator`,
-   so the goal already contains exact paths and context.
+ 7. Pre-explore discipline: the primary MUST front-load exploration via a `detective`
+    spawn (which fans out research workers) before delegating to `coordinator`,
+    so the goal already contains exact paths and context. Coordinator should rarely
+    need its research fallback.
 
 ## Snippet proof (verification, not enforcement)
 
