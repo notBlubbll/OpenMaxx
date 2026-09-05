@@ -149,8 +149,8 @@ converting the rule to a permission-denied enforcement if possible.
 | main (orchestration) | hypercharm/glm-5.3-flash | high | high effort | 131,072 | paid credits |
 | detective (research orchestrator) | hypercharm/deepseek-v4-pro-0813 | high | high effort | 262,144 | paid credits |
 | coordinator (implementation orchestrator) | hypercharm/qwen3.8-flash | high | high effort | 128,000 | paid credits |
-| edit (ALL code edits + shell/builds) | airouter/Qwen3.8 | edit | high effort | 65,536 | airouter credits |
-| research (deep search, all lookups) | airouter/DeepSeek-V4-Flash | research | high effort | 32,768 | airouter credits |
+| edit (ALL code edits + shell/builds) | airouter/Qwen3.8 | edit | high effort | 65,536 | airouter flat |
+| research (deep search, all lookups) | airouter/DeepSeek-V4-Flash | research | high effort | 32,768 | airouter flat |
 | findings saving | write_findings custom tool | — | — | — | zero (local, deterministic) |
 | session titles | hypercharm/gpt-oss-120b | low | 2,048 | 65,536 | low tier (cheap) |
 | small_model (compaction summaries) | hypercharm/glm-5.3 | high | 32,768 | 128,000 | paid credits |
