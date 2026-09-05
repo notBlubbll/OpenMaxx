@@ -13,6 +13,16 @@ export const TaskArgsFixer = async () => {
     ["[🤖Coordinate]", "coordinator"],
   ]
 
+  const TAG_PREFIX = {
+    coordinator: "[🤖Coordinate] ",
+    edit: "[✏️Edit] ",
+    research: "[🔎Research] ",
+    detective: "[🕵🏼‍♂️Detective] ",
+    general: "[🤖General] ",
+    explore: "[🔎Explore] ",
+    title: "[🏷️Title] ",
+  }
+
   function inferType(args) {
     const desc = String(args.description || "")
     for (const [marker, type] of TYPE_MARKERS) {
@@ -46,6 +56,13 @@ export const TaskArgsFixer = async () => {
           args.subagent_type = t
           console.error(`[task-args-fixer] injected missing subagent_type="${t}" (description: ${String(args.description || "").slice(0, 60)})`)
         }
+      }
+      // ensure the description always carries the correct emoji tag prefix for its type
+      const description = String(args.description || "")
+      if (description && !/^\[\S+\] /.test(description)) {
+        const tag = TAG_PREFIX[args.subagent_type] || "[🤖Sub] "
+        args.description = tag + description
+        console.error(`[task-args-fixer] prefixed description with "${tag}" (subagent_type: ${args.subagent_type || "unknown"})`)
       }
     },
   }

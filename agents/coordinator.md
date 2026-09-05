@@ -1,7 +1,7 @@
 ---
 description: "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation across edit and research subagents. Cannot edit or run shell itself."
 mode: subagent
-model: hyper/glm-5.3-flash
+model: hypercharm/qwen3.8-flash
 variant: high
 permission:
   edit: deny

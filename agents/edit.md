@@ -1,7 +1,7 @@
 ---
 description: "✏️Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results."
 mode: subagent
-model: ifm/IFM/K2-Horizon-375B-A23B
+model: airouter/Qwen3.8
 variant: edit
 steps: 40
 permission:
