@@ -58,11 +58,40 @@
           "resource": "*",
           "effect": "allow"
         }
-      ]
+      ],
+      "settings": {
+        "reasoningEffort": "high"
+      }
+    },
+    "research-worker": {
+      "mode": "subagent",
+      "model": "airouter/DeepSeek-V4-Flash#research-worker",
+      "steps": 20,
+      "color": "#7aa2f7",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "write_findings",
+          "resource": "*",
+          "effect": "allow"
+        }
+      ],
+      "settings": {
+        "reasoningEffort": "low"
+      }
     },
     "detective": {
       "mode": "subagent",
-      "model": "airouter/DeepSeek-V4-Flash#max",
+      "model": "hypercharm/glm-5.3-flash",
       "steps": 40,
       "color": "#8b5a2b",
       "permissions": [
@@ -78,7 +107,7 @@
         },
         {
           "action": "subagent",
-          "resource": "research",
+          "resource": "research-worker",
           "effect": "allow"
         },
         {
@@ -86,7 +115,10 @@
           "resource": "*",
           "effect": "allow"
         }
-      ]
+      ],
+      "settings": {
+        "reasoningEffort": "high"
+      }
     },
     "edit": {
       "mode": "subagent",
@@ -104,7 +136,10 @@
           "resource": "*",
           "effect": "allow"
         }
-      ]
+      ],
+      "settings": {
+        "reasoningEffort": "medium"
+      }
     },
     "coordinator": {
       "description": "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself.",
@@ -148,7 +183,10 @@
           "resource": "edit",
           "effect": "allow"
         }
-      ]
+      ],
+      "settings": {
+        "reasoningEffort": "low"
+      }
     }
   },
   "providers": {
@@ -265,6 +303,7 @@
           },
           "variants": [
             { "id": "high", "settings": { "reasoningEffort": "high" } },
+            { "id": "research", "settings": { "reasoningEffort": "high" } },
             { "id": "edit", "settings": { "reasoningEffort": "high" } }
           ],
           "limit": { "context": 262144, "output": 65536 }
@@ -278,7 +317,8 @@
           },
           "variants": [
             { "id": "high", "settings": { "reasoningEffort": "high" } },
-            { "id": "research", "settings": { "reasoningEffort": "medium" } },
+            { "id": "research", "settings": { "reasoningEffort": "high" } },
+            { "id": "research-worker", "settings": { "reasoningEffort": "low" } },
             { "id": "max", "settings": { "reasoningEffort": "max" } }
           ],
           "limit": { "context": 920576, "output": 32768 }
