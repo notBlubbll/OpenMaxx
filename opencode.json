@@ -1,497 +1,440 @@
 {
   "$schema": "https://opencode.ai/config.json",
   "model": "hypercharm/glm-5.3-flash",
-  "variant": "high",
-  "small_model": "hypercharm/glm-5.3",
-  "experimental": {
-    "subagent_depth": 4
-  },
+  "permissions": [
+    {
+      "action": "*",
+      "resource": "*",
+      "effect": "allow"
+    }
+  ],
+  "shell": "cmd",
   "instructions": [
     "AGENTS.md"
   ],
-  "permission": "allow",
-  "compaction": {
-    "prune": false
-  },
-  "agent": {
+  "agents": {
     "explore": {
-      "model": "agnes-research/agnes-2.5-flash",
-      "variant": "explore",
-      "permission": {
-        "edit": "deny",
-        "bash": "deny",
-        "write_findings": "allow"
-      }
+      "mode": "subagent",
+      "model": "agnes-research/agnes-2.5-flash#explore",
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "write_findings",
+          "resource": "*",
+          "effect": "allow"
+        }
+      ]
     },
     "research": {
-      "model": "airouter/DeepSeek-V4-Flash",
-      "variant": "research",
+      "mode": "subagent",
+      "model": "airouter/DeepSeek-V4-Flash#research",
       "steps": 30,
       "color": "#7aa2f7",
-      "permission": {
-        "edit": "deny",
-        "bash": "allow",
-        "write_findings": "allow"
-      }
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "write_findings",
+          "resource": "*",
+          "effect": "allow"
+        }
+      ]
     },
     "detective": {
-      "model": "airouter/DeepSeek-V4-Flash",
-      "variant": "max",
+      "mode": "subagent",
+      "model": "airouter/DeepSeek-V4-Flash#max",
+      "steps": 40,
       "color": "#8b5a2b",
-      "permission": {
-        "edit": "deny",
-        "bash": "allow",
-        "task": {
-          "research": "allow",
-          "write_findings": "allow"
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "research",
+          "effect": "allow"
+        },
+        {
+          "action": "write_findings",
+          "resource": "*",
+          "effect": "allow"
         }
-      }
+      ]
     },
     "edit": {
-      "model": "airouter/Qwen3.8",
-      "variant": "edit",
+      "mode": "subagent",
+      "model": "airouter/Qwen3.8#edit",
       "steps": 40,
       "color": "#ffd54f",
-      "permission": {
-        "edit": "allow",
-        "bash": "allow",
-        "task": {},
-        "edit-ops": "allow"
-      }
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "allow"
+        }
+      ]
     },
     "coordinator": {
-      "model": "hypercharm/qwen3.8-flash",
-      "variant": "high",
+      "mode": "subagent",
+      "model": "hypercharm/qwen3.8-flash#high",
+      "steps": 40,
       "color": "#555555",
-      "permission": {
-        "edit": "deny",
-        "bash": "deny",
-        "glob": "deny",
-        "grep": "deny",
-        "edit-ops": "deny",
-        "write_findings": "allow",
-        "task": {
-          "research": "allow",
-          "edit": "allow"
+      "permissions": [
+        {
+          "action": "edit",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "shell",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "glob",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "grep",
+          "resource": "*",
+          "effect": "deny"
+        },
+        {
+          "action": "write_findings",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "research",
+          "effect": "allow"
+        },
+        {
+          "action": "subagent",
+          "resource": "edit",
+          "effect": "allow"
         }
-      }
+      ]
     }
   },
-  "provider": {
+  "providers": {
     "openference": {
       "name": "OpenFerence",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "https://api.openference.com/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000,
-        "chunkTimeout": 300000
+        "timeout": 1800000
       },
       "models": {
         "DeepSeek-V4-Pro-0813": {
           "name": "DeepSeek V4 Pro 0813",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            },
-            "max": {
-              "reasoningEffort": "max"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 664576,
-            "output": 384000
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } },
+            { "id": "max", "settings": { "reasoningEffort": "max" } }
+          ],
+          "limit": { "context": 664576, "output": 384000 }
         },
         "DeepSeek-V4-Flash-0731": {
           "name": "DeepSeek V4 Flash 0731",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            },
-            "max": {
-              "reasoningEffort": "max"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 920576,
-            "output": 32768
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } },
+            { "id": "max", "settings": { "reasoningEffort": "max" } }
+          ],
+          "limit": { "context": 920576, "output": 32768 }
         },
         "GLM-5.3-Flash": {
           "name": "GLM 5.3 Flash",
-          "reasoning": true,
-          "tool_call": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
           },
-          "variants": {
-            "max": {
-              "reasoningEffort": "max"
-            },
-            "high": {
-              "reasoningEffort": "high"
-            },
-            "medium": {
-              "reasoningEffort": "medium"
-            },
-            "low": {
-              "reasoningEffort": "low"
-            }
-          },
-          "limit": {
-            "context": 1048576,
-            "output": 128000
-          }
+          "variants": [
+            { "id": "max", "settings": { "reasoningEffort": "max" } },
+            { "id": "high", "settings": { "reasoningEffort": "high" } },
+            { "id": "medium", "settings": { "reasoningEffort": "medium" } },
+            { "id": "low", "settings": { "reasoningEffort": "low" } }
+          ],
+          "limit": { "context": 1048576, "output": 128000 }
         }
       }
     },
     "ifm": {
       "name": "IFM",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "http://127.0.0.1:8089/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000,
-        "chunkTimeout": 300000
+        "timeout": 1800000
       },
       "models": {
         "IFM/K2-Horizon-375B-A23B": {
           "name": "K2 Horizon 375B A23B",
-          "reasoning": true,
-          "tool_call": true,
-          "interleaved": "reasoning",
-          "variants": {
-            "research": {
-              "reasoningEffort": "high"
-            },
-            "edit": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 524288,
-            "output": 32768
-          }
+          "variants": [
+            { "id": "research", "settings": { "reasoningEffort": "high" } },
+            { "id": "edit", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 524288, "output": 32768 }
         }
       }
     },
     "agnes-research": {
       "name": "Agnes AI (research)",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "https://apihub.agnes-ai.com/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000,
-        "chunkTimeout": 300000
+        "timeout": 1800000
       },
       "models": {
         "agnes-2.5-flash": {
           "name": "Agnes 2.5 Flash (research)",
-          "reasoning": true,
-          "tool_call": true,
-          "attachment": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
           },
-          "variants": {
-            "explore": {
-              "thinking": {
-                "type": "enabled",
-                "budget_tokens": 2048
-              }
-            },
-            "research": {
-              "thinking": {
-                "type": "enabled",
-                "budget_tokens": 16384
-              }
-            }
-          },
-          "limit": {
-            "context": 512000,
-            "output": 65536
-          }
+          "variants": [
+            { "id": "explore", "settings": { "thinking": { "type": "enabled", "budget_tokens": 2048 } } },
+            { "id": "research", "settings": { "thinking": { "type": "enabled", "budget_tokens": 16384 } } }
+          ],
+          "limit": { "context": 512000, "output": 65536 }
         }
       }
     },
     "agnes-execute": {
       "name": "Agnes AI (execute)",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "https://apihub.agnes-ai.com/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000,
-        "chunkTimeout": 300000
+        "timeout": 1800000
       },
       "models": {
         "agnes-2.5-flash": {
           "name": "Agnes 2.5 Flash (execute)",
-          "reasoning": true,
-          "tool_call": true,
-          "attachment": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
           },
-          "variants": {
-            "edit": {
-              "thinking": {
-                "type": "enabled",
-                "budget_tokens": 16384
-              }
-            }
-          },
-          "limit": {
-            "context": 512000,
-            "output": 65536
-          }
+          "variants": [
+            { "id": "edit", "settings": { "thinking": { "type": "enabled", "budget_tokens": 16384 } } }
+          ],
+          "limit": { "context": 512000, "output": 65536 }
         }
       }
     },
     "camelai": {
       "name": "camelStream",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "https://stream.camelai.com/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000,
-        "chunkTimeout": 300000
+        "timeout": 1800000
       },
       "models": {
         "auto": {
           "name": "Camel Auto (fleet)",
-          "tool_call": true,
-          "reasoning": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            },
-            "max": {
-              "thinking": {
-                "type": "enabled",
-                "budget_tokens": 4096
-              }
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 262144,
-            "output": 65536
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } },
+            { "id": "max", "settings": { "thinking": { "type": "enabled", "budget_tokens": 4096 } } }
+          ],
+          "limit": { "context": 262144, "output": 65536 }
         }
       }
     },
     "airouter": {
       "name": "AI Router",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "https://api.airouter.ch/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000,
-        "chunkTimeout": 300000
+        "timeout": 1800000
       },
       "models": {
         "Qwen3.8": {
           "name": "Qwen-3.8-27B",
-          "reasoning": true,
-          "tool_call": true,
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
           },
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            },
-            "edit": {
-              "reasoningEffort": "high"
-            }
-          },
-          "limit": {
-            "context": 262144,
-            "output": 65536
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } },
+            { "id": "edit", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 262144, "output": 65536 }
         },
         "DeepSeek-V4-Flash": {
           "name": "DeepSeek-V4-Flash-0731",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            },
-            "research": {
-              "reasoningEffort": "medium"
-            },
-            "max": {
-              "reasoningEffort": "max"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 920576,
-            "output": 32768
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } },
+            { "id": "research", "settings": { "reasoningEffort": "medium" } },
+            { "id": "max", "settings": { "reasoningEffort": "max" } }
+          ],
+          "limit": { "context": 920576, "output": 32768 }
         }
       }
     },
     "hypercharm": {
       "name": "HyperCharm",
-      "npm": "@ai-sdk/openai-compatible",
-      "options": {
+      "package": "@opencode-ai/ai/providers/openai-compatible",
+      "settings": {
         "baseURL": "https://hyper.charm.land/v1",
         "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000,
-        "chunkTimeout": 300000
+        "timeout": 1800000
       },
       "models": {
         "glm-5.3-flash": {
           "name": "GLM 5.3 Flash",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text", "image"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 1048576,
-            "output": 131072
-          },
-          "modalities": {
-            "input": [
-              "text",
-              "image"
-            ],
-            "output": [
-              "text"
-            ]
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 1048576, "output": 131072 }
         },
         "deepseek-v4-flash-0731": {
           "name": "DeepSeek V4 Flash 0731",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 1000000,
-            "output": 384000
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 1000000, "output": 384000 }
         },
         "deepseek-v4-pro-0813": {
           "name": "DeepSeek V4 Pro 0813",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 1048576,
-            "output": 262144
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 1048576, "output": 262144 }
         },
         "deepseek-v4-flash": {
           "name": "DeepSeek V4 Flash",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 1000000,
-            "output": 384000
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 1000000, "output": 384000 }
         },
         "glm-5.3": {
           "name": "GLM 5.3",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 1048576,
-            "output": 262144
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 1048576, "output": 262144 }
         },
         "qwen3.8-flash": {
           "name": "Qwen3.8 Flash",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "high": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 1000000,
-            "output": 128000
-          }
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 1000000, "output": 128000 }
         },
         "gpt-oss-120b": {
           "name": "GPT-OSS-120B",
-          "reasoning": true,
-          "tool_call": true,
-          "variants": {
-            "low": {
-              "reasoningEffort": "low"
-            },
-            "medium": {
-              "reasoningEffort": "medium"
-            },
-            "high": {
-              "reasoningEffort": "high"
-            }
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
           },
-          "limit": {
-            "context": 128072,
-            "output": 13107
-          }
+          "variants": [
+            { "id": "low", "settings": { "reasoningEffort": "low" } },
+            { "id": "medium", "settings": { "reasoningEffort": "medium" } },
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 128072, "output": 13107 }
         }
       }
     }
   },
-  "shell": "cmd",
   "plugins": [
     "file:///C:/Users/User/.config/opencode/plugins/edit-tool-fix.js",
     "file:///C:/Users/User/.config/opencode/plugins/write-findings.js",
     "file:///C:/Users/User/.config/opencode/plugins/grep-fix.js",
-    "file:///C:/Users/User/.config/opencode/plugins/task-args-fixer.js",
     "file:///C:/Users/User/.config/opencode/plugins/mind-automation.js"
   ]
 }

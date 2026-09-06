@@ -68,20 +68,20 @@ the primary and detective. The `hypercharm` provider serves the coordinator, sma
 ~/.config/opencode/
 ├── opencode.json
 ├── agents/
-    │   ├── research.md     # deep search -> airouter/DeepSeek-V4-Flash variant:research (saves via write_findings)
-    │   ├── detective.md  # research orchestrator -> airouter/DeepSeek-V4-Flash variant:max variant:high (spawns research workers)
-│   ├── edit.md         # code edits + shell/builds -> airouter/Qwen3.8 variant:edit (edit-ops batch tool)
-│   ├── coordinator.md    # implementation orchestrator -> hypercharm/qwen3.8-flash; plans + delegates, cannot edit/bash itself
+    │   ├── research.md     # deep search -> airouter/DeepSeek-V4-Flash#research (saves via write_findings)
+    │   ├── detective.md  # research orchestrator -> airouter/DeepSeek-V4-Flash#high (spawns research workers)
+│   ├── edit.md         # code edits + shell/builds -> airouter/Qwen3.8#edit (edit tool)
+│   ├── coordinator.md    # implementation orchestrator -> hypercharm/qwen3.8-flash#high; plans + delegates, cannot edit/shell itself
 │   └── title.md        # session titles -> hypercharm/gpt-oss-120b  [overrides small_model]
 ├── tools/            # edit-ops.js (batch file edits), write.js (schema-safe write override)
-├── plugins/          # write-findings.js, task-args-fixer.js
+├── plugins/          # write-findings.js, mind-automation.js, grep-fix.js, edit-tool-fix.js (V2 native, no translation shims)
 └── instructions/
     └── AGENTS.md       # delegation rules injected into every session
 ```
 
 Copy the files to `%USERPROFILE%\.config\opencode\` (Windows) or `~/.config/opencode/`.
 
-Requires **opencode >= 1.18** (`subagent_depth`). Restart opencode after any change.
+Requires **opencode2** (OpenCode V2, `subagent` tool with `agent`/`description`/`prompt`). Restart opencode after any change.
 
 ## Architecture
 
