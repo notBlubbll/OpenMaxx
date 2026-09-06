@@ -3,7 +3,7 @@
 Repo: [notBlubbll/OpenMaxx](https://github.com/notBlubbll/OpenMaxx)
 
 Routes opencode work across providers by cost and role: GLM-5.3-Flash (hypercharm, 1M context)
-for primary orchestration and detective; **agnes-research** (apihub.agnes-ai.com) for research; **airouter** (api.airouter.ch) for the executors â€” DeepSeek-V4-Flash for research workers, Qwen-3.8-27B for code edits; Qwen3 Next 80B-A3B Instruct (hypercharm) for the implementation coordinator with LOW reasoning for rapid dispatch; GLM-5.3 (hypercharm flagship) for compaction; hypercharm/gpt-oss-120b for session
+for primary orchestration and detective; **airouter** (api.airouter.ch) for research + execution (api.airouter.ch) for the executors â€” Agnes 2.5 Flash for research (HIGH reasoning), Qwen-3.8-27B for edits (LOW, fast); Qwen3 Next 80B-A3B Instruct (hypercharm) for the implementation coordinator with LOW reasoning for rapid dispatch; GLM-5.3 (hypercharm flagship) for compaction; hypercharm/gpt-oss-120b for session
 titles. Findings are saved directly via the deterministic write_findings custom tool (no subagent,
 no LLM).
 
@@ -24,16 +24,16 @@ Editing:
 
 ## Get API keys
 
-**AI Router (executers: edit)** â€” get your key from your AI Router account and set
+**AI Router (executers: research + edit)** â€” get your key from your AI Router account and set
 it in `opencode.json` under `provider.airouter.options.apiKey` (baseURL
-`https://api.airouter.ch/v1`). Models: `Qwen3.8` (Qwen-3.8-27B).
+`https://api.airouter.ch/v1`). Models: `Qwen3.8` (Qwen-3.8-27B) and `DeepSeek-V4-Flash` (DeepSeek-V4-Flash-0731).
 
 **HyperCharm** â€” set your key in `opencode.json` under `provider.hypercharm.options.apiKey`
 (baseURL `https://hyper.charm.land/v1`). Models: `glm-5.3-flash` (primary + detective), `qwen3-next-80b-a3b-instruct` (coordinator), `glm-5.3` (compaction, flagship), and `gpt-oss-120b` (titles â€” HyperCharm's low tier, trivially cheap).
 
 ## OpenAI-Compatible SDK (stability)
 
-GLM-5.3-Flash (primary + detective) routes via the `hypercharm` provider; agnes-2.5-flash (research) routes via the `agnes-research` provider; Qwen3.8 (edit) routes via the `airouter` provider; qwen3-next-80b-a3b-instruct (coordinator), glm-5.3 (compaction) and gpt-oss-120b (titles) route via the `hypercharm` provider; agnes-research/agnes-2.5-flash (explore) points at the apihub.agnes-ai.com endpoint.
+GLM-5.3-Flash (primary + detective) routes via the `hypercharm` provider; Agnes 2.5 Flash (research) routes via the `airouter` provider; Agnes 2.5 Flash (edit) routes via the `airouter` provider; qwen3-next-80b-a3b-instruct (coordinator), glm-5.3 (compaction) and gpt-oss-120b (titles) route via the `hypercharm` provider; agnes-research/agnes-2.5-flash (explore) points at the apihub.agnes-ai.com endpoint.
 
 The OpenAI-compatible SDK handles streaming responses cleanly and returns
 usage fields natively.
@@ -47,10 +47,10 @@ The `airouter` provider serves the executer (edit). The `hypercharm` provider se
 ~/.config/opencode/
 â”œâ”€â”€ opencode.json
 â”œâ”€â”€ agents/
-â”‚   â”œâ”€â”€ research.md       # deep search -> agnes-research/agnes-2.5-flash#research (HIGH reasoning, saves via write_findings)
-â”‚   â”œâ”€â”€ research-worker.md # parallel lookups -> airouter/DeepSeek-V4-Flash#research-worker (LOW reasoning)
+â”‚   â”œâ”€â”€ research.md       # deep search -> agnes-research/agnes-2.5-flash#research (LOW reasoning, fast, saves via write_findings)
+â”‚   â”œâ”€â”€ research-worker.md # parallel lookups -> agnes-research/agnes-2.5-flash#research-worker (LOW reasoning)
 â”‚   â”œâ”€â”€ detective.md      # research orchestrator -> hypercharm/glm-5.3-flash (HIGH reasoning, spawns research-worker)
-â”‚   â”œâ”€â”€ edit.md           # code edits + shell/builds -> airouter/Qwen3.8#edit (MEDIUM reasoning, edit tool)
+â”‚   â”œâ”€â”€ edit.md           # code edits + shell/builds -> agnes-execute/agnes-2.5-flash#edit (LOW reasoning, fast, edit tool)
 â”‚   â”œâ”€â”€ coordinator.md    # implementation orchestrator -> hypercharm/qwen3-next-80b-a3b-instruct (LOW reasoning); plans + delegates, cannot edit/shell itself
 â”‚   â””â”€â”€ title.md          # session titles -> hypercharm/gpt-oss-120b  [overrides small_model]
 â”œâ”€â”€ tools/            # edit-ops.js (batch file edits), write.js (schema-safe write override)
@@ -78,7 +78,7 @@ Primary (hypercharm/glm-5.3-flash, variant:high)      receives request, routes A
   â”‚   â””â”€ research-worker (airouter/DeepSeek-V4-Flash, variant:research-worker)   parallel research workers (LOW reasoning) [airouter]
   â”œâ”€ coordinator (hypercharm/qwen3-next-80b-a3b-instruct, variant:low)   implementation orchestrator: plans + delegates, cannot edit/shell itself [hypercharm]
   â”‚   â”œâ”€ edit (airouter/Qwen3.8)     applies edits via edit tool + builds
-  â”‚   â””â”€ research (agnes-research/agnes-2.5-flash#research, variant:high) ONLY as fallback for gaps in detective findings
+  â”‚   â””â”€ research (agnes-research/agnes-2.5-flash#research, variant:low) ONLY as fallback for gaps in detective findings
   â””â”€ explore (agnes-research/agnes-2.5-flash#explore)     nested lookups inside edit [agnes-research]
 ```
 
@@ -97,4 +97,9 @@ The plugins directory uses the V2 subdirectory structure. Each plugin lives in i
 - **k2-reasoning-proxy.js** â€” Plugin that autostarts the k2-proxy standalone server on port 8089
 
 The standalone `k2-proxy-server-standalone.js` is kept in `.opencode-backups/` to avoid being auto-loaded as a broken plugin.
+
+
+
+
+
 

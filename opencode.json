@@ -60,12 +60,12 @@
         }
       ],
       "settings": {
-        "reasoningEffort": "high"
+        "reasoningEffort": "low"
       }
     },
     "research-worker": {
       "mode": "subagent",
-      "model": "airouter/DeepSeek-V4-Flash#research-worker",
+      "model": "agnes-research/agnes-2.5-flash#research-worker",
       "steps": 20,
       "color": "#7aa2f7",
       "permissions": [
@@ -91,9 +91,7 @@
     },
     "detective": {
       "mode": "subagent",
-      "model": "hypercharm/glm-5.3-flash",
-      "steps": 40,
-      "color": "#8b5a2b",
+      "model": "hypercharm/qwen3.8-flash", "steps": 40, "color": "#8b5a2b",
       "permissions": [
         {
           "action": "edit",
@@ -122,7 +120,7 @@
     },
     "edit": {
       "mode": "subagent",
-      "model": "airouter/Qwen3.8#edit",
+      "model": "agnes-execute/agnes-2.5-flash#edit",
       "steps": 40,
       "color": "#ffd54f",
       "permissions": [
@@ -138,7 +136,7 @@
         }
       ],
       "settings": {
-        "reasoningEffort": "medium"
+        "reasoningEffort": "low"
       }
     },
     "coordinator": {
@@ -445,7 +443,10 @@
     "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/write-findings",
     "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/grep-fix",
     "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/mind-automation",
-    "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/task-args-fixer"
-  ]
+    "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/task-args-fixer","file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/rg-fix"]
 }
+
+
+
+
 

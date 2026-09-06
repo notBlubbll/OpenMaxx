@@ -1,7 +1,7 @@
 ---
 description: "✏️Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results."
 mode: subagent
-model: airouter/Qwen3.8#edit
+model: agnes-execute/agnes-2.5-flash#edit
 steps: 40
 color: "#ffd54f"
 permissions:
@@ -12,7 +12,7 @@ permissions:
     resource: "*"
     effect: allow
 settings:
-  reasoningEffort: medium
+  reasoningEffort: low
 ---
 
 Execute immediately — never restate the task, never announce plans. First action = first tool call.

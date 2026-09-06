@@ -32,7 +32,7 @@ export default {
           const path = String(args.path || "").trim()
           const body = String(args.body || "")
           if (!path.includes(".opencode-findings")) {
-            return "ERROR: path must contain .opencode-findings, got: " + path
+            return { output: "ERROR: path must contain .opencode-findings, got: " + path }
           }
           const { mkdir, writeFile } = await import("node:fs/promises")
           const { dirname } = await import("node:path")
@@ -41,9 +41,9 @@ export default {
             const dir = dirname(normalized)
             await mkdir(dir, { recursive: true })
             await writeFile(normalized, body, "utf8")
-            return `WRITTEN: ${normalized} (${Buffer.byteLength(body, "utf8")} bytes)`
+            return { output: `WRITTEN: ${normalized} (${Buffer.byteLength(body, "utf8")} bytes)` }
           } catch (e) {
-            return "WRITE-FAILED: " + normalized + " :: " + (e && e.message ? e.message : String(e))
+            return { output: "WRITE-FAILED: " + normalized + " :: " + (e && e.message ? e.message : String(e)) }
           }
         },
       })

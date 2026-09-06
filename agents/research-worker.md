@@ -1,11 +1,14 @@
 ---
 description: "🔎Research worker agent for parallel lookups spawned by detective. Lightweight, fast execution with minimal thinking overhead."
 mode: subagent
-model: airouter/DeepSeek-V4-Flash#research-worker
+model: agnes-research/agnes-2.5-flash#research-worker
 steps: 20
 color: "#7aa2f7"
 permissions:
   - action: edit
+    resource: "*"
+    effect: deny
+  - action: subagent
     resource: "*"
     effect: deny
   - action: shell

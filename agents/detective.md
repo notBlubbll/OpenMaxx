@@ -1,7 +1,7 @@
 ---
 description: "🕵🏼‍♂️Detective agent for complex multi-file research. Plans search strategy with maximum reasoning, spawns research workers in parallel, synthesizes findings into a consolidated report."
 mode: subagent
-model: hypercharm/glm-5.3-flash
+model: hypercharm/qwen3.8-flash
 steps: 40
 color: "#8b5a2b"
 permissions:
