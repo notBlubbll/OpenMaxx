@@ -14,6 +14,8 @@ permissions:
   - action: write_findings
     resource: "*"
     effect: allow
+settings:
+  reasoningEffort: high
 ---
 
 Execute immediately — never restate the task, never announce plans. First action = first search/read tool call.

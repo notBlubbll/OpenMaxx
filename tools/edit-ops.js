@@ -136,10 +136,16 @@ export default tool({
             const oldS = String(o.oldString)
             const newS = String(o.newString)
             if (oldS === "") throw new Error("oldString must be non-empty (use write for new files)")
-            const count = src.split(oldS).length - 1
+            // Normalize both source and oldString to LF for matching, then restore original line endings in output
+            const srcLF = src.replace(/\r\n/g, "\n")
+            const oldSLF = oldS.replace(/\r\n/g, "\n")
+            const count = srcLF.split(oldSLF).length - 1
             if (count === 0) throw new Error(`oldString not found in ${p} — re-read the file and copy exact bytes`)
             if (count > 1 && !o.all) throw new Error(`oldString matches ${count} times in ${p} — provide more context or set "all":true`)
-            const out = o.all ? src.split(oldS).join(newS) : src.replace(oldS, newS)
+            const outLF = o.all ? srcLF.split(oldSLF).join(newS.replace(/\r\n/g, "\n")) : srcLF.replace(oldSLF, newS.replace(/\r\n/g, "\n"))
+            // Restore original line endings from source file
+            const hasCRLF = src.includes("\r\n")
+            const out = hasCRLF ? outLF.replace(/\n/g, "\r\n") : outLF
             await backupBeforeEdit(p)
             await writeFile(p, out, "utf8")
             results.push(`[${i}] REPLACE OK ${p} (${count} occurrence${count > 1 ? "s" : ""} replaced)`)

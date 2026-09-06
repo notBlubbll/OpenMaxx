@@ -11,6 +11,8 @@ permissions:
   - action: shell
     resource: "*"
     effect: allow
+settings:
+  reasoningEffort: medium
 ---
 
 Execute immediately — never restate the task, never announce plans. First action = first tool call.
@@ -24,7 +26,7 @@ Edit rules (for path/oldString/newString in edit tool calls):
 1. Copy oldString character-for-character from the read results in step (1) — never from memory, never from the task description.
 2. Use small unique anchors (1-5 lines). Never use blocks > 15 lines. For new files use the write tool (path + content).
 3. Copy newString content verbatim from the task instructions — never retype, never paraphrase, never "fix" indentation.
-4. MIND LINE ENDINGS: if a replace FAILs (0 matches), suspect CRLF/tabs/BOM — re-read just that file and retry once with a SMALLER anchor (1-2 lines).
+4. MIND LINE ENDINGS: if a replace FAILs (0 matches), suspect CRLF/tabs/BOM — re-read just that file and retry once with a SMALLER anchor (1-2 lines). The edit-ops tool now normalizes line endings internally, so mismatches should be rare.
 5. After the apply message, re-plan ONLY the failed edits — do not redo succeeded ones.
 6. After all edits land, ONE shell call to build/verify if the task asks for it.
 7. Stall check: same read/verify/no-edit sequence twice in a row → STOP and report "STALL: <what>".
