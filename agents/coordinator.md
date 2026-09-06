@@ -58,18 +58,12 @@ CRITICAL RULES (cannot be violated):
 FINDINGS PATH RULE (reading AND writing): derive ALL .opencode-findings paths from YOUR OWN working directory - never abbreviate the root. If your cwd is C:\Users\User\Desktop\EXPERIMENTS\EXPLORER, findings live at C:\Users\User\Desktop\EXPERIMENTS\EXPLORER\.opencode-findings\ - writing/reading C:\Users\User\Desktop\EXPLORER\.opencode-findings\ (missing EXPERIMENTS) is WRONG and the file will not be found. If a read returns "file not found", FIRST suspect an abbreviated root: re-check your cwd and rebuild the full path before listing directories.
 
 WRITE FINDINGS (your own final report - you write it, you do NOT delegate it):
-- When your task ends with a findings/report file, write it YOURSELF. NEVER spawn a `research` subagent to "find the write_findings tool path" or to write findings, and NEVER spawn an `edit` subagent to write or append to a findings file.
-- **PREFERRED METHOD — bodyFile (avoids ALL JS string escaping):**
-  1. Write body to temp file via `shell`: Write-Content -Path $env:TEMP\wf-body.md -Value "your markdown"
-  2. Then in Code Mode: `tools.write_findings({ path: 'C:\\path\\.opencode-findings\\file.md', bodyFile: 'C:\\Users\\User\\AppData\\Local\\Temp\\wf-body.md' })`
-- **DIRECT METHOD — body (only for short text with NO quotes/apostrophes):**
-  `tools.write_findings({ path: 'C:\\path\\.opencode-findings\\file.md', body: 'short text' })`
-- CODE MODE RULES (inside `execute` code blocks):
-  - **NO `require`, NO `import`, NO `fs`, NO `path`, NO Node.js APIs.** Code Mode is sandboxed — only tools in the catalog are available.
-  - Use single-quoted strings for path and bodyFile. Escape inner apostrophes as `\'`. Backslashes as `\\`. No backticks (TaggedTemplateExpression error).
-  - If body has ANY quotes or apostrophes, use bodyFile instead — write content to a temp file via `shell` first.
-- The tool returns "WRITTEN: <path> (<n> bytes)". That return value IS the write confirmation - do NOT read the file back to verify, do NOT spawn any subagent to confirm, append, or re-verify it.
-- Your final message: "<file path>: <one-line summary>" — the path verbatim from the return value, plus one line. Do NOT append "READ BEFORE ACTING".
+- When your task ends with a findings/report file, write it YOURSELF. NEVER spawn a `research` subagent to find a tool path or to write findings, and NEVER spawn an `edit` subagent to write findings.
+- **Use the native `write` tool directly:** `write(path: "C:\\path\\.opencode-findings\\file.md", content: "your markdown")`
+  - Path MUST contain `.opencode-findings`. Content is your full markdown findings text.
+  - No Code Mode needed. No escaping needed. The `write` tool handles it.
+- The tool returns a confirmation. Do NOT read the file back to verify.
+- Your final message: "<file path>: <one-line summary>".
 
 Delegation rules (mandatory - your own edit, shell, grep and glob tools are disabled):
 - ALL code modifications go through `edit` subagent spawns. Each edit spawn prompt MUST contain: exact file path(s), the precise change, and the exact anchor strings (oldString) taken from the detective findings — character-for-character. The edit subagent applies them via its edit tool (batched: reads first, then replaces — the edit agent knows this workflow).

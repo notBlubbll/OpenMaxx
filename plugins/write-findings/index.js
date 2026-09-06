@@ -1,10 +1,10 @@
 // write-findings plugin — OpenCode V2.
-// Replaces the summarizer subagent with a deterministic, instant file-write tool.
 // Uses ctx.tool.transform() (V2 API), not the V1 @opencode-ai/plugin SDK.
 //
-// Two ways to pass body content:
-//   1. body: "markdown string" — direct, but quotes/apostrophes in markdown can break JS strings
-//   2. bodyFile: "/tmp/findings-body.txt" — write body to a temp file first, pass the path (avoids all string escaping)
+// Three ways to pass body content (in order of preference):
+//   1. bodyBase64: base64-encoded markdown — safest, zero escaping issues
+//   2. bodyFile: path to a temp file containing the markdown — avoids string escaping
+//   3. body: direct markdown string — only for short text with no quotes/apostrophes
 
 export default {
   id: "write-findings",
@@ -13,26 +13,27 @@ export default {
       editor.add({
         name: "write_findings",
         description:
-          "Write a findings/report markdown file to disk. " +
-          "path: absolute Windows path containing .opencode-findings. " +
-          "body: markdown content (direct string). OR bodyFile: path to a temp file containing the markdown. " +
-          "Use bodyFile if the markdown has quotes or apostrophes that break JS strings. " +
-          "Returns WRITTEN with the path and byte count.",
+          "Write a findings/report markdown file to disk. path: absolute path containing .opencode-findings. " +
+          "Content via ONE OF: bodyBase64 (base64-encoded, safest), bodyFile (path to temp file), or body (direct string). " +
+          "Returns WRITTEN with path and byte count.",
         input: {
           type: "object",
           properties: {
             path: {
               type: "string",
-              description:
-                "Absolute Windows path under .opencode-findings, e.g. C:\\proj\\.opencode-findings\\report.md",
+              description: "Absolute Windows path under .opencode-findings",
             },
-            body: {
+            bodyBase64: {
               type: "string",
-              description: "Full markdown findings content, written verbatim. Use only if body has no quotes/apostrophes.",
+              description: "Base64-encoded markdown content. Safest option — no escaping issues.",
             },
             bodyFile: {
               type: "string",
-              description: "Path to a temp file containing the markdown body. Preferred — avoids JS string escaping issues.",
+              description: "Path to a file containing the markdown body.",
+            },
+            body: {
+              type: "string",
+              description: "Direct markdown string. Only for short text with no quotes/apostrophes.",
             },
           },
           required: ["path"],
@@ -51,30 +52,32 @@ export default {
           }
 
           let body = ""
-          if (args.bodyFile) {
-            // Read body from a temp file (avoids string escaping issues)
+          if (args.bodyBase64) {
+            // Decode base64 — zero escaping issues
+            body = Buffer.from(String(args.bodyBase64), "base64").toString("utf8")
+          } else if (args.bodyFile) {
+            // Read from temp file
             const { readFile } = await import("node:fs/promises")
             try {
               body = await readFile(String(args.bodyFile), "utf8")
             } catch (e) {
-              return { output: "READ-FAILED: could not read bodyFile: " + args.bodyFile + " :: " + (e.message || String(e)) }
+              return { output: "READ-FAILED: " + args.bodyFile + " :: " + (e.message || String(e)) }
             }
           } else if (args.body) {
             body = String(args.body)
           } else {
-            return { output: "ERROR: either body or bodyFile is required" }
+            return { output: "ERROR: one of bodyBase64, bodyFile, or body is required" }
           }
 
           const { mkdir, writeFile } = await import("node:fs/promises")
           const { dirname } = await import("node:path")
           const normalized = path.replace(/(?<![\/\\])\.opencode-findings/, "\\opencode-findings")
           try {
-            const dir = dirname(normalized)
-            await mkdir(dir, { recursive: true })
+            await mkdir(dirname(normalized), { recursive: true })
             await writeFile(normalized, body, "utf8")
             return { output: `WRITTEN: ${normalized} (${Buffer.byteLength(body, "utf8")} bytes)` }
           } catch (e) {
-            return { output: "WRITE-FAILED: " + normalized + " :: " + (e && e.message ? e.message : String(e)) }
+            return { output: "WRITE-FAILED: " + normalized + " :: " + (e.message || String(e)) }
           }
         },
       })

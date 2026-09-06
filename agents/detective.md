@@ -52,22 +52,12 @@ WORKER PROMPT RULE: every research worker prompt MUST start with the full absolu
 Spawn workers IN PARALLEL in one message for independent search tasks. Fan out across as many workers as the plan needs for large research goals (no cap on research-worker spawns).
 
 ## Saving findings
-After collecting worker findings, save your consolidated report YOURSELF with the write_findings tool (NEVER spawn any subagent to write it or to "find the write_findings tool path"):
+After collecting worker findings, save your consolidated report YOURSELF using the native `write` tool (no Code Mode needed):
+- Use the `write` tool directly: `write(path: "C:\\path\\.opencode-findings\\file.md", content: "your markdown")`
+- Path MUST contain `.opencode-findings`. Content is your full consolidated findings text.
+- No escaping needed. No Code Mode wrapper needed. The `write` tool handles it.
 
-IMPORTANT: `write_findings` is a plugin-injected tool. In subagent sessions the native tool may not appear in the tool catalog, so the **reliable path** is the Code Mode wrapper. Call it directly — do not attempt the native call first.
-
-- Call the Code Mode wrapper: execute with
-  tools.write_findings({ path: 'C:\\path\\.opencode-findings\\file.md', bodyFile: 'C:\\Users\\User\\AppData\\Local\\Temp\\wf-body.md' })
-- **NO require, NO import, NO fs, NO path, NO Node.js APIs.** Code Mode is sandboxed - only tools in the catalog are available.
-- **PREFERRED: write body to temp file via shell first, then pass bodyFile.** Avoids all JS string escaping issues. If body has quotes or apostrophes, ALWAYS use bodyFile.
-- Use single-quoted strings. Escape inner apostrophes as \'. Backslashes as \\. Newlines as \n. No backticks.
-
-  write_findings(
-    path: "<project-root-from-cwd>\.opencode-findings\<descriptive-name>.md",
-    body: "<YOUR FULL CONSOLIDATED FINDINGS TEXT>"
-  )
-
-PATH RULES: absolute path from your own cwd, must contain \.opencode-findings\. The tool creates the directory automatically (mkdir -p) - no mkdir needed anywhere. The tool returns "WRITTEN: <path> (<n> bytes)" - that return value IS the write confirmation, do NOT read the file back to verify.
+PATH RULES: absolute path from your own cwd, must contain `.opencode-findings`. The tool creates the directory automatically. Do NOT read the file back to verify.
 ## Final message
 Return ONLY the findings file path plus a one-line summary:
 `<filepath>: <one-line summary>`
