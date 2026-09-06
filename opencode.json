@@ -107,8 +107,9 @@
       ]
     },
     "coordinator": {
+      "description": "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself.",
       "mode": "subagent",
-      "model": "hypercharm/qwen3.8-flash#high",
+      "model": "hypercharm/qwen3-next-80b-a3b-instruct",
       "steps": 40,
       "color": "#555555",
       "permissions": [
@@ -151,58 +152,6 @@
     }
   },
   "providers": {
-    "openference": {
-      "name": "OpenFerence",
-      "package": "@opencode-ai/ai/providers/openai-compatible",
-      "settings": {
-        "baseURL": "https://api.openference.com/v1",
-        "apiKey": "REPLACE_WITH_REAL_KEY",
-        "timeout": 1800000
-      },
-      "models": {
-        "DeepSeek-V4-Pro-0813": {
-          "name": "DeepSeek V4 Pro 0813",
-          "capabilities": {
-            "tools": true,
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "variants": [
-            { "id": "high", "settings": { "reasoningEffort": "high" } },
-            { "id": "max", "settings": { "reasoningEffort": "max" } }
-          ],
-          "limit": { "context": 664576, "output": 384000 }
-        },
-        "DeepSeek-V4-Flash-0731": {
-          "name": "DeepSeek V4 Flash 0731",
-          "capabilities": {
-            "tools": true,
-            "input": ["text"],
-            "output": ["text"]
-          },
-          "variants": [
-            { "id": "high", "settings": { "reasoningEffort": "high" } },
-            { "id": "max", "settings": { "reasoningEffort": "max" } }
-          ],
-          "limit": { "context": 920576, "output": 32768 }
-        },
-        "GLM-5.3-Flash": {
-          "name": "GLM 5.3 Flash",
-          "capabilities": {
-            "tools": true,
-            "input": ["text", "image"],
-            "output": ["text"]
-          },
-          "variants": [
-            { "id": "max", "settings": { "reasoningEffort": "max" } },
-            { "id": "high", "settings": { "reasoningEffort": "high" } },
-            { "id": "medium", "settings": { "reasoningEffort": "medium" } },
-            { "id": "low", "settings": { "reasoningEffort": "low" } }
-          ],
-          "limit": { "context": 1048576, "output": 128000 }
-        }
-      }
-    },
     "ifm": {
       "name": "IFM",
       "package": "@opencode-ai/ai/providers/openai-compatible",
@@ -416,6 +365,18 @@
             { "id": "high", "settings": { "reasoningEffort": "high" } }
           ],
           "limit": { "context": 1000000, "output": 128000 }
+        },
+        "qwen3-next-80b-a3b-instruct": {
+          "name": "Qwen3 Next 80B-A3B Instruct",
+          "capabilities": {
+            "tools": true,
+            "input": ["text"],
+            "output": ["text"]
+          },
+          "variants": [
+            { "id": "high", "settings": { "reasoningEffort": "high" } }
+          ],
+          "limit": { "context": 1048576, "output": 131072 }
         },
         "gpt-oss-120b": {
           "name": "GPT-OSS-120B",
