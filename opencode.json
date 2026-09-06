@@ -9,6 +9,9 @@
     }
   ],
   "shell": "cmd",
+  "experimental": {
+    "subagent_depth": 4
+  },
   "instructions": [
     "AGENTS.md"
   ],
