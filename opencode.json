@@ -3,7 +3,9 @@
   "model": "hypercharm/glm-5.3-flash",
   "variant": "high",
   "small_model": "hypercharm/glm-5.3",
-  "subagent_depth": 3,
+  "experimental": {
+    "subagent_depth": 4
+  },
   "instructions": [
     "AGENTS.md"
   ],
@@ -484,5 +486,8 @@
       }
     }
   },
-  "shell": "cmd"
+  "shell": "cmd",
+  "plugins": [
+    "file:///C:/Users/User/.config/opencode/plugins/edit-tool-fix.js"
+  ]
 }
