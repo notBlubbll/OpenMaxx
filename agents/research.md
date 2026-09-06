@@ -1,7 +1,7 @@
 ---
 description: "🔎Research agent for deep code lookups inside coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references."
 mode: subagent
-model: airouter/DeepSeek-V4-Flash#research
+model: agnes-research/agnes-2.5-flash#research
 steps: 30
 color: "#7aa2f7"
 permissions:
