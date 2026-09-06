@@ -432,9 +432,9 @@
     }
   },
   "plugins": [
-    "file:///C:/Users/User/.config/opencode/plugins/edit-tool-fix.js",
-    "file:///C:/Users/User/.config/opencode/plugins/write-findings.js",
-    "file:///C:/Users/User/.config/opencode/plugins/grep-fix.js",
-    "file:///C:/Users/User/.config/opencode/plugins/mind-automation.js"
+    "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/edit-tool-fix.js",
+    "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/write-findings.js",
+    "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/grep-fix.js",
+    "file:///HINTFORLLM:REPLACEWITHREALOPENCODEPATH/opencode/plugins/mind-automation.js"
   ]
 }
