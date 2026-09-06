@@ -28,6 +28,12 @@ export default {
           required: ["path", "body"],
           additionalProperties: false,
         },
+        output: {
+          type: "object",
+          properties: {
+            output: { type: "string" },
+          },
+        },
         execute: async (args) => {
           const path = String(args.path || "").trim()
           const body = String(args.body || "")

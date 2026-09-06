@@ -17,6 +17,9 @@ permissions:
   - action: grep
     resource: "*"
     effect: deny
+  - action: execute
+    resource: "*"
+    effect: allow
   - action: write_findings
     resource: "*"
     effect: allow

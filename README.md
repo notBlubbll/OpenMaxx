@@ -1,9 +1,9 @@
-﻿# opencode multi-model subagent setup
+﻿﻿# opencode multi-model subagent setup
 
 Repo: [notBlubbll/OpenMaxx](https://github.com/notBlubbll/OpenMaxx)
 
 Routes opencode work across providers by cost and role: GLM-5.3-Flash (hypercharm, 1M context)
-for primary orchestration and detective; **airouter** (api.airouter.ch) for research + execution (api.airouter.ch) for the executors â€” Agnes 2.5 Flash for research (HIGH reasoning), Qwen-3.8-27B for edits (LOW, fast); Qwen3 Next 80B-A3B Instruct (hypercharm) for the implementation coordinator with LOW reasoning for rapid dispatch; GLM-5.3 (hypercharm flagship) for compaction; hypercharm/gpt-oss-120b for session
+for primary orchestration and detective; **airouter** (api.airouter.ch) for research + execution (api.airouter.ch) for the executors — Agnes 2.5 Flash for research (HIGH reasoning), Qwen-3.8-27B for edits (LOW, fast); Qwen3 Next 80B-A3B Instruct (hypercharm) for the implementation coordinator with LOW reasoning for rapid dispatch; GLM-5.3 (hypercharm flagship) for compaction; hypercharm/gpt-oss-120b for session
 titles. Findings are saved directly via the deterministic write_findings custom tool (no subagent,
 no LLM).
 
@@ -24,12 +24,12 @@ Editing:
 
 ## Get API keys
 
-**AI Router (executers: research + edit)** â€” get your key from your AI Router account and set
+**AI Router (executers: research + edit)** — get your key from your AI Router account and set
 it in `opencode.json` under `provider.airouter.options.apiKey` (baseURL
 `https://api.airouter.ch/v1`). Models: `Qwen3.8` (Qwen-3.8-27B) and `DeepSeek-V4-Flash` (DeepSeek-V4-Flash-0731).
 
-**HyperCharm** â€” set your key in `opencode.json` under `provider.hypercharm.options.apiKey`
-(baseURL `https://hyper.charm.land/v1`). Models: `glm-5.3-flash` (primary + detective), `qwen3-next-80b-a3b-instruct` (coordinator), `glm-5.3` (compaction, flagship), and `gpt-oss-120b` (titles â€” HyperCharm's low tier, trivially cheap).
+**HyperCharm** — set your key in `opencode.json` under `provider.hypercharm.options.apiKey`
+(baseURL `https://hyper.charm.land/v1`). Models: `glm-5.3-flash` (primary + detective), `qwen3-next-80b-a3b-instruct` (coordinator), `glm-5.3` (compaction, flagship), and `gpt-oss-120b` (titles — HyperCharm's low tier, trivially cheap).
 
 ## OpenAI-Compatible SDK (stability)
 
@@ -82,19 +82,19 @@ Primary (hypercharm/glm-5.3-flash, variant:high)      receives request, routes A
   â””â”€ explore (agnes-research/agnes-2.5-flash#explore)     nested lookups inside edit [agnes-research]
 ```
 
-The primary NEVER spawns `edit` directly â€” ALL edits go through `coordinator`.
-The primary spawns `detective` for ALL research needs. `research-worker` is the detective's fan-out for parallel lookups. `research` is the coordinator's fallback for gaps in detective findings â€” never a primary tool.
+The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
+The primary spawns `detective` for ALL research needs. `research-worker` is the detective's fan-out for parallel lookups. `research` is the coordinator's fallback for gaps in detective findings — never a primary tool.
 
 ## Plugin Setup
 
 The plugins directory uses the V2 subdirectory structure. Each plugin lives in its own folder with an `index.js` entrypoint:
 
-- **write-findings/** â€” Custom tool that writes findings to `.opencode-findings/` without spawning a subagent
-- **edit-tool-fix/** â€” Normalizes paths and line endings before edit execution
-- **grep-fix/** â€” Fixes invalid `include` parameter shapes in grep calls
-- **mind-automation/** â€” V2 event subscription for mind CLI checkpoint automation
-- **task-args-fixer/** â€” V2 no-op stub (V2 native schema)
-- **k2-reasoning-proxy.js** â€” Plugin that autostarts the k2-proxy standalone server on port 8089
+- **write-findings/** — Custom tool that writes findings to `.opencode-findings/` without spawning a subagent
+- **edit-tool-fix/** — Normalizes paths and line endings before edit execution
+- **grep-fix/** — Fixes invalid `include` parameter shapes in grep calls
+- **mind-automation/** — V2 event subscription for mind CLI checkpoint automation
+- **task-args-fixer/** — V2 no-op stub (V2 native schema)
+- **k2-reasoning-proxy.js** — Plugin that autostarts the k2-proxy standalone server on port 8089
 
 The standalone `k2-proxy-server-standalone.js` is kept in `.opencode-backups/` to avoid being auto-loaded as a broken plugin.
 
