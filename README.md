@@ -309,6 +309,27 @@ survives compaction and session resets. The instruction is harmless even
 without the MCP server — it only activates when mind tools are available.
 
 
+## OpenCode V2 notes (Sept 2026)
+
+V2 installs as `opencode2` (`npm install -g @opencode-ai/cli@beta`) and runs **side-by-side** with V1 —
+it never replaces the V1 `opencode` binary. Both share `~/.config/opencode/opencode.json`.
+
+- **V1 rejects V2-format configs.** If your config uses V2 shapes (`agents.*.permissions`
+  arrays, `provider.npm`, etc.), the V1 `opencode` binary fails every command with
+  "V2 permissions are not supported by OpenCode V1. Use V1 permission rules or run opencode2."
+- This machine maps `opencode` → `opencode2` (V1 kept as `opencode1` via renamed npm shims in
+  `%APPDATA%\npm`). Re-running `npm i -g opencode-ai` regenerates the V1 shims and undoes that.
+- Plugin gotchas fixed in this repo (see `plugins/`):
+  - **grep-fix.js**: the grep tool's `include` parameter is a **single glob string** — the server
+    passes it as one `--glob=` flag (no array, no comma lists; `MAX_RECORD_BYTES` = 64KB per match
+    line). Merging exclusion globs into an array breaks **every** grep call with
+    `include: Expected string`. The plugin now only coerces invalid shapes (arrays) to the first
+    positive glob and keeps the 64KB-error → actionable-text conversion.
+  - **edit-tool-fix.js**: load as a plain `.js` entrypoint with no SDK import. The npm
+    `@opencode-ai/plugin` package (1.14.x/1.18.x line) is the **V1 SDK** and exports no `Plugin`
+    symbol — a directory plugin doing `import { Plugin } from "@opencode-ai/plugin"` fails to load
+    ("Export named 'Plugin' not found"). Uses the edit tool's `path` field (not `filePath`).
+
 ## Current routing summary
 
 - Main model: hypercharm/glm-5.3-flash (variant high)

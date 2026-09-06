@@ -488,6 +488,10 @@
   },
   "shell": "cmd",
   "plugins": [
-    "file:///C:/Users/User/.config/opencode/plugins/edit-tool-fix.js"
+    "file:///C:/Users/User/.config/opencode/plugins/edit-tool-fix.js",
+    "file:///C:/Users/User/.config/opencode/plugins/write-findings.js",
+    "file:///C:/Users/User/.config/opencode/plugins/grep-fix.js",
+    "file:///C:/Users/User/.config/opencode/plugins/task-args-fixer.js",
+    "file:///C:/Users/User/.config/opencode/plugins/mind-automation.js"
   ]
 }
