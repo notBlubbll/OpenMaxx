@@ -1,4 +1,4 @@
-﻿﻿# opencode multi-model subagent setup
+﻿# opencode multi-model subagent setup
 
 Repo: [notBlubbll/OpenMaxx](https://github.com/notBlubbll/OpenMaxx)
 
@@ -45,25 +45,25 @@ The `airouter` provider serves the executer (edit). The `hypercharm` provider se
 
 ```
 ~/.config/opencode/
-â”œâ”€â”€ opencode.json
-â”œâ”€â”€ agents/
-â”‚   â”œâ”€â”€ research.md       # deep search -> agnes-research/agnes-2.5-flash#research (LOW reasoning, fast, saves via write_findings)
-â”‚   â”œâ”€â”€ research-worker.md # parallel lookups -> agnes-research/agnes-2.5-flash#research-worker (LOW reasoning)
-â”‚   â”œâ”€â”€ detective.md      # research orchestrator -> hypercharm/glm-5.3-flash (HIGH reasoning, spawns research-worker)
-â”‚   â”œâ”€â”€ edit.md           # code edits + shell/builds -> agnes-execute/agnes-2.5-flash#edit (LOW reasoning, fast, edit tool)
-â”‚   â”œâ”€â”€ coordinator.md    # implementation orchestrator -> hypercharm/qwen3-next-80b-a3b-instruct (LOW reasoning); plans + delegates, cannot edit/shell itself
-â”‚   â””â”€â”€ title.md          # session titles -> hypercharm/gpt-oss-120b  [overrides small_model]
-â”œâ”€â”€ tools/            # edit-ops.js (batch file edits), write.js (schema-safe write override)
-â”œâ”€â”€ plugins/          # write-findings/, edit-tool-fix/, grep-fix/, mind-automation/, task-args-fixer/ (V2 native)
-â”‚   â”œâ”€â”€ write-findings/index.js
-â”‚   â”œâ”€â”€ edit-tool-fix/index.js
-â”‚   â”œâ”€â”€ grep-fix/index.js
-â”‚   â”œâ”€â”€ mind-automation/index.js
-â”‚   â”œâ”€â”€ task-args-fixer/index.js
-â”‚   â”œâ”€â”€ k2-reasoning-proxy.js
-â”‚   â””â”€â”€ .opencode-backups/
-â””â”€â”€ instructions/
-    â””â”€â”€ AGENTS.md       # delegation rules injected into every session
+├── opencode.json
+├── agents/
+│   ├── research.md       # deep search -> agnes-research/agnes-2.5-flash#research (LOW reasoning, fast, saves via write_findings)
+│   ├── research-worker.md # parallel lookups -> agnes-research/agnes-2.5-flash#research-worker (LOW reasoning)
+│   ├── detective.md      # research orchestrator -> hypercharm/glm-5.3-flash (HIGH reasoning, spawns research-worker)
+│   ├── edit.md           # code edits + shell/builds -> agnes-execute/agnes-2.5-flash#edit (LOW reasoning, fast, edit tool)
+│   ├── coordinator.md    # implementation orchestrator -> hypercharm/qwen3-next-80b-a3b-instruct (LOW reasoning); plans + delegates, cannot edit/shell itself
+│   └── title.md          # session titles -> hypercharm/gpt-oss-120b  [overrides small_model]
+├── tools/            # edit-ops.js (batch file edits), write.js (schema-safe write override)
+├── plugins/          # write-findings/, edit-tool-fix/, grep-fix/, mind-automation/, task-args-fixer/ (V2 native)
+│   ├── write-findings/index.js
+│   ├── edit-tool-fix/index.js
+│   ├── grep-fix/index.js
+│   ├── mind-automation/index.js
+│   ├── task-args-fixer/index.js
+│   ├── k2-reasoning-proxy.js
+│   └── .opencode-backups/
+└── instructions/
+    └── AGENTS.md       # delegation rules injected into every session
 ```
 
 Copy the files to `%USERPROFILE%\.config\opencode\` (Windows) or `~/.config/opencode/`.
@@ -74,12 +74,12 @@ Requires **opencode2** (OpenCode V2, `subagent` tool with `agent`/`description`/
 
 ```
 Primary (hypercharm/glm-5.3-flash, variant:high)      receives request, routes ALL research to detective
-  â”œâ”€ detective (hypercharm/glm-5.3-flash, high thinking)   research orchestrator (PREFERRED for lookups) [hypercharm]
-  â”‚   â””â”€ research-worker (airouter/DeepSeek-V4-Flash, variant:research-worker)   parallel research workers (LOW reasoning) [airouter]
-  â”œâ”€ coordinator (hypercharm/qwen3-next-80b-a3b-instruct, variant:low)   implementation orchestrator: plans + delegates, cannot edit/shell itself [hypercharm]
-  â”‚   â”œâ”€ edit (airouter/Qwen3.8)     applies edits via edit tool + builds
-  â”‚   â””â”€ research (agnes-research/agnes-2.5-flash#research, variant:low) ONLY as fallback for gaps in detective findings
-  â””â”€ explore (agnes-research/agnes-2.5-flash#explore)     nested lookups inside edit [agnes-research]
+  ├── detective (hypercharm/glm-5.3-flash, high thinking)   research orchestrator (PREFERRED for lookups) [hypercharm]
+  │   └── research-worker (airouter/DeepSeek-V4-Flash, variant:research-worker)   parallel research workers (LOW reasoning) [airouter]
+  ├── coordinator (hypercharm/qwen3-next-80b-a3b-instruct, variant:low)   implementation orchestrator: plans + delegates, cannot edit/shell itself [hypercharm]
+  │   ├── edit (airouter/Qwen3.8)     applies edits via edit tool + builds
+  │   └── research (agnes-research/agnes-2.5-flash#research, variant:low) ONLY as fallback for gaps in detective findings
+  └── explore (agnes-research/agnes-2.5-flash#explore)     nested lookups inside edit [agnes-research]
 ```
 
 The primary NEVER spawns `edit` directly — ALL edits go through `coordinator`.
