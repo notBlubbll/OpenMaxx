@@ -25,6 +25,9 @@ export default {
 }
 
 function fixRgCommand(cmd) {
+  // Match rg invocations: rg [args] or rg.exe [args]
+  // We fix the entire command string, focusing on --glob and -g arguments
+
   let result = cmd
 
   // Fix --glob="path1/path2;path3/path4" → split into separate -g flags
@@ -68,7 +71,9 @@ function fixRgCommand(cmd) {
 
 function normalizeGlob(pattern) {
   if (!pattern) return pattern
+  // Convert forward slashes to backslashes for Windows rg
   let fixed = pattern.replace(/\//g, "\\")
+  // Collapse multiple backslashes
   fixed = fixed.replace(/\\{2,}/g, "\\")
   return fixed
 }
