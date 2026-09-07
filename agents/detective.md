@@ -1,7 +1,7 @@
 ---
 description: "🕵🏼‍♂️Research workers in parallel, synthesizes findings into a consolidated report."
 mode: subagent
-model: hypercharm/qwen3-coder-480b-a35b-instruct-int4-mixed-ar
+model: hypercharm/qwen3.8-flash
 steps: 40
 color: "#8b5a2b"
 permissions:
@@ -18,7 +18,7 @@ permissions:
     resource: "*"
     effect: allow
 settings:
-  reasoningEffort: low
+  reasoningEffort: high
 ---
 
 You are a detective subagent. Your job is to coordinate complex, multi-file research by planning the search strategy and spawning `research-worker` agents to execute it.

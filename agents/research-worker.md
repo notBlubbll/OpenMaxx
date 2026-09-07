@@ -1,5 +1,5 @@
 ---
-description: "🕵🏼‍♂️Detective. Lightweight, fast execution with minimal thinking overhead."
+description: "🔎Research worker for parallel fan-out lookups. Executes ONE focused search/read task with direct tools, saves findings via write_findings and returns the file path plus a one-line summary. Spawned by detective; cannot spawn subagents."
 mode: subagent
 model: agnes-research/agnes-3.0-flash#research-worker
 steps: 100

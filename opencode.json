@@ -89,7 +89,7 @@
       ]
     },
     "research": {
-      "description": "🔎Coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references.",
+      "description": "🔎Deep code lookup agent (coordinator fallback when detective findings are insufficient). Reads code, traces call paths, and reports structured findings with exact file:line references. Saves findings via one write_findings call; cannot spawn subagents.",
       "mode": "subagent",
       "model": "agnes-research/agnes-3.0-flash#research",
       "steps": 150,
@@ -121,7 +121,7 @@
       }
     },
     "research-worker": {
-      "description": "🕵🏼‍♂️Detective. Lightweight, fast execution with minimal thinking overhead.",
+      "description": "🔎Research worker for parallel fan-out lookups. Executes ONE focused search/read task with direct tools, saves findings via write_findings and returns the file path plus a one-line summary. Spawned by detective; cannot spawn subagents.",
       "mode": "subagent",
       "model": "agnes-research/agnes-3.0-flash#research-worker",
       "steps": 100,
@@ -155,7 +155,7 @@
     "detective": {
       "description": "🕵🏼‍♂️Research workers in parallel, synthesizes findings into a consolidated report.",
       "mode": "subagent",
-      "model": "hypercharm/qwen3-coder-480b-a35b-instruct-int4-mixed-ar",
+      "model": "hypercharm/qwen3.8-flash",
       "steps": 100,
       "color": "#8b5a2b",
       "permissions": [
@@ -206,7 +206,7 @@
         }
       ],
       "settings": {
-        "reasoningEffort": "low"
+        "reasoningEffort": "high"
       }
     },
     "edit": {
@@ -249,7 +249,7 @@
     "coordinator": {
       "description": "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself.",
       "mode": "subagent",
-      "model": "hypercharm/qwen3.8-flash",
+      "model": "hypercharm/qwen3-coder-480b-a35b-instruct-int4-mixed-ar",
       "steps": 150,
       "color": "#555555",
       "permissions": [
@@ -305,7 +305,7 @@
         }
       ],
       "settings": {
-        "reasoningEffort": "low"
+        "reasoningEffort": "medium"
       }
     }
   },

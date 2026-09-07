@@ -1,5 +1,5 @@
 ---
-description: "🔎Research agent for deep code lookups inside coordinator sessions."
+description: "🔎Deep code lookup agent (coordinator fallback when detective findings are insufficient). Reads code, traces call paths, and reports structured findings with exact file:line references. Saves findings via one write_findings call; cannot spawn subagents."
 mode: subagent
 model: agnes-research/agnes-3.0-flash#research
 steps: 150
@@ -15,7 +15,7 @@ permissions:
     resource: "*"
     effect: allow
 settings:
-  reasoningEffort: high
+  reasoningEffort: low
 ---
 
 Execute immediately — never restate the task, never announce plans. First action = first search/read tool call.
