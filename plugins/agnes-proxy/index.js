@@ -15,6 +15,7 @@ export default {
     const AGNES_KEYS = [
       "wk-REDACTED",
       "sk-REDACTED",
+      "sk-REDACTED",
     ];
 
     const conversationMap = new Map();
@@ -61,7 +62,7 @@ export default {
     async function isSleevUp() {
       const ctl = new AbortController();
       const timer = setTimeout(() => ctl.abort(), 1500);
-      try { const res = await fetch(`${SLEEV_BASE}/health`, { signal: ctl.signal }); return res.ok; }
+      try { await fetch(`${SLEEV_BASE}/`, { signal: ctl.signal }); return true; } // any HTTP response = gateway alive
       catch { return false; } finally { clearTimeout(timer); }
     }
 
@@ -102,7 +103,7 @@ export default {
         const targetURL = useSleev ? `${SLEEV_BASE}${path}` : UPSTREAM + path;
         if (useSleev) {
           headers["sleeve-harness"] = "opencode";
-          headers["sleeve-base-url"] = UPSTREAM + path;
+          headers["sleeve-base-url"] = `${UPSTREAM}/v1`; // base only: gateway appends req path itself
         }
 
         const init = { method: req.method, headers };
@@ -117,7 +118,7 @@ export default {
           headers["authorization"] = `Bearer ${AGNES_KEYS[usedIdx]}`;
           if (useSleev) {
             headers["sleeve-harness"] = "opencode";
-            headers["sleeve-base-url"] = UPSTREAM + path;
+            headers["sleeve-base-url"] = `${UPSTREAM}/v1`; // base only: gateway appends req path itself
           }
           init.headers = headers;
           try { upstream = await fetch(targetURL, init); } catch (err) {

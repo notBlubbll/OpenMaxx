@@ -19,7 +19,7 @@ export default {
       if (Date.now() - sleevLastCheck < 5000) return sleevCache;
       sleevLastCheck = Date.now();
       const req = httpRequest(`${SLEEV_BASE}/health`, { method: "GET", timeout: 1000 }, (res) => {
-        sleevCache = res.statusCode >= 200 && res.statusCode < 400;
+        sleevCache = true; // any HTTP response = gateway alive (it 400s without harness headers)
         res.resume();
       });
       req.on("error", () => { sleevCache = false; });
@@ -63,7 +63,7 @@ export default {
 
         if (useSleev) {
           headers["sleeve-harness"] = "opencode";
-          headers["sleeve-base-url"] = `${UPSTREAM}${reqPath}`;
+          headers["sleeve-base-url"] = `${UPSTREAM}/v1`; // gateway strips leading /v1 from req path, so base MUST include it
         }
 
         const init = { method: req.method, headers };

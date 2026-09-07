@@ -1,4 +1,4 @@
-﻿# opencode multi-model subagent setup
+﻿﻿# opencode multi-model subagent setup
 
 Routes opencode work across providers by cost and role: GLM-5.3-Flash (hypercharm, 1M context)
 for primary orchestration and detective; **agnes-research** (apihub.agnes-ai.com) for research workers and explore;
