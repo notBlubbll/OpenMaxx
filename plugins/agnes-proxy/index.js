@@ -13,14 +13,16 @@ export default {
     const SLEEV_BASE = "http://127.0.0.1:17321";
 
     const AGNES_KEYS = [
-      "REDACTED",
-      "REDACTED",
-      "REDACTED",
+      "REDACTED-AGNES-KEY-1",
+      "REDACTED-AGNES-KEY-2",
+      "REDACTED-AGNES-KEY-3",
     ];
 
     const conversationMap = new Map();
     const keyHealth = AGNES_KEYS.map(() => ({ healthy: true, lastError: 0 }));
     const KEY_COOLDOWN_MS = 30000;
+    let _sleevCache = null; // { value: boolean, timestamp: number }
+    const SLEEV_CACHE_TTL_MS = 30000;
 
     function fingerprintPayload(payload) {
       const msgs = payload?.messages;
@@ -66,6 +68,18 @@ export default {
       catch { return false; } finally { clearTimeout(timer); }
     }
 
+    async function getSleevDecision() {
+      const now = Date.now();
+      if (_sleevCache && _sleevCache.timestamp + SLEEV_CACHE_TTL_MS > now) return _sleevCache.value;
+      try {
+        const value = await isSleevUp();
+        _sleevCache = { value, timestamp: now };
+        return value;
+      } catch {
+        return _sleevCache ? _sleevCache.value : false;
+      }
+    }
+
     function collect(req) {
       return new Promise((resolve, reject) => {
         const chunks = [];
@@ -80,14 +94,17 @@ export default {
         const path = req.url || "/";
 
         if (req.method === "GET" && path.split("?")[0] === "/health") {
-          const sleev = await isSleevUp();
+          const sleev = await getSleevDecision();
           res.writeHead(200, { "content-type": "application/json" });
           res.end(JSON.stringify({ status: "ok", keys: AGNES_KEYS.length, healthy: keyHealth.filter((k) => k.healthy).length, sleev }));
           return;
         }
 
         const raw = await collect(req);
-        const useSleev = await isSleevUp();
+        let clientGone = false;
+        let reader = null;
+        req.on("close", () => { clientGone = true; try { reader?.cancel().catch(() => {}); } catch {} });
+        const useSleev = await getSleevDecision();
 
         let parsed = null;
         try { parsed = JSON.parse(raw?.toString("utf8") ?? "{}"); } catch {}
@@ -108,8 +125,23 @@ export default {
 
         const init = { method: req.method, headers };
         if (raw && raw.length && req.method !== "GET" && req.method !== "HEAD") {
-          init.body = raw;
-          init.duplex = "half";
+          let parsed = null;
+          try { parsed = JSON.parse(raw.toString("utf8")); } catch {}
+          let outBody;
+          if (parsed && parsed.model && parsed.model.startsWith("agnes")) {
+            const minMaxTokens = parseInt(process.env.AGNES_MIN_MAX_TOKENS || "16384");
+            const maxTokens = parsed.max_tokens ?? parsed.max_completion_tokens;
+            if (maxTokens == null || maxTokens <= 0 || maxTokens < minMaxTokens) {
+              parsed.max_tokens = Math.min(Math.max(maxTokens || 0, minMaxTokens), 65536);
+              delete parsed.max_completion_tokens;
+            }
+            outBody = Buffer.from(JSON.stringify(parsed));
+          } else {
+            outBody = Buffer.from(raw);
+          }
+          init.body = outBody;
+          if (outBody.length > 0) init.duplex = "half";
+          headers["content-length"] = String(outBody.length);
         }
 
         let upstream = null;
@@ -146,13 +178,37 @@ export default {
         if (ctype) outHeaders["content-type"] = ctype;
         res.writeHead(upstream.status, outHeaders);
         if (!upstream.body) { res.end(); return; }
-        const reader = upstream.body.getReader();
-        for (;;) { const { done, value } = await reader.read(); if (done) break; res.write(Buffer.from(value)); }
-        res.end();
+        reader = upstream.body.getReader();
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done || clientGone || res.destroyed) break;
+          res.write(Buffer.from(value));
+          if (!res.writableNeedDrain) continue;
+          await new Promise((r) => { res.once("drain", r); res.once("close", r); });
+          if (clientGone || res.destroyed) break;
+        }
+        if (!clientGone && !res.destroyed) res.end();
       } catch (err) {
-        if (!res.headersSent) res.writeHead(502, { "content-type": "text/plain" });
-        try { res.end(`Proxy error: ${err?.message || String(err)}`); } catch {}
+        const msg = err?.message || String(err);
+        if (!res.headersSent) {
+          res.writeHead(502, { "content-type": "application/json" });
+          try { res.end(JSON.stringify({ error: { message: msg, type: "proxy_error" } })); } catch {}
+        } else if (!res.writableEnded && !res.destroyed) {
+          try {
+            res.write(`data: ${JSON.stringify({ error: { message: msg, type: "proxy_error" } })}\n\n`);
+            res.write("data: [DONE]\n\n");
+            res.end();
+          } catch {}
+        }
       }
+    });
+
+    server.on("error", (err) => {
+      if (err.code === "EADDRINUSE") {
+        console.log(`[agnes-proxy] 127.0.0.1:8090 already bound by another instance — standing down`);
+        return;
+      }
+      console.error(`[agnes-proxy] server error:`, err);
     });
 
     server.listen(PORT, HOST, () => {

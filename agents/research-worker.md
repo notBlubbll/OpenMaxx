@@ -1,7 +1,7 @@
 ---
 description: "🕵🏼‍♂️Detective. Lightweight, fast execution with minimal thinking overhead."
 mode: subagent
-model: agnes-research/agnes-2.5-flash#research-worker
+model: agnes-research/agnes-3.0-flash#research-worker
 steps: 100
 color: "#7aa2f7"
 permissions:
@@ -32,7 +32,7 @@ BATCH READ CALLS: issue ALL independent read/grep/glob calls in ONE assistant me
 PATH SANITY: all .opencode-findings paths must be built from YOUR OWN cwd. Never abbreviate the root.
 
 FINDINGS WRITE (ONE write_findings call - tolerant: aliases accepted, no escaping dance):
-- To save findings, call `write_findings` DIRECTLY once (path under `.opencode-findings/`, body = full markdown). It is an MCP tool available to you — do not wrap it in execute, do not fall back to shell or write.
+- To save findings, call `write_findings` via `execute` ONCE - the tool lives in the Code Mode catalog as `tools.write.findings` in subagent sessions. Just call it: `return tools.write.findings({ path: '<abs path containing .opencode-findings>', body: '<full markdown>' })` - plain string params, no backticks, no catalog check, no conditional branching, no fallback to shell or write.
 - Path MUST contain `.opencode-findings`. Content is your full markdown text.
 - The WRITTEN response IS the confirmation. Do NOT retry via shell heredocs, python, base64, or temp files.
 - Write ONCE, then return the file path plus a one-line summary.

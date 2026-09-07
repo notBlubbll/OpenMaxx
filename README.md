@@ -31,22 +31,22 @@ Editing:
 |---|---|
 | primary (orchestration) | hypercharm/glm-5.3-flash |
 | detective (research orchestrator) | hypercharm/qwen3.8-flash |
-| research-worker (parallel lookups) | agnes-research/agnes-2.5-flash |
+| research-worker (parallel lookups) | agnes-research/agnes-3.0-flash |
 | coordinator (implementation orchestrator) | hypercharm/qwen3-next-80b-a3b-instruct |
-| edit (code edits + builds) | agnes-execute/agnes-2.5-flash |
-| research (fallback only) | agnes-research/agnes-2.5-flash |
-| explore (nested lookups) | agnes-research/agnes-2.5-flash |
+| edit (code edits + builds) | agnes-execute/agnes-3.0-flash |
+| research (fallback only) | agnes-research/agnes-3.0-flash |
+| explore (nested lookups) | agnes-research/agnes-3.0-flash |
 | titles / compaction | hypercharm/gpt-oss-120b / hypercharm/glm-5.3 |
 | findings saving | write_findings tool (local, zero cost) |
 
 ```
 Primary (hypercharm/glm-5.3-flash)      receives request, routes ALL research to detective
   ├── detective (hypercharm/qwen3.8-flash)   research orchestrator
-  │   └── research-worker (agnes-research/agnes-2.5-flash)   parallel lookups
+  │   └── research-worker (agnes-research/agnes-3.0-flash)   parallel lookups
   ├── coordinator (hypercharm/qwen3-next-80b-a3b-instruct)   plans + delegates, cannot edit/shell
-  │   ├── edit (agnes-execute/agnes-2.5-flash)   applies edits + builds
-  │   └── research (agnes-research/agnes-2.5-flash)   fallback for gaps only
-  └── explore (agnes-research/agnes-2.5-flash)   nested lookups inside edit
+  │   ├── edit (agnes-execute/agnes-3.0-flash)   applies edits + builds
+  │   └── research (agnes-research/agnes-3.0-flash)   fallback for gaps only
+  └── explore (agnes-research/agnes-3.0-flash)   nested lookups inside edit
 ```
 
 Rules that matter: primary never spawns `edit`, never researches itself.
@@ -86,7 +86,7 @@ validates regex balance. Findings also exist as MCP tool
 opencode agent list
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' |
   Select-String 'agent=edit'
-# expect: providerID=agnes-execute modelID=agnes-2.5-flash
+# expect: providerID=agnes-execute modelID=agnes-3.0-flash
 ```
 
 Subagent sessions are title-tagged ([Edit], [Coordinate], [Research],
@@ -96,3 +96,5 @@ Subagent sessions are title-tagged ([Edit], [Coordinate], [Research],
 
 Edits and research run on Agnes AI and HyperCharm — review their terms for
 training-data policies. Mind MCP memory is optional and off by default.
+
+> **NOTE:** All API keys in this snapshot are REDACTED placeholders (opencode.json apiKey fields and plugins/agnes-proxy AGNES_KEYS). Pruned providers not referenced by the live setup: airouter, camelai, freebuff, ifm, synthetic, xkiro. Restore real values from ~/.config/opencode when deploying.

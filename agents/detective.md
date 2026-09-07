@@ -1,7 +1,7 @@
 ---
 description: "🕵🏼‍♂️Research workers in parallel, synthesizes findings into a consolidated report."
 mode: subagent
-model: hypercharm/qwen3.8-flash
+model: hypercharm/qwen3-coder-480b-a35b-instruct-int4-mixed-ar
 steps: 40
 color: "#8b5a2b"
 permissions:
@@ -14,7 +14,7 @@ permissions:
   - action: subagent
     resource: research-worker
     effect: allow
-    - action: write_findings
+  - action: write_findings
     resource: "*"
     effect: allow
 settings:
@@ -55,7 +55,7 @@ Spawn workers IN PARALLEL in one message for independent search tasks. Fan out a
 
 ## Saving findings
 save your consolidated report YOURSELF with ONE call:
-- Call `write_findings` DIRECTLY once: path under `.opencode-findings/`, body = full markdown. It is an MCP tool available to you — no execute wrapper, no shell.
+- Call `write_findings` via `execute` ONCE: `return tools.write.findings({ path: '<cwd>\\.opencode-findings\\<slug>.md', body: '<full consolidated markdown>' })`. Plain string params, no backticks, no catalog check. No shell, no node fallback.
 - Path MUST contain `.opencode-findings`. Content is your full consolidated findings text.
 - The WRITTEN response IS the confirmation. Do NOT retry via shell heredocs, python, base64, or temp files.
 - If the tool is not in your catalog, report configuration failure — never fall back to shell/PowerShell.

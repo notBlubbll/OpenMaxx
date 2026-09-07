@@ -1,7 +1,7 @@
 ---
 description: "✏️Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results."
 mode: subagent
-model: agnes-execute/agnes-2.5-flash#edit
+model: agnes-execute/agnes-3.0-flash#edit
 steps: 40
 color: "#ffd54f"
 permissions:
@@ -11,7 +11,7 @@ permissions:
   - action: shell
     resource: "*"
     effect: allow
-    - action: write_findings
+  - action: write_findings
     resource: "*"
     effect: allow
   - action: subagent

@@ -20,7 +20,7 @@ permissions:
   - action: execute
     resource: "*"
     effect: allow
-    - action: write_findings
+  - action: write_findings
     resource: "*"
     effect: allow
   - action: subagent
