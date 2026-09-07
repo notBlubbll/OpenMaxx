@@ -1,1 +1,413 @@
-{"$schema":"https://opencode.ai/config.json","model":"hypercharm/glm-5.3-flash","permissions":[{"action":"*","resource":"*","effect":"allow"}],"shell":"powershell","experimental":{"subagent_depth":4},"mcp":{"servers":{"mind":{"type":"local","command":["C:\\Users\\User\\Documents\\mind\\mind","mcp"]},"cheatengine":{"type":"local","command":["python","C:/Users/User/Desktop/HytaleHack/cheatengine-mcp-bridge/MCP_Server/mcp_cheatengine.py"]}}},"agents":{"explore":{"description":"??Explore agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. \u0027src/components/**/*.tsx\u0027), search code for keywords (eg. \u0027API endpoints\u0027), or answer questions about the codebase (eg. \u0027how do API endpoints work?\u0027). When calling this agent, specify the desired thoroughness level: \u0027quick\u0027 for basic searches, \u0027medium\u0027 for moderate exploration, or \u0027very thorough\u0027 for comprehensive analysis across multiple locations and naming conventions.","mode":"subagent","model":"agnes-research/agnes-2.5-flash#explore","steps":60,"permissions":[{"action":"edit","resource":"*","effect":"deny"},{"action":"shell","resource":"*","effect":"deny"},{"action":"write_findings","resource":"*","effect":"allow"}]},"research":{"description":"??Coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references.","mode":"subagent","model":"agnes-research/agnes-2.5-flash#research","steps":100,"color":"#7aa2f7","permissions":[{"action":"edit","resource":"*","effect":"deny"},{"action":"shell","resource":"*","effect":"allow"},{"action":"write_findings","resource":"*","effect":"allow"}],"settings":{"reasoningEffort":"low"}},"research-worker":{"description":"???????Detective. Lightweight, fast execution with minimal thinking overhead.","mode":"subagent","model":"agnes-research/agnes-2.5-flash#research-worker","steps":40,"color":"#7aa2f7","permissions":[{"action":"edit","resource":"*","effect":"deny"},{"action":"shell","resource":"*","effect":"allow"},{"action":"write_findings","resource":"*","effect":"allow"}],"settings":{"reasoningEffort":"low"}},"detective":{"description":"???????Research workers in parallel, synthesizes findings into a consolidated report.","mode":"subagent","model":"hypercharm/qwen3.8-flash","steps":100,"color":"#8b5a2b","permissions":[{"action":"edit","resource":"*","effect":"deny"},{"action":"shell","resource":"*","effect":"allow"},{"action":"subagent","resource":"research-worker","effect":"allow"},{"action":"write_findings","resource":"*","effect":"allow"}],"settings":{"reasoningEffort":"low"}},"edit":{"description":"??Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results.","mode":"subagent","model":"agnes-execute/agnes-2.5-flash#edit","steps":80,"color":"#ffd54f","permissions":[{"action":"edit","resource":"*","effect":"allow"},{"action":"shell","resource":"*","effect":"allow"},{"action":"write_findings","resource":"*","effect":"allow"}],"settings":{"reasoningEffort":"medium"}},"coordinator":{"description":"??Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself.","mode":"subagent","model":"hypercharm/qwen3-next-80b-a3b-instruct","steps":150,"color":"#555555","permissions":[{"action":"edit","resource":"*","effect":"deny"},{"action":"shell","resource":"*","effect":"deny"},{"action":"glob","resource":"*","effect":"deny"},{"action":"grep","resource":"*","effect":"deny"},{"effect":"allow","resource":"*","action":"execute"},{"action":"write_findings","resource":"*","effect":"allow"},{"action":"subagent","resource":"research","effect":"allow"},{"action":"subagent","resource":"edit","effect":"allow"}],"settings":{"reasoningEffort":"low"}}},"providers":{"agnes-research":{"name":"Agnes AI (research)","package":"@opencode-ai/ai/providers/openai-compatible","settings":{"baseURL":"http://127.0.0.1:8090/v1","apiKey":"REDACTED"},"models":{"agnes-2.5-flash":{"name":"Agnes 2.5 Flash (research)","capabilities":{"tools":true,"input":["text","image"],"output":["text"]},"variants":[{"id":"explore","settings":{"thinking":{"type":"enabled","budget_tokens":2048}}},{"id":"research","settings":{"thinking":{"type":"enabled","budget_tokens":16384}}},{"id":"research-worker","settings":{"thinking":{"type":"enabled","budget_tokens":1024}}}],"limit":{"context":512000,"output":65536}}}},"hypercharm":{"name":"HyperCharm","package":"@opencode-ai/ai/providers/openai-compatible","settings":{"baseURL":"http://127.0.0.1:17300/v1","apiKey":"REDACTED"},"models":{"glm-5.3-flash":{"name":"GLM 5.3 Flash","capabilities":{"tools":true,"input":["text","image"],"output":["text"]},"variants":[{"id":"high","settings":{"reasoningEffort":"high"}}],"limit":{"context":1048576,"output":131072}},"qwen3.8-flash":{"name":"Qwen3.8 Flash","capabilities":{"tools":true,"input":["text"],"output":["text"]},"variants":[{"id":"high","settings":{"reasoningEffort":"high"}}],"limit":{"context":1000000,"output":128000}},"qwen3-next-80b-a3b-instruct":{"name":"Qwen3 Next 80B-A3B Instruct","capabilities":{"tools":true,"input":["text"],"output":["text"]},"variants":[{"id":"high","settings":{"reasoningEffort":"high"}}],"limit":{"context":1048576,"output":131072}}}},"agnes-execute":{"name":"Agnes AI (execute)","package":"@opencode-ai/ai/providers/openai-compatible","settings":{"baseURL":"http://127.0.0.1:8090/v1","apiKey":"REDACTED"},"models":{"agnes-2.5-flash":{"name":"Agnes 2.5 Flash (execute)","capabilities":{"tools":true,"input":["text","image"],"output":["text"]},"variants":[{"id":"edit","settings":{"thinking":{"type":"enabled","budget_tokens":16384}}}],"limit":{"context":512000,"output":65536}}}}},"plugins":["file:///C:/Users/User/.config/opencode/plugins/edit-tool-fix","file:///C:/Users/User/.config/opencode/plugins/write-findings","file:///C:/Users/User/.config/opencode/plugins/grep-fix","file:///C:/Users/User/.config/opencode/plugins/mind-automation","file:///C:/Users/User/.config/opencode/plugins/task-args-fixer","file:///C:/Users/User/.config/opencode/plugins/rg-fix","file:///C:/Users/User/.config/opencode/plugins/sleev-gateway","file:///C:/Users/User/.config/opencode/plugins/tinyproxy","file:///C:/Users/User/.config/opencode/plugins/agnes-proxy"]}
+{
+    "$schema":  "https://opencode.ai/config.json",
+    "model":  "hypercharm/glm-5.3-flash",
+    "permissions":  [
+                        {
+                            "action":  "*",
+                            "resource":  "*",
+                            "effect":  "allow"
+                        }
+                    ],
+    "shell":  "powershell",
+    "experimental":  {
+                         "subagent_depth":  4
+                     },
+    "mcp":  {
+                "servers":  {
+                                "mind":  {
+                                             "type":  "local",
+                                             "command":  [
+                                                             "C:\\Users\\User\\Documents\\mind\\mind",
+                                                             "mcp"
+                                                         ]
+                                         },
+                                "cheatengine":  {
+                                                    "type":  "local",
+                                                    "command":  [
+                                                                    "python",
+                                                                    "C:/Users/User/Desktop/HytaleHack/cheatengine-mcp-bridge/MCP_Server/mcp_cheatengine.py"
+                                                                ]
+                                                }
+                            }
+            },
+    "agents":  {
+                   "explore":  {
+                                   "description":  "??Explore agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. \u0027src/components/**/*.tsx\u0027), search code for keywords (eg. \u0027API endpoints\u0027), or answer questions about the codebase (eg. \u0027how do API endpoints work?\u0027). When calling this agent, specify the desired thoroughness level: \u0027quick\u0027 for basic searches, \u0027medium\u0027 for moderate exploration, or \u0027very thorough\u0027 for comprehensive analysis across multiple locations and naming conventions.",
+                                   "mode":  "subagent",
+                                   "model":  "agnes-research/agnes-2.5-flash#explore",
+                                   "steps":  60,
+                                   "permissions":  [
+                                                       {
+                                                           "action":  "edit",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "shell",
+                                                           "resource":  "*",
+                                                           "effect":  "deny"
+                                                       },
+                                                       {
+                                                           "action":  "write_findings",
+                                                           "resource":  "*",
+                                                           "effect":  "allow"
+                                                       }
+                                                   ]
+                               },
+                   "research":  {
+                                    "description":  "??Coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references.",
+                                    "mode":  "subagent",
+                                    "model":  "agnes-research/agnes-2.5-flash#research",
+                                    "steps":  100,
+                                    "color":  "#7aa2f7",
+                                    "permissions":  [
+                                                        {
+                                                            "action":  "edit",
+                                                            "resource":  "*",
+                                                            "effect":  "deny"
+                                                        },
+                                                        {
+                                                            "action":  "shell",
+                                                            "resource":  "*",
+                                                            "effect":  "allow"
+                                                        },
+                                                        {
+                                                            "action":  "write_findings",
+                                                            "resource":  "*",
+                                                            "effect":  "allow"
+                                                        }
+                                                    ],
+                                    "settings":  {
+                                                     "reasoningEffort":  "low"
+                                                 }
+                                },
+                   "research-worker":  {
+                                           "description":  "???????Detective. Lightweight, fast execution with minimal thinking overhead.",
+                                           "mode":  "subagent",
+                                           "model":  "agnes-research/agnes-2.5-flash#research-worker",
+                                           "steps":  40,
+                                           "color":  "#7aa2f7",
+                                           "permissions":  [
+                                                               {
+                                                                   "action":  "edit",
+                                                                   "resource":  "*",
+                                                                   "effect":  "deny"
+                                                               },
+                                                               {
+                                                                   "action":  "shell",
+                                                                   "resource":  "*",
+                                                                   "effect":  "allow"
+                                                               },
+                                                               {
+                                                                   "action":  "write_findings",
+                                                                   "resource":  "*",
+                                                                   "effect":  "allow"
+                                                               }
+                                                           ],
+                                           "settings":  {
+                                                            "reasoningEffort":  "low"
+                                                        }
+                                       },
+                   "detective":  {
+                                     "description":  "???????Research workers in parallel, synthesizes findings into a consolidated report.",
+                                     "mode":  "subagent",
+                                     "model":  "hypercharm/qwen3.8-flash",
+                                     "steps":  100,
+                                     "color":  "#8b5a2b",
+                                     "permissions":  [
+                                                         {
+                                                             "action":  "edit",
+                                                             "resource":  "*",
+                                                             "effect":  "deny"
+                                                         },
+                                                         {
+                                                             "action":  "shell",
+                                                             "resource":  "*",
+                                                             "effect":  "allow"
+                                                         },
+                                                         {
+                                                             "action":  "subagent",
+                                                             "resource":  "research-worker",
+                                                             "effect":  "allow"
+                                                         },
+                                                         {
+                                                             "action":  "write_findings",
+                                                             "resource":  "*",
+                                                             "effect":  "allow"
+                                                         }
+                                                     ],
+                                     "settings":  {
+                                                      "reasoningEffort":  "low"
+                                                  }
+                                 },
+                   "edit":  {
+                                "description":  "??Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results.",
+                                "mode":  "subagent",
+                                "model":  "agnes-execute/agnes-2.5-flash#edit",
+                                "steps":  80,
+                                "color":  "#ffd54f",
+                                "permissions":  [
+                                                    {
+                                                        "action":  "edit",
+                                                        "resource":  "*",
+                                                        "effect":  "allow"
+                                                    },
+                                                    {
+                                                        "action":  "shell",
+                                                        "resource":  "*",
+                                                        "effect":  "allow"
+                                                    },
+                                                    {
+                                                        "action":  "write_findings",
+                                                        "resource":  "*",
+                                                        "effect":  "allow"
+                                                    }
+                                                ],
+                                "settings":  {
+                                                 "reasoningEffort":  "medium"
+                                             }
+                            },
+                   "coordinator":  {
+                                       "description":  "??Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself.",
+                                       "mode":  "subagent",
+                                       "model":  "hypercharm/qwen3-next-80b-a3b-instruct",
+                                       "steps":  150,
+                                       "color":  "#555555",
+                                       "permissions":  [
+                                                           {
+                                                               "action":  "edit",
+                                                               "resource":  "*",
+                                                               "effect":  "deny"
+                                                           },
+                                                           {
+                                                               "action":  "shell",
+                                                               "resource":  "*",
+                                                               "effect":  "deny"
+                                                           },
+                                                           {
+                                                               "action":  "glob",
+                                                               "resource":  "*",
+                                                               "effect":  "deny"
+                                                           },
+                                                           {
+                                                               "action":  "grep",
+                                                               "resource":  "*",
+                                                               "effect":  "deny"
+                                                           },
+                                                           {
+                                                               "effect":  "allow",
+                                                               "resource":  "*",
+                                                               "action":  "execute"
+                                                           },
+                                                           {
+                                                               "action":  "write_findings",
+                                                               "resource":  "*",
+                                                               "effect":  "allow"
+                                                           },
+                                                           {
+                                                               "action":  "subagent",
+                                                               "resource":  "research",
+                                                               "effect":  "allow"
+                                                           },
+                                                           {
+                                                               "action":  "subagent",
+                                                               "resource":  "edit",
+                                                               "effect":  "allow"
+                                                           }
+                                                       ],
+                                       "settings":  {
+                                                        "reasoningEffort":  "low"
+                                                    }
+                                   }
+               },
+    "providers":  {
+                      "agnes-research":  {
+                                             "name":  "Agnes AI (research)",
+                                             "package":  "@opencode-ai/ai/providers/openai-compatible",
+                                             "settings":  {
+                                                              "baseURL":  "http://127.0.0.1:8090/v1",
+                                                              "apiKey":  "REDACTED"
+                                                          },
+                                             "models":  {
+                                                            "agnes-2.5-flash":  {
+                                                                                    "name":  "Agnes 2.5 Flash (research)",
+                                                                                    "capabilities":  {
+                                                                                                         "tools":  true,
+                                                                                                         "input":  [
+                                                                                                                       "text",
+                                                                                                                       "image"
+                                                                                                                   ],
+                                                                                                         "output":  [
+                                                                                                                        "text"
+                                                                                                                    ]
+                                                                                                     },
+                                                                                    "variants":  [
+                                                                                                     {
+                                                                                                         "id":  "explore",
+                                                                                                         "settings":  {
+                                                                                                                          "thinking":  {
+                                                                                                                                           "type":  "enabled",
+                                                                                                                                           "budget_tokens":  2048
+                                                                                                                                       }
+                                                                                                                      }
+                                                                                                     },
+                                                                                                     {
+                                                                                                         "id":  "research",
+                                                                                                         "settings":  {
+                                                                                                                          "thinking":  {
+                                                                                                                                           "type":  "enabled",
+                                                                                                                                           "budget_tokens":  16384
+                                                                                                                                       }
+                                                                                                                      }
+                                                                                                     },
+                                                                                                     {
+                                                                                                         "id":  "research-worker",
+                                                                                                         "settings":  {
+                                                                                                                          "thinking":  {
+                                                                                                                                           "type":  "enabled",
+                                                                                                                                           "budget_tokens":  1024
+                                                                                                                                       }
+                                                                                                                      }
+                                                                                                     }
+                                                                                                 ],
+                                                                                    "limit":  {
+                                                                                                  "context":  512000,
+                                                                                                  "output":  65536
+                                                                                              }
+                                                                                }
+                                                        }
+                                         },
+                      "hypercharm":  {
+                                         "name":  "HyperCharm",
+                                         "package":  "@opencode-ai/ai/providers/openai-compatible",
+                                         "settings":  {
+                                                          "baseURL":  "http://127.0.0.1:17300/v1",
+                                                          "apiKey":  "REDACTED"
+                                                      },
+                                         "models":  {
+                                                        "glm-5.3-flash":  {
+                                                                              "name":  "GLM 5.3 Flash",
+                                                                              "capabilities":  {
+                                                                                                   "tools":  true,
+                                                                                                   "input":  [
+                                                                                                                 "text",
+                                                                                                                 "image"
+                                                                                                             ],
+                                                                                                   "output":  [
+                                                                                                                  "text"
+                                                                                                              ]
+                                                                                               },
+                                                                              "variants":  [
+                                                                                               {
+                                                                                                   "id":  "high",
+                                                                                                   "settings":  {
+                                                                                                                    "reasoningEffort":  "high"
+                                                                                                                }
+                                                                                               }
+                                                                                           ],
+                                                                              "limit":  {
+                                                                                            "context":  1048576,
+                                                                                            "output":  131072
+                                                                                        }
+                                                                          },
+                                                        "qwen3.8-flash":  {
+                                                                              "name":  "Qwen3.8 Flash",
+                                                                              "capabilities":  {
+                                                                                                   "tools":  true,
+                                                                                                   "input":  [
+                                                                                                                 "text"
+                                                                                                             ],
+                                                                                                   "output":  [
+                                                                                                                  "text"
+                                                                                                              ]
+                                                                                               },
+                                                                              "variants":  [
+                                                                                               {
+                                                                                                   "id":  "high",
+                                                                                                   "settings":  {
+                                                                                                                    "reasoningEffort":  "high"
+                                                                                                                }
+                                                                                               }
+                                                                                           ],
+                                                                              "limit":  {
+                                                                                            "context":  1000000,
+                                                                                            "output":  128000
+                                                                                        }
+                                                                          },
+                                                        "qwen3-next-80b-a3b-instruct":  {
+                                                                                            "name":  "Qwen3 Next 80B-A3B Instruct",
+                                                                                            "capabilities":  {
+                                                                                                                 "tools":  true,
+                                                                                                                 "input":  [
+                                                                                                                               "text"
+                                                                                                                           ],
+                                                                                                                 "output":  [
+                                                                                                                                "text"
+                                                                                                                            ]
+                                                                                                             },
+                                                                                            "variants":  [
+                                                                                                             {
+                                                                                                                 "id":  "high",
+                                                                                                                 "settings":  {
+                                                                                                                                  "reasoningEffort":  "high"
+                                                                                                                              }
+                                                                                                             }
+                                                                                                         ],
+                                                                                            "limit":  {
+                                                                                                          "context":  1048576,
+                                                                                                          "output":  131072
+                                                                                                      }
+                                                                                        }
+                                                    }
+                                     },
+                      "agnes-execute":  {
+                                            "name":  "Agnes AI (execute)",
+                                            "package":  "@opencode-ai/ai/providers/openai-compatible",
+                                            "settings":  {
+                                                             "baseURL":  "http://127.0.0.1:8090/v1",
+                                                             "apiKey":  "REDACTED"
+                                                         },
+                                            "models":  {
+                                                           "agnes-2.5-flash":  {
+                                                                                   "name":  "Agnes 2.5 Flash (execute)",
+                                                                                   "capabilities":  {
+                                                                                                        "tools":  true,
+                                                                                                        "input":  [
+                                                                                                                      "text",
+                                                                                                                      "image"
+                                                                                                                  ],
+                                                                                                        "output":  [
+                                                                                                                       "text"
+                                                                                                                   ]
+                                                                                                    },
+                                                                                   "variants":  [
+                                                                                                    {
+                                                                                                        "id":  "edit",
+                                                                                                        "settings":  {
+                                                                                                                         "thinking":  {
+                                                                                                                                          "type":  "enabled",
+                                                                                                                                          "budget_tokens":  16384
+                                                                                                                                      }
+                                                                                                                     }
+                                                                                                    }
+                                                                                                ],
+                                                                                   "limit":  {
+                                                                                                 "context":  512000,
+                                                                                                 "output":  65536
+                                                                                             }
+                                                                               }
+                                                       }
+                                        }
+                  },
+    "plugins":  [
+                    "file:///C:/Users/User/.config/opencode/plugins/edit-tool-fix",
+                    "file:///C:/Users/User/.config/opencode/plugins/write-findings",
+                    "file:///C:/Users/User/.config/opencode/plugins/grep-fix",
+                    "file:///C:/Users/User/.config/opencode/plugins/mind-automation",
+                    "file:///C:/Users/User/.config/opencode/plugins/task-args-fixer",
+                    "file:///C:/Users/User/.config/opencode/plugins/rg-fix",
+                    "file:///C:/Users/User/.config/opencode/plugins/sleev-gateway",
+                    "file:///C:/Users/User/.config/opencode/plugins/tinyproxy",
+                    "file:///C:/Users/User/.config/opencode/plugins/agnes-proxy"
+                ]
+}
