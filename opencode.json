@@ -11,6 +11,21 @@
       "action": "subagent",
       "resource": "*",
       "effect": "deny"
+    },
+    {
+      "action": "subagent",
+      "resource": "coordinator",
+      "effect": "allow"
+    },
+    {
+      "action": "subagent",
+      "resource": "research",
+      "effect": "allow"
+    },
+    {
+      "action": "subagent",
+      "resource": "detective",
+      "effect": "allow"
     }
   ],
   "shell": "powershell",
@@ -23,14 +38,16 @@
       "command": [
         "C:\\Users\\User\\Documents\\mind\\mind",
         "mcp"
-      ]
+      ],
+      "timeout": 20000
     },
     "cheatengine": {
       "type": "local",
       "command": [
         "python",
         "C:\\Users\\User\\Desktop\\HytaleHack\\cheatengine-mcp-bridge\\MCP_Server\\mcp_cheatengine.py"
-      ]
+      ],
+      "timeout": 20000
     },
     "write": {
       "type": "local",
@@ -38,7 +55,8 @@
         "node",
         "C:\\Users\\User\\.config\\opencode\\mcp\\findings-mcp.cjs"
       ],
-      "enabled": true
+      "enabled": true,
+      "timeout": 20000
     }
   },
   "agents": {
@@ -74,7 +92,7 @@
       "description": "🔎Coordinator sessions. Reads code, traces call paths, and reports structured findings with exact file:line references.",
       "mode": "subagent",
       "model": "agnes-research/agnes-2.5-flash#research",
-      "steps": 100,
+      "steps": 150,
       "color": "#7aa2f7",
       "permissions": [
         {
@@ -106,7 +124,7 @@
       "description": "🕵🏼‍♂️Detective. Lightweight, fast execution with minimal thinking overhead.",
       "mode": "subagent",
       "model": "agnes-research/agnes-2.5-flash#research-worker",
-      "steps": 40,
+      "steps": 100,
       "color": "#7aa2f7",
       "permissions": [
         {
@@ -297,7 +315,7 @@
       "package": "@opencode-ai/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://127.0.0.1:8090/v1",
-        "apiKey": "agnes-proxy-managed"
+        "apiKey": "REDACTED"
       },
       "models": {
         "agnes-2.5-flash": {
@@ -353,7 +371,7 @@
       "package": "@opencode-ai/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://127.0.0.1:8090/v1",
-        "apiKey": "agnes-proxy-managed"
+        "apiKey": "REDACTED"
       },
       "models": {
         "agnes-2.5-flash": {
@@ -1799,7 +1817,7 @@
       "package": "@opencode-ai/ai/providers/openai-compatible",
       "settings": {
         "baseURL": "http://localhost:8084/v1",
-        "apiKey": "synthetic-proxy"
+        "apiKey": "REDACTED"
       },
       "models": {
         "hf:moonshotai/Kimi-K3": {

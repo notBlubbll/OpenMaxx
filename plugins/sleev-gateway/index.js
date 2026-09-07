@@ -49,7 +49,7 @@ export default {
     function isSignedIn() {
       try {
         const cfg = readJson(sleevFile("config.json"));
-        return cfg && cfg.auth && cfg.auth.signedIn = REDACTED true;
+        return cfg && cfg.auth && cfg.auth.signedIn === true;
       } catch (e) {
         log(`signin-check failed: base=${baseDir("roam")} err=${e?.message}`);
         return false;

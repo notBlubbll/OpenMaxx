@@ -2,7 +2,7 @@
 description: "🕵🏼‍♂️Detective. Lightweight, fast execution with minimal thinking overhead."
 mode: subagent
 model: agnes-research/agnes-2.5-flash#research-worker
-steps: 20
+steps: 100
 color: "#7aa2f7"
 permissions:
   - action: edit

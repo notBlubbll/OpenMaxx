@@ -2,7 +2,7 @@
 description: "🔎Research agent for deep code lookups inside coordinator sessions.
 mode: subagent
 model: agnes-research/agnes-2.5-flash#research
-steps: 100
+steps: 150
 color: "#7aa2f7"
 permissions:
   - action: edit

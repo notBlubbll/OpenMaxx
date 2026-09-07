@@ -19,8 +19,8 @@ export default {
     ];
 
     const conversationMap = new Map();
-    const keyHealth = REDACTED => ({ healthy: true, lastError: 0 }));
-    const KEY_COOLDOWN_MS = REDACTED
+    const keyHealth = AGNES_KEYS.map(() => ({ healthy: true, lastError: 0 }));
+    const KEY_COOLDOWN_MS = 30000;
 
     function fingerprintPayload(payload) {
       const msgs = payload?.messages;
@@ -82,7 +82,7 @@ export default {
         if (req.method === "GET" && path.split("?")[0] === "/health") {
           const sleev = await isSleevUp();
           res.writeHead(200, { "content-type": "application/json" });
-          res.end(JSON.stringify({ status: "ok", keys = REDACTED healthy: keyHealth.filter((k) = REDACTED k.healthy).length, sleev }));
+          res.end(JSON.stringify({ status: "ok", keys: AGNES_KEYS.length, healthy: keyHealth.filter((k) => k.healthy).length, sleev }));
           return;
         }
 
@@ -93,12 +93,12 @@ export default {
         try { parsed = JSON.parse(raw?.toString("utf8") ?? "{}"); } catch {}
         const fingerprint = fingerprintPayload(parsed);
         const cachedSession = fingerprint != null ? touchConversation(fingerprint) : undefined;
-        let usedIdx = pickKey(cachedSession ? cachedSession.tokenIndex = REDACTED
+        let usedIdx = pickKey(cachedSession ? cachedSession.tokenIndex : undefined);
 
         const headers = { ...req.headers };
         delete headers["host"];
         delete headers["content-length"];
-        headers["authorization"] = REDACTED ${AGNES_KEYS[usedIdx]}`;
+        headers["authorization"] = `Bearer ${AGNES_KEYS[usedIdx]}`;
 
         const targetURL = useSleev ? `${SLEEV_BASE}${path}` : UPSTREAM + path;
         if (useSleev) {
@@ -115,7 +115,7 @@ export default {
         let upstream = null;
         let lastErr = null;
         for (let attempt = 0; attempt < AGNES_KEYS.length; attempt++) {
-          headers["authorization"] = REDACTED ${AGNES_KEYS[usedIdx]}`;
+          headers["authorization"] = `Bearer ${AGNES_KEYS[usedIdx]}`;
           if (useSleev) {
             headers["sleeve-harness"] = "opencode";
             headers["sleeve-base-url"] = `${UPSTREAM}/v1`; // base only: gateway appends req path itself
@@ -126,7 +126,7 @@ export default {
           }
           if ((upstream.status === 429 || upstream.status === 401 || upstream.status === 403) && attempt + 1 < AGNES_KEYS.length) {
             await upstream.body?.cancel?.(); keyHealth[usedIdx] = { healthy: false, lastError: Date.now() }; usedIdx = pickKey(undefined);
-            if (cachedSession) cachedSession.tokenIndex = REDACTED continue;
+            if (cachedSession) cachedSession.tokenIndex = usedIdx; continue;
           }
           break;
         }
@@ -137,8 +137,8 @@ export default {
         }
 
         if (fingerprint != null) {
-          if (!cachedSession) trackConversationSession(fingerprint, { tokenIndex = REDACTED requestCount: 1 });
-          else { cachedSession.requestCount++; cachedSession.tokenIndex = REDACTED trackConversationSession(fingerprint, cachedSession); }
+          if (!cachedSession) trackConversationSession(fingerprint, { tokenIndex: usedIdx, requestCount: 1 });
+          else { cachedSession.requestCount++; cachedSession.tokenIndex = usedIdx; trackConversationSession(fingerprint, cachedSession); }
         }
 
         const outHeaders = {};

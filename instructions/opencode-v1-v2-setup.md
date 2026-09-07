@@ -48,6 +48,19 @@ Error: Configuration is invalid at C:\Users\User\.config\opencode\opencode.json
 
 `opencode stats --days 1` works again (reads V2 session data).
 
+## Instructions loading (V2 quirk — September 6, 2026)
+
+V2 parses the `instructions` array in `opencode.json` but does NOT load its entries (see
+https://opencode.ai/v2/docs/instructions). The only instruction files V2 loads are `AGENTS.md` files:
+
+1. The global file `~/.config/opencode/AGENTS.md` (loaded for EVERY project) — this is where the
+   **Agent Delegation Rules** live now (updated for V2's `subagent` tool: `agent`/`description`/`prompt`,
+   no `Task`/`subagent_type`/`task_id`).
+2. Project `AGENTS.md` files, from the current location up to home/project root.
+
+The reference copy at `~/.config/opencode/instructions/AGENTS.md` must be kept in sync with the global file.
+The `instructions` config array is left in place for when V2 implements it.
+
 ## Maintenance notes
 
 - **npm updates break the shims:** any `npm install -g opencode-ai` (reinstall/update of V1) regenerates
