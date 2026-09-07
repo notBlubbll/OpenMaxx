@@ -53,7 +53,7 @@ Spawn workers IN PARALLEL in one message for independent search tasks. Fan out a
 
 ## Saving findings
 save your consolidated report YOURSELF with ONE write_findings call:
-- Call write_findings ONCE: path under `.opencode-findings/`, body = full markdown. If not in your catalog, ONE execute call: return tools.write_findings({ path, body }) with plain strings.
+- Call write_findings ONCE: path under `.opencode-findings/`, body = full markdown. Via ONE execute call - it works regardless of catalog contents, so never stop to check: return tools.write_findings({ path, body }) with plain strings, no backticks.
 - Path MUST contain `.opencode-findings`. Content is your full consolidated findings text.
 - The WRITTEN response IS the confirmation. Do NOT retry via shell heredocs, python, base64, or temp files.
 

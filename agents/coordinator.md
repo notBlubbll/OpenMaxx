@@ -59,7 +59,7 @@ FINDINGS PATH RULE (reading AND writing): derive ALL .opencode-findings paths fr
 
 WRITE FINDINGS (your own final report - you write it, you do NOT delegate it):
 - When your task ends with a findings/report file, write it YOURSELF. NEVER spawn a `research` subagent to find a tool path or to write findings, and NEVER spawn an `edit` subagent to write findings.
-- **Call write_findings ONCE:** path under `.opencode-findings/`, body = full markdown. If not in your catalog, ONE execute call with plain string params.
+- **Call write_findings ONCE:** path under `.opencode-findings/`, body = full markdown. Via ONE execute call regardless of catalog contents, never stop to check - plain string params, no backticks.
   - Path MUST contain `.opencode-findings`. Content is your full markdown findings text.
   - No Code Mode needed. No escaping needed. The `write` tool handles it.
 - The tool returns a confirmation. Do NOT read the file back to verify.
