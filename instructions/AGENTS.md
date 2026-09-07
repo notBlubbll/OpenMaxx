@@ -26,7 +26,7 @@
 - When the `subagent` tool is not available in your tool list, you ARE a subagent already and should execute directly as instructed.
 - RESEARCH ROUTING (HIGHEST PRIORITY): the primary routes ALL research through `detective` — spawn detective for multi-file lookups, pre-explore, and any investigation; the primary's loop is: spawn detective -> receive findings path + summary -> delegate to coordinator -> synthesize. `coordinator` is an IMPLEMENTATION orchestrator: it plans and fans out `edit` spawns and must NOT spawn `research` unless the detective findings in its goal are insufficient for the edits (missing paths/context) — when it must, state in the spawn prompt exactly what info is missing and why the findings didn't cover it. Nested `research` agents MUST NOT spawn anything further; they save findings with ONE write_findings call.
 - Detective vs research routing: Use `detective` when the task involves 2+ files, call-path tracing, pattern searches across the codebase, or any multi-step investigation. `research` is ONLY a coordinator fallback for gaps in detective findings — never the primary's tool, and never a substitute for detective.
-- detective (hypercharm/glm-5.3-flash, high thinking) → spawns research workers in parallel → each saves findings via ONE write_findings call
+- detective (hypercharm/qwen3.8-flash, high thinking) → spawns research workers in parallel → each saves findings via ONE write_findings call
 - The `coordinator` agent has glob, grep, edit, shell ALL DENIED. Only tools: subagent (spawn research/edit) and read (findings files only). It MUST delegate all searching and editing.
 - Only the primary may spawn `detective`. The sub-orchestrator (coordinator) spawns `edit` for implementation and `research` ONLY as a fallback when detective findings are insufficient — never detective.
 - Parallel fan-out: a `coordinator` SHOULD shard independent edits across MULTIPLE `edit` subagents in ONE message (parallel) rather than batching them into one call; same-file/overlapping edits stay in a single call to avoid conflicts. Independent searches fan out across parallel `research` subagents the same way, with NO CAP — shard as many as needed in ONE message (combine related searches into multi-topic tasks when possible). `edit` subagent spawns are UNLIMITED — shard independent edits across as many as the plan needs in ONE message; same-file/overlapping edits stay in a single spawn to avoid conflicts.
@@ -64,10 +64,3 @@
 - OpenCode V2 (`opencode2`, beta-19192) is the default `opencode` command on this machine. V1 (`opencode1`) still exists for reference.
 - Config `instructions` entries are NOT loaded by V2. Loaded instruction sources are: this global AGENTS.md, then project AGENTS.md files from the Location up to home/project root.
 - Agents are defined in `~/.config/opencode/opencode.json` (`agents` key, V2 permission rules) AND `~/.config/opencode/agents/*.md` (file-based agents). Keep the agent md bodies in V2 vocabulary (see the files themselves).
-
-## Planned upgrades
-- Coordinator (sub-orchestrator): airouter/Qwen3.8#max
-- Detective: hypercharm/glm-5.3-flash (coordinates research workers) — the primary spawns it for ALL research needs
-- Edit: airouter/Qwen3.8#edit
-- Research: hypercharm/gemma-4-26b-a4b-it
-- Explore: agnes-research/agnes-2.5-flash#explore

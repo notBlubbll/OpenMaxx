@@ -92,14 +92,14 @@ function loadState(directory) {
 }
 
 function compactHandledKeys(handled) {
-  const keys = Object.keys(handled);
+  const keys = REDACTED
   if (keys.length <= MAX_STATE_KEYS) return handled;
   const sorted = keys
-    .map((key) => ({ key, value: Number(handled[key]) || 0 }))
+    .map((key) = REDACTED ({ key, value: Number(handled[key]) || 0 }))
     .sort((a, b) => b.value - a.value)
     .slice(0, MAX_STATE_KEYS);
   const next = {};
-  for (const item of sorted) next[item.key] = item.value;
+  for (const item of sorted) next[item.key] = REDACTED
   return next;
 }
 
@@ -122,7 +122,7 @@ function hasIntervalPassed(lastByKey, key, minMs) {
   const now = Date.now();
   const previous = Number(lastByKey[key] ?? 0);
   if (Number.isFinite(previous) && previous > 0 && now - previous < minMs) return false;
-  lastByKey[key] = now;
+  lastByKey[key] = REDACTED
   return true;
 }
 
@@ -181,13 +181,7 @@ function buildSessionSummaryContent(projectSpace, payload, summary) {
 function persistSessionSummary(directory, payload, summary, state) {
   const projectSpace = getProjectSpace(directory);
   const sessionId = extractSessionId(payload);
-  const dedupeKey = projectSpace + ":" + sessionId;
-  if (!hasIntervalPassed(state.summaries, dedupeKey, MIN_SUMMARY_INTERVAL_MS)) return;
-  const safeSummary = clampText(summary, MAX_NOTES_CHARS);
-  if (!safeSummary) return;
-  const memoryName = buildSessionSummaryName(sessionId);
-  const memoryContent = buildSessionSummaryContent(projectSpace, payload, safeSummary);
-  runMindCommand(["add", projectSpace, memoryName, memoryContent, "--tags", "type:session,cat:summary", "--tier", "3"]);
+  const dedupeKey = projectSpace + ": "REDACTED"add", projectSpace, memoryName, memoryContent, "--tags", "type:session,cat:summary", "--tier", "3"]);
 }
 
 export default {
@@ -198,14 +192,7 @@ export default {
 
     function checkpointForEvent(eventPayload, extra) {
       const projectSpace = getProjectSpace(directory);
-      const checkpointKey = projectSpace + ":" + extractSessionId(eventPayload);
-      if (!hasIntervalPassed(state.checkpoints, checkpointKey, MIN_CHECKPOINT_INTERVAL_MS)) return;
-      const notes = buildEventNotes(directory, eventPayload, extra);
-      ensureSessionScaffold(projectSpace, notes);
-    }
-
-    // Map V2 event types to the actions the plugin needs.
-    // V2 event stream emits events like { type: "session.created", ... } etc.
+      const checkpointKey = projectSpace + ": "REDACTED"session.created", ... } etc.
     function handleEvent(event) {
       if (!event || typeof event !== "object") return;
       try {

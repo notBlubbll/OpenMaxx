@@ -11,12 +11,17 @@ permissions:
   - action: shell
     resource: "*"
     effect: allow
-  - action: write_findings
+    - action: write_findings
     resource: "*"
     effect: allow
+  - action: subagent
+    resource: "*"
+    effect: deny
 settings:
   reasoningEffort: medium
 ---
+
+You are explicitly forbidden from spawning any subagent (detective, coordinator, research, explore, general). All work must be done directly via native tools. No exceptions.
 
 Execute immediately — never restate the task, never announce plans. First action = first tool call.
 

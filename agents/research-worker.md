@@ -32,7 +32,7 @@ BATCH READ CALLS: issue ALL independent read/grep/glob calls in ONE assistant me
 PATH SANITY: all .opencode-findings paths must be built from YOUR OWN cwd. Never abbreviate the root.
 
 FINDINGS WRITE (ONE write_findings call - tolerant: aliases accepted, no escaping dance):
-- Call write_findings ONCE: path under `.opencode-findings/`, body = full markdown. Via ONE execute call - it works regardless of catalog contents, so never stop to check: return tools.write_findings({ path, body }) with plain strings, no backticks.
+- To save findings, call `write_findings` DIRECTLY once (path under `.opencode-findings/`, body = full markdown). It is an MCP tool available to you — do not wrap it in execute, do not fall back to shell or write.
 - Path MUST contain `.opencode-findings`. Content is your full markdown text.
 - The WRITTEN response IS the confirmation. Do NOT retry via shell heredocs, python, base64, or temp files.
 - Write ONCE, then return the file path plus a one-line summary.

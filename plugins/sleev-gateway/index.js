@@ -1,16 +1,27 @@
-// sleev-gateway.js — OpenCode V2 plugin that manages the Sleev gateway lifecycle.
-// Ensures the gateway is running on 127.0.0.1:17321. Proxies (agnes, tinyproxy)
-// just check health and route through it — they don't manage the gateway.
+// sleev-gateway plugin - OpenCode V2. Manages the Sleev gateway lifecycle.
+//
+// Lessons (2026-09-07):
+// - The `sleev` CLI itself is broken in this env (all gateway/auth commands
+//   fail with "expected value at line 1 column 1"), so NEVER gate on CLI
+//   output. Signed-in state comes from config.json (auth.signedIn).
+// - Start the gateway BINARY directly with --host/--port/--config/--db-path.
+// - Stale sleeve-gateway.exe zombies (from dead server runs) hold no port but
+//   confuse checks: liveness = TCP response on PORT, nothing else.
 
 export default {
   id: "sleev-gateway",
   async setup(ctx) {
-    const { spawn, execSync } = await import("node:child_process");
-    const { appendFileSync } = await import("node:fs");
-
     const HOST = "127.0.0.1";
     const PORT = 17321;
-    const ERR_LOG = `${process.env.USERPROFILE || process.env.TEMP || "."}\\.config\\opencode\\plugins\\.sleev-gateway-errors.log`;
+
+    const { spawn } = await import("node:child_process");
+    const { readFileSync, appendFileSync, existsSync } = await import("node:fs");
+    const { join } = await import("node:path");
+
+    const ERR_LOG = join(
+      process.env.USERPROFILE || process.env.TEMP || ".",
+      ".config", "opencode", "plugins", ".sleev-gateway-errors.log"
+    );
 
     function log(msg) {
       const line = `[${new Date().toISOString()}] ${msg}\n`;
@@ -18,73 +29,83 @@ export default {
       try { appendFileSync(ERR_LOG, line); } catch {}
     }
 
-    // --- Sleev binary resolution ---
-    function resolveSleevBinary() {
+    function baseDir(kind) {
+      // APPDATA/LOCALAPPDATA are sometimes unset in service contexts - fall back via USERPROFILE.
+      const app = process.env.APPDATA;
+      const local = process.env.LOCALAPPDATA;
+      const home = process.env.USERPROFILE || "";
+      if (kind === "roam") return app || (home ? join(home, "AppData", "Roaming") : "");
+      return local || (home ? join(home, "AppData", "Local") : "");
+    }
+
+    function sleevFile(...parts) {
+      return join(baseDir("roam"), "sleev", ...parts);
+    }
+
+    function readJson(p) {
+      return JSON.parse(readFileSync(p, "utf8").replace(/^\uFEFF/, ""));
+    }
+
+    function isSignedIn() {
       try {
-        const which = process.platform === "win32" ? "where" : "which";
-        return execSync(`${which} sleev`, { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8" }).trim().split(/\r?\n/)[0];
+        const cfg = readJson(sleevFile("config.json"));
+        return cfg && cfg.auth && cfg.auth.signedIn = REDACTED true;
+      } catch (e) {
+        log(`signin-check failed: base=${baseDir("roam")} err=${e?.message}`);
+        return false;
+      }
+    }
+
+    function gatewayBin() {
+      try {
+        const cfg = readJson(sleevFile("config.json"));
+        const p = cfg && cfg.gateway && cfg.gateway.binPath;
+        if (p && existsSync(p)) return p;
       } catch {}
       return null;
     }
 
-    function isSleevLoggedIn(bin) {
-      const useShell = bin.endsWith(".cmd") || bin.endsWith(".bat");
-      try {
-        const out = execSync(`"${bin}" auth status`, { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8", timeout: 8000, shell: useShell });
-        if (out.includes('"signedIn"')) return /"signedIn"\s*:\s*true/.test(out);
-        return /logged in|authenticated|signed in/i.test(out);
-      } catch { return false; }
-    }
-
-    function isSleevGatewayHealthy(bin) {
-      const useShell = bin.endsWith(".cmd") || bin.endsWith(".bat");
-      try {
-        const out = execSync(`"${bin}" gateway status`, { stdio: ["ignore", "pipe", "ignore"], encoding: "utf8", timeout: 8000, shell: useShell });
-        return /"running"\s*:\s*true/.test(out) && /"healthy"\s*:\s*true/.test(out);
-      } catch { return false; }
-    }
-
-    // --- HTTP health check ---
     async function isUp() {
-      const ctl = new AbortController();
-      const timer = setTimeout(() => ctl.abort(), 2000);
-      try {
-        const res = await fetch(`http://${HOST}:${PORT}/health`, { signal: ctl.signal });
-        return res.ok;
-      } catch { return false; }
-      finally { clearTimeout(timer); }
+      const { request } = await import("node:http");
+      return new Promise((resolve) => {
+        const req = request(`http://${HOST}:${PORT}/`, { method: "GET", timeout: 4000 }, (res) => {
+          resolve(true); // any HTTP response = alive (it 400s without harness headers)
+          res.resume();
+        });
+        req.on("error", () => resolve(false));
+        req.on("timeout", () => { req.destroy(); resolve(false); });
+        req.end();
+      });
     }
 
-    // --- Gateway lifecycle ---
+    let starting = false; // singleflight: concurrent ensureRunning calls must not spawn twice (EADDRINUSE -> exit 255)
+
     async function ensureRunning() {
       try {
         if (await isUp()) return;
-
-        const bin = resolveSleevBinary();
-        if (!bin) { log("sleev binary not found"); return; }
-
-        // Check if gateway already running (started externally)
-        if (isSleevGatewayHealthy(bin)) { log("gateway already healthy (external)"); return; }
-
-        // Ensure signed in
-        if (!isSleevLoggedIn(bin)) {
-          log("not signed in — run `sleev auth login` manually, then restart");
+        if (starting) return;
+        await new Promise((r) => setTimeout(r, 2000));
+        if (await isUp()) return; // re-check: gateway may have just come up
+        starting = true;
+        if (!isSignedIn()) {
+          log("not signed in (config.json auth.signedIn != true) - sign in, then restart");
           return;
         }
 
-        // Bind and start
-        const useShell = bin.endsWith(".cmd") || bin.endsWith(".bat");
-        execSync(`"${bin}" gateway bind --host ${HOST} --port ${PORT} --restart`, {
-          stdio: ["ignore", "pipe", "pipe"], encoding: "utf8", timeout: 10000, shell: useShell,
-        });
-        const child = spawn(bin, ["gateway", "start"], {
-          detached: true, stdio: "ignore", windowsHide: true, shell: useShell,
-        });
+        const bin = gatewayBin();
+        if (!bin) { log("gateway binary not found (config.json gateway.binPath)"); return; }
+
+        const child = spawn(bin, [
+          "--host", HOST,
+          "--port", String(PORT),
+          "--config", sleevFile("gateway.json"),
+          "--db-path", join(baseDir("local"), "sleev", "sleeve.sqlite"),
+        ], { detached: true, stdio: "ignore", windowsHide: true });
+
         child.on("error", (e) => log(`spawn error: ${e?.message}`));
         child.on("exit", (code, sig) => log(`gateway exited code=${code} signal=${sig}`));
         child.unref();
 
-        // Wait for health
         for (let i = 0; i < 20; i++) {
           await new Promise((r) => setTimeout(r, 500));
           if (await isUp()) { log(`gateway ready on http://${HOST}:${PORT}`); return; }
@@ -92,6 +113,8 @@ export default {
         log("gateway did not become healthy within timeout");
       } catch (e) {
         log(`ensureRunning failed: ${e?.message || String(e)}`);
+      } finally {
+        starting = false;
       }
     }
 
