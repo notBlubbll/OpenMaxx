@@ -1,9 +1,11 @@
-// rg-fix plugin — OpenCode V2.
+// rg-fix plugin - OpenCode V2.
 // Fixes ripgrep (rg.exe) glob patterns on Windows before shell execution.
-// Common issues the LLM generates:
-//   1. Forward slashes in --glob (rg on Windows needs backslashes or quoted forward-slash globs)
-//   2. Semicolons in --glob (rg uses multiple -g flags, not semicolons)
-//   3. Missing quotes around glob patterns containing **
+// Verified against rg 15.2.0 on Windows (forward slashes REQUIRED in --glob):
+//   --glob "plugins/**"  -> works (exit 0)
+//   --glob "plugins\**"  -> matches nothing (exit 1)
+// So normalization goes backslash -> forward slash (NOT the reverse).
+// A positional `rg --files path/**` is treated as a PATH (os error 123);
+// quoting does not help - it must be promoted to `--glob "path/**"`.
 
 export default {
   id: "rg-fix",
@@ -25,45 +27,55 @@ export default {
 }
 
 function fixRgCommand(cmd) {
-  // Match rg invocations: rg [args] or rg.exe [args]
-  // We fix the entire command string, focusing on --glob and -g arguments
-
   let result = cmd
 
-  // Fix --glob="path1/path2;path3/path4" → split into separate -g flags
+  // Split --glob="a;b" into separate -g flags
   result = result.replace(
     /--glob\s*=\s*"([^"]*);([^"]*)"/g,
     (_, a, b) => `-g "${normalizeGlob(a)}" -g "${normalizeGlob(b)}"`
   )
 
-  // Fix --glob='path1/path2;path3/path4' (single quotes)
+  // Split --glob='a;b' (single quotes)
   result = result.replace(
     /--glob\s*=\s*'([^']*);([^']*)'/g,
     (_, a, b) => `-g '${normalizeGlob(a)}' -g '${normalizeGlob(b)}'`
   )
 
-  // Fix --glob="pattern" → normalize the path inside
+  // Normalize --glob="pattern"
   result = result.replace(
     /--glob\s*=\s*"([^"]*)"/g,
     (_, pattern) => `--glob="${normalizeGlob(pattern)}"`
   )
 
-  // Fix --glob 'pattern' (space-separated, no equals)
+  // Normalize --glob 'pattern' (space-separated, no equals)
   result = result.replace(
     /--glob\s+'([^']*)'/g,
     (_, pattern) => `--glob '${normalizeGlob(pattern)}'`
   )
 
-  // Fix -g "pattern;pattern" → split into multiple -g flags
+  // Split --glob "a;b" (space-separated) into separate flags
   result = result.replace(
-    /-g\s+"([^"]*);([^"]*)"/g,
-    (_, a, b) => `-g "${normalizeGlob(a)}" -g "${normalizeGlob(b)}"`
+    /--glob\s+"([^"]*);([^"]*)"/g,
+    (_, a, b) => `--glob "${normalizeGlob(a)}" --glob "${normalizeGlob(b)}"`
   )
 
-  // Fix bare rg --files path/** → rg --files "path/**" (quote unquoted globs)
+  // Normalize --glob "pattern" (space-separated, no equals)
   result = result.replace(
-    /(\brg(?:\.exe)?\s+[^"]*?--files\s+)([^\s"]+\*\*)/g,
-    (_, prefix, glob) => `${prefix}"${normalizeGlob(glob)}"`
+    /--glob\s+"([^"]*)"/g,
+    (_, pattern) => `--glob "${normalizeGlob(pattern)}"`
+  )
+
+  // Normalize -g "pattern"
+  result = result.replace(
+    /-g\s+"([^"]*)"/g,
+    (_, pattern) => `-g "${normalizeGlob(pattern)}"`
+  )
+
+  // Bare `rg --files path/**` -> promote to `--glob "path/**"`
+  // (quoting alone is ineffective: rg parses it as a PATH, os error 123)
+  result = result.replace(
+    /(\brg(?:\.exe)?\s[^\n]*?--files\s+)(?!-g\b|--glob\b)([^\s"']+[^\s]*\*\*)/g,
+    (_, prefix, glob) => `${prefix}--glob "${normalizeGlob(glob)}"`
   )
 
   return result
@@ -71,9 +83,9 @@ function fixRgCommand(cmd) {
 
 function normalizeGlob(pattern) {
   if (!pattern) return pattern
-  // Convert forward slashes to backslashes for Windows rg
-  let fixed = pattern.replace(/\//g, "\\")
-  // Collapse multiple backslashes
-  fixed = fixed.replace(/\\{2,}/g, "\\")
+  // Windows rg requires FORWARD slashes in globs - convert backslashes
+  let fixed = pattern.replace(/\\/g, "/")
+  // Collapse duplicate slashes (globs never contain ://)
+  fixed = fixed.replace(/\/{2,}/g, "/")
   return fixed
 }
