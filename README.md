@@ -1,7 +1,5 @@
 ﻿# opencode multi-model subagent setup
 
-Repo: [notBlubbll/OpenMaxx](https://github.com/notBlubbll/OpenMaxx)
-
 Routes opencode work across providers by cost and role: GLM-5.3-Flash (hypercharm, 1M context)
 for primary orchestration and detective; **agnes-research** (apihub.agnes-ai.com) for research workers and explore;
 **agnes-execute** (apihub.agnes-ai.com) for code edits — Agnes 2.5 Flash for both, different API keys,
@@ -19,7 +17,7 @@ Detective:
 
 Researching:
 
-<img width="377" height="160" alt="image" src="https://github.com/user-attachments/assets/d59e971a-440c-4a8a-88b0-3a79b0efcac3" />
+<img width="377" height="160" alt="image" src="https://github.com/user-attachments/assets/213e28da-c8ea-4a07-bd7e-42adc7d8fcd8" />
 
 Editing:
 
