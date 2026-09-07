@@ -67,11 +67,7 @@
 
 ## Planned upgrades
 - Coordinator (sub-orchestrator): airouter/Qwen3.8#max
-- Detective: hypercharm/qwen3.8-flash (coordinates research workers) — the primary spawns it for ALL research needs
-- Edit: agnes-execute/agnes-2.5-flash#edit
-- Research: agnes-research/agnes-2.5-flash#research
+- Detective: hypercharm/glm-5.3-flash (coordinates research workers) — the primary spawns it for ALL research needs
+- Edit: airouter/Qwen3.8#edit
+- Research: hypercharm/gemma-4-26b-a4b-it
 - Explore: agnes-research/agnes-2.5-flash#explore
-
-
-
-

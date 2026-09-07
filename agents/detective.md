@@ -1,5 +1,5 @@
 ---
-description: "🕵🏼‍♂️ in parallel, synthesizes findings into a consolidated report."
+description: "🕵🏼‍♂️Research workers in parallel, synthesizes findings into a consolidated report."
 mode: subagent
 model: hypercharm/qwen3.8-flash
 steps: 40

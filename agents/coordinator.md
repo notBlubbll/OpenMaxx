@@ -1,5 +1,5 @@
 ---
-description: "🤖 for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself."
+description: "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself."
 mode: subagent
 model: hypercharm/qwen3-next-80b-a3b-instruct
 steps: 40
