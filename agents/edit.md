@@ -1,4 +1,4 @@
-﻿---
+---
 description: "✏️Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results."
 mode: subagent
 model: agnes-execute/agnes-2.5-flash#edit
@@ -38,4 +38,4 @@ TOOL SCHEMA: every tool call MUST include ALL required keys with exact names. ed
 
 Shell: always include the `command` parameter, e.g. { "command": "dotnet build" }.
 
-When done: write a brief report using the native `write` tool to `.opencode-findings/<topic-slug>.md` in the project root (files changed, build result, deviations). Call it YOURSELF — no Code Mode needed. Use: `write(path: "C:\\path\\.opencode-findings\\file.md", content: "your markdown")`. Path MUST contain `.opencode-findings`. Final message = ONLY "<file path>: <one-line summary>".
+When done: save a brief report with ONE write_findings call (path `.opencode-findings/<topic-slug>.md` in the project root, body = files changed, build result, deviations). Call it YOURSELF. Path MUST contain `.opencode-findings`. Final message = ONLY "<file path>: <one-line summary>".

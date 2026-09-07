@@ -1,4 +1,4 @@
-﻿---
+---
 description: "🕵🏼‍♂️Detective. Lightweight, fast execution with minimal thinking overhead."
 mode: subagent
 model: agnes-research/agnes-2.5-flash#research-worker
@@ -31,10 +31,10 @@ BATCH READ CALLS: issue ALL independent read/grep/glob calls in ONE assistant me
 
 PATH SANITY: all .opencode-findings paths must be built from YOUR OWN cwd. Never abbreviate the root.
 
-FINDINGS WRITE (use the native `write` tool — no Code Mode needed):
-- Use the `write` tool directly: `write(path: "C:\\path\\.opencode-findings\\file.md", content: "your markdown")`
+FINDINGS WRITE (ONE write_findings call - tolerant: aliases accepted, no escaping dance):
+- Call write_findings ONCE: path under `.opencode-findings/`, body = full markdown. If not in your catalog, ONE execute call: return tools.write_findings({ path, body }) with plain strings.
 - Path MUST contain `.opencode-findings`. Content is your full markdown text.
-- No escaping needed. No Code Mode wrapper needed. The `write` tool handles it.
+- The WRITTEN response IS the confirmation. Do NOT retry via shell heredocs, python, base64, or temp files.
 - Write ONCE, then return the file path plus a one-line summary.
 
 PATH RULES:
