@@ -36,7 +36,7 @@
       "type": "local",
       "command": [
         "node",
-        "C:\\\\Users\\\\User\\\\.config\\\\opencode\\\\findings-mcp.cjs"
+        "C:\\Users\\User\\.config\\opencode\\mcp\\findings-mcp.cjs"
       ],
       "enabled": true
     }
