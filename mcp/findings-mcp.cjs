@@ -1,8 +1,9 @@
-// findings-mcp.js - zero-dependency MCP server (stdio) exposing write_findings.
-// Why MCP and not just the plugin: plugin-injected tools only register into the
-// main session's tool catalog; subagents (research, research-worker) cannot see
-// them ("unknown tool"). MCP tools propagate to subagent sessions, so research
-// agents can call findings_write_findings DIRECTLY with no execute wrapper.
+// findings-mcp.cjs - zero-dependency MCP server (stdio) exposing the findings tool.
+// V2: registered in opencode.json under mcp.servers."write" -> effective tool id
+// "write_findings" (<server>_<tool> naming). Under default Code Mode, agents call it
+// as tools.write.findings inside an execute block:
+//   return tools.write.findings({ path: '<abs path containing .opencode-findings>', body: '<markdown>' })
+// The permission action matching this tool is "write_findings" (allow-listed per agent).
 const fs = require("fs");
 const path = require("path");
 

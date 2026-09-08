@@ -33,30 +33,28 @@
     "subagent_depth": 4
   },
   "mcp": {
-    "mind": {
-      "type": "local",
-      "command": [
-        "C:\\Users\\User\\Documents\\mind\\mind",
-        "mcp"
-      ],
-      "timeout": 20000
-    },
-    "cheatengine": {
-      "type": "local",
-      "command": [
-        "python",
-        "C:\\Users\\User\\Desktop\\HytaleHack\\cheatengine-mcp-bridge\\MCP_Server\\mcp_cheatengine.py"
-      ],
-      "timeout": 20000
-    },
-    "write": {
-      "type": "local",
-      "command": [
-        "node",
-        "C:\\Users\\User\\.config\\opencode\\mcp\\findings-mcp.cjs"
-      ],
-      "enabled": true,
-      "timeout": 20000
+    "servers": {
+      "mind": {
+        "type": "local",
+        "command": [
+          "C:\\Users\\User\\Documents\\mind\\mind",
+          "mcp"
+        ]
+      },
+      "cheatengine": {
+        "type": "local",
+        "command": [
+          "python",
+          "C:\\Users\\User\\Desktop\\HytaleHack\\cheatengine-mcp-bridge\\MCP_Server\\mcp_cheatengine.py"
+        ]
+      },
+      "write": {
+        "type": "local",
+        "command": [
+          "node",
+          "C:\\Users\\User\\.config\\opencode\\mcp\\findings-mcp.cjs"
+        ]
+      }
     }
   },
   "agents": {

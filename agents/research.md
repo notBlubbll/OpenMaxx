@@ -14,6 +14,9 @@ permissions:
   - action: write_findings
     resource: "*"
     effect: allow
+  - action: execute
+    resource: "*"
+    effect: allow
 settings:
   reasoningEffort: low
 ---

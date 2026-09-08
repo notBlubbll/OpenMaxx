@@ -2,7 +2,7 @@
 description: "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself."
 mode: subagent
 model: hypercharm/qwen3-coder-480b-a35b-instruct-int4-mixed-ar
-steps: 40
+steps: 150
 color: "#555555"
 permissions:
   - action: edit

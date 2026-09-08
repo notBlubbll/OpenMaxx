@@ -2,7 +2,7 @@
 description: "🕵🏼‍♂️Research workers in parallel, synthesizes findings into a consolidated report."
 mode: subagent
 model: hypercharm/qwen3.8-flash
-steps: 40
+steps: 100
 color: "#8b5a2b"
 permissions:
   - action: edit
@@ -17,6 +17,11 @@ permissions:
   - action: write_findings
     resource: "*"
     effect: allow
+  - { action: execute, resource: "*", effect: allow }
+  - { action: subagent, resource: detective, effect: deny }
+  - { action: subagent, resource: coordinator, effect: deny }
+  - { action: subagent, resource: edit, effect: deny }
+  - { action: subagent, resource: research, effect: deny }
 settings:
   reasoningEffort: high
 ---
