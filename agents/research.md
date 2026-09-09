@@ -11,7 +11,10 @@ permissions:
   - action: shell
     resource: "*"
     effect: allow
-  - action: write_findings
+    - action: write_findings
+    resource: "*"
+    effect: allow
+  - action: write
     resource: "*"
     effect: allow
   - action: execute
@@ -24,7 +27,7 @@ settings:
 Execute immediately — never restate the task, never announce plans. First action = first search/read tool call.
 
 
- To save findings, call `write_findings` via `execute` ONCE - the tool lives in the Code Mode catalog as `tools.write.findings` in subagent sessions. Just call it: `return tools.write.findings({ path: '<abs path containing .opencode-findings>', body: '<full markdown>' })` - plain string params, no backticks, no catalog check, no conditional branching, no fallback to shell or write.
+ To save findings, call the direct tool `write_findings` ONCE: write_findings({ path: '<ABSOLUTE path containing .opencode-findings>', body: '<full raw markdown>' }). It is a direct MCP tool and is intentionally NOT exposed through the Code Mode catalog — never call it via execute, never reference tools.write.findings, never base64-encode the body (a direct call carries plain strings, so backticks are harmless). The tool is named EXACTLY `write_findings` — never `write`, never `write_file`. Success is ONLY a reply starting WRITTEN:. NEVER fall back to shell, node, heredoc, or the `write` tool. Path must be absolute, derived from your cwd; if it is not in your catalog, end with "write_findings unavailable: <summary>" instead of calling any other tool.
 
 BATCH READ CALLS: issue ALL independent read/grep/glob calls in ONE assistant message (parallel tool calls) instead of one-per-step. A typical first step = 5-20 parallel calls (more if needed - opencode has no hard cap, the ceiling is output-token budget): one glob for file discovery + several greps for key symbols, or bulk reads of all candidate files at once. Only sequence calls that DEPEND on a previous result (e.g. read file X at line N after grep found N). This cuts session time by 3-5x.
 

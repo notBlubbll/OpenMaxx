@@ -32,18 +32,18 @@ Editing:
 | primary (orchestration) | hypercharm/glm-5.3-flash |
 | detective (research orchestrator) | hypercharm/qwen3.8-flash |
 | research-worker (parallel lookups) | agnes-research/agnes-3.0-flash |
-| coordinator (implementation orchestrator) | hypercharm/qwen3-next-80b-a3b-instruct |
+| coordinator (implementation orchestrator) | hypercharm/deepseek-v4-flash-0731#high |
 | edit (code edits + builds) | agnes-execute/agnes-3.0-flash |
 | research (fallback only) | agnes-research/agnes-3.0-flash |
 | explore (nested lookups) | agnes-research/agnes-3.0-flash |
-| titles / compaction | hypercharm/gpt-oss-120b / hypercharm/glm-5.3 |
+| titles / compaction | hypercharm/qwen3.8-flash / hypercharm/glm-5.3-flash |
 | findings saving | write_findings tool (local, zero cost) |
 
 ```
 Primary (hypercharm/glm-5.3-flash)      receives request, routes ALL research to detective
   ├── detective (hypercharm/qwen3.8-flash)   research orchestrator
   │   └── research-worker (agnes-research/agnes-3.0-flash)   parallel lookups
-  ├── coordinator (hypercharm/qwen3-next-80b-a3b-instruct)   plans + delegates, cannot edit/shell
+     ├── coordinator (hypercharm/deepseek-v4-flash-0731#high)   plans + delegates, cannot edit/shell
   │   ├── edit (agnes-execute/agnes-3.0-flash)   applies edits + builds
   │   └── research (agnes-research/agnes-3.0-flash)   fallback for gaps only
   └── explore (agnes-research/agnes-3.0-flash)   nested lookups inside edit
@@ -97,4 +97,4 @@ Subagent sessions are title-tagged ([Edit], [Coordinate], [Research],
 Edits and research run on Agnes AI and HyperCharm — review their terms for
 training-data policies. Mind MCP memory is optional and off by default.
 
-> **NOTE:** All API keys in this snapshot are REDACTED placeholders (opencode.json apiKey fields and plugins/agnes-proxy AGNES_KEYS). Pruned providers not referenced by the live setup: airouter, camelai, freebuff, ifm, synthetic, xkiro. Restore real values from ~/.config/opencode when deploying.
+> **NOTE:** All API keys in this snapshot are REDACTED placeholders (opencode.json apiKey fields - hypercharm included - and plugins/agnes-proxy AGNES_KEYS). The hypercharm model list is trimmed to the three used models: glm-5.3-flash, qwen3.8-flash, deepseek-v4-flash-0731. Pruned providers not referenced by the live setup: airouter, camelai, freebuff, ifm, synthetic, xkiro. Restore real values from ~/.config/opencode when deploying.

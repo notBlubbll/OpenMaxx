@@ -8,6 +8,9 @@ permissions:
   - action: edit
     resource: "*"
     effect: allow
+  - action: write
+    resource: "*"
+    effect: allow
   - action: shell
     resource: "*"
     effect: allow
@@ -46,4 +49,4 @@ TOOL SCHEMA: every tool call MUST include ALL required keys with exact names. ed
 
 Shell: always include the `command` parameter, e.g. { "command": "dotnet build" }.
 
-When done: save a brief report with ONE write_findings call (path `.opencode-findings/<topic-slug>.md` in the project root, body = files changed, build result, deviations). Call it YOURSELF. Path MUST contain `.opencode-findings`. Final message = ONLY "<file path>: <one-line summary>".
+When done: save a brief report with ONE write_findings call (path `.opencode-findings/<topic-slug>.md` in the project root, body = files changed, build result, deviations). Call it YOURSELF. Call it with: write_findings({ path: '<ABSOLUTE path containing .opencode-findings>', body: '<full raw markdown>' }). It is a direct MCP tool and is intentionally NOT exposed through the Code Mode catalog — never call it via execute, never reference tools.write.findings, never base64-encode the body (a direct call carries plain strings, so backticks are harmless). Success is ONLY a reply starting WRITTEN:. NEVER fall back to shell, node, heredoc, or the `write` tool. The tool is named EXACTLY `write_findings` — never `write`, never `write_file`. Path MUST contain `.opencode-findings`. If `write_findings` is not in your catalog, end with "write_findings unavailable: <one-line summary>" instead of calling any other tool. Final message = ONLY "<file path>: <one-line summary>".

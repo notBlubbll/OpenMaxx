@@ -14,7 +14,10 @@ permissions:
   - action: shell
     resource: "*"
     effect: allow
-  - action: write_findings
+    - action: write_findings
+    resource: "*"
+    effect: allow
+  - action: write
     resource: "*"
     effect: allow
   - action: execute
@@ -35,9 +38,10 @@ BATCH READ CALLS: issue ALL independent read/grep/glob calls in ONE assistant me
 PATH SANITY: all .opencode-findings paths must be built from YOUR OWN cwd. Never abbreviate the root.
 
 FINDINGS WRITE (ONE write_findings call - tolerant: aliases accepted, no escaping dance):
-- To save findings, call `write_findings` via `execute` ONCE - the tool lives in the Code Mode catalog as `tools.write.findings` in subagent sessions. Just call it: `return tools.write.findings({ path: '<abs path containing .opencode-findings>', body: '<full markdown>' })` - plain string params, no backticks, no catalog check, no conditional branching, no fallback to shell or write.
+- To save findings, call the direct tool `write_findings` ONCE: write_findings({ path: '<ABSOLUTE path containing .opencode-findings>', body: '<full raw markdown>' }). It is a direct MCP tool and is intentionally NOT exposed through the Code Mode catalog — never call it via execute, never reference tools.write.findings, never base64-encode the body (a direct call carries plain strings, so backticks are harmless). The tool is named EXACTLY `write_findings` — never `write`, never `write_file`; if it is not in your catalog, end with "write_findings unavailable: <summary>" instead of calling any other tool.
 - Path MUST contain `.opencode-findings`. Content is your full markdown text.
-- The WRITTEN response IS the confirmation. Do NOT retry via shell heredocs, python, base64, or temp files.
+- Success is ONLY a reply starting WRITTEN:; an ERROR: or WRITE-FAILED: means fix the named defect and retry exactly once. NEVER fall back to shell, node, heredoc, or the `write` tool. Path must be absolute, derived from your cwd.
+
 - Write ONCE, then return the file path plus a one-line summary.
 
 PATH RULES:

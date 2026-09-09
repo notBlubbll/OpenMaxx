@@ -14,7 +14,10 @@ permissions:
   - action: subagent
     resource: research-worker
     effect: allow
-  - action: write_findings
+    - action: write_findings
+    resource: "*"
+    effect: allow
+  - action: write
     resource: "*"
     effect: allow
   - { action: execute, resource: "*", effect: allow }
@@ -60,10 +63,10 @@ Spawn workers IN PARALLEL in one message for independent search tasks. Fan out a
 
 ## Saving findings
 save your consolidated report YOURSELF with ONE call:
-- Call `write_findings` via `execute` ONCE: `return tools.write.findings({ path: '<cwd>\\.opencode-findings\\<slug>.md', body: '<full consolidated markdown>' })`. Plain string params, no backticks, no catalog check. No shell, no node fallback.
+- Call the direct tool `write_findings` ONCE: write_findings({ path: '<ABSOLUTE path containing .opencode-findings>', body: '<full raw consolidated markdown>' }). It is a direct MCP tool and is intentionally NOT exposed through the Code Mode catalog — never call it via execute, never reference tools.write.findings, never base64-encode the body (a direct call carries plain strings, so backticks are harmless).
 - Path MUST contain `.opencode-findings`. Content is your full consolidated findings text.
-- The WRITTEN response IS the confirmation. Do NOT retry via shell heredocs, python, base64, or temp files.
-- If the tool is not in your catalog, report configuration failure — never fall back to shell/PowerShell.
+- Success is ONLY a reply starting WRITTEN:; an ERROR: or WRITE-FAILED: means fix the named defect and retry exactly once. NEVER fall back to shell, node, heredoc, or the `write` tool. Path must be absolute, derived from your cwd.
+- If the tool is not in your catalog, report configuration failure — never fall back to shell/PowerShell. The tool is named EXACTLY `write_findings` — never `write`, never `write_file`; if it is not in your catalog, end with "write_findings unavailable: <summary>" instead of calling any other tool.
 
 PATH RULES: absolute path from your own cwd, must contain `.opencode-findings`. The tool creates the directory automatically. Do NOT read the file back to verify.
 ## Final message

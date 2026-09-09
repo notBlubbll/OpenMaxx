@@ -26,6 +26,11 @@
       "action": "subagent",
       "resource": "detective",
       "effect": "allow"
+    },
+    {
+      "action": "mind_*",
+      "resource": "*",
+      "effect": "allow"
     }
   ],
   "shell": "powershell",
@@ -37,7 +42,8 @@
       "mind": {
         "type": "local",
         "command": [
-          "C:\\Users\\User\\Documents\\mind\\mind",
+          "C:\\Users\\User\\.bun\\bin\\bun.exe",
+          "C:\\Users\\User\\Documents\\mind\\src\\mind.ts",
           "mcp"
         ]
       },
@@ -53,7 +59,8 @@
         "command": [
           "node",
           "C:\\Users\\User\\.config\\opencode\\mcp\\findings-mcp.cjs"
-        ]
+        ],
+        "codemode": false
       }
     }
   },
@@ -64,6 +71,11 @@
       "model": "agnes-research/agnes-3.0-flash#explore",
       "steps": 60,
       "permissions": [
+        {
+          "action": "write",
+          "resource": "*",
+          "effect": "allow"
+        },
         {
           "action": "edit",
           "resource": "*",
@@ -81,6 +93,11 @@
         },
         {
           "action": "write_findings",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "mind_*",
           "resource": "*",
           "effect": "allow"
         }
@@ -94,6 +111,11 @@
       "color": "#7aa2f7",
       "permissions": [
         {
+          "action": "write",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
           "action": "edit",
           "resource": "*",
           "effect": "deny"
@@ -110,6 +132,11 @@
         },
         {
           "action": "write_findings",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
+          "action": "mind_*",
           "resource": "*",
           "effect": "allow"
         }
@@ -126,6 +153,11 @@
       "color": "#7aa2f7",
       "permissions": [
         {
+          "action": "write",
+          "resource": "*",
+          "effect": "allow"
+        },
+        {
           "action": "edit",
           "resource": "*",
           "effect": "deny"
@@ -144,6 +176,11 @@
           "action": "write_findings",
           "resource": "*",
           "effect": "allow"
+        },
+        {
+          "action": "mind_*",
+          "resource": "*",
+          "effect": "allow"
         }
       ],
       "settings": {
@@ -157,6 +194,11 @@
       "steps": 100,
       "color": "#8b5a2b",
       "permissions": [
+        {
+          "action": "write",
+          "resource": "*",
+          "effect": "allow"
+        },
         {
           "action": "edit",
           "resource": "*",
@@ -201,6 +243,11 @@
           "action": "subagent",
           "resource": "research",
           "effect": "deny"
+        },
+        {
+          "action": "mind_*",
+          "resource": "*",
+          "effect": "allow"
         }
       ],
       "settings": {
@@ -214,6 +261,11 @@
       "steps": 80,
       "color": "#ffd54f",
       "permissions": [
+        {
+          "action": "write",
+          "resource": "*",
+          "effect": "allow"
+        },
         {
           "action": "edit",
           "resource": "*",
@@ -238,6 +290,11 @@
           "action": "subagent",
           "resource": "*",
           "effect": "deny"
+        },
+        {
+          "action": "mind_*",
+          "resource": "*",
+          "effect": "allow"
         }
       ],
       "settings": {
@@ -247,10 +304,15 @@
     "coordinator": {
       "description": "🤖Coordinator sub-orchestrator for complex multi-step work. Plans, sequences, and delegates implementation to edit subagents. Cannot edit, run shell, or use edit tools itself.",
       "mode": "subagent",
-      "model": "hypercharm/qwen3-coder-480b-a35b-instruct-int4-mixed-ar",
+      "model": "hypercharm/deepseek-v4-flash-0731#high",
       "steps": 150,
       "color": "#555555",
       "permissions": [
+        {
+          "action": "write",
+          "resource": "*",
+          "effect": "allow"
+        },
         {
           "action": "edit",
           "resource": "*",
@@ -294,16 +356,21 @@
         {
           "action": "write_findings",
           "resource": "*",
-          "effect": "allow"
+          "effect": "deny"
         },
         {
           "action": "subagent",
           "resource": "research-worker",
           "effect": "deny"
+        },
+        {
+          "action": "mind_*",
+          "resource": "*",
+          "effect": "allow"
         }
       ],
       "settings": {
-        "reasoningEffort": "medium"
+        "reasoningEffort": "high"
       }
     }
   },
@@ -459,8 +526,8 @@
             "output": 128000
           }
         },
-        "qwen3-coder-480b-a35b-instruct-int4-mixed-ar": {
-          "name": "Qwen3-Coder-480B-A35B (INT4 Mixed AutoRound)",
+        "deepseek-v4-flash-0731": {
+          "name": "DeepSeek V4 Flash 0731",
           "capabilities": {
             "tools": true,
             "input": [
@@ -480,10 +547,14 @@
           ],
           "limit": {
             "context": 1000000,
-            "output": 131072
+            "output": 384000
           }
         }
       }
     }
-  }
+  },
+  "instructions": [
+    "AGENTS.md",
+    "skills.md"
+  ]
 }
