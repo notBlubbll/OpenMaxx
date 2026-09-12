@@ -1,12 +1,18 @@
 // sleev-gateway plugin - OpenCode V2. Manages the Sleev gateway lifecycle.
 //
-// Lessons (2026-09-07):
-// - The `sleev` CLI itself is broken in this env (all gateway/auth commands
-//   fail with "expected value at line 1 column 1"), so NEVER gate on CLI
-//   output. Signed-in state comes from config.json (auth.signedIn).
-// - Start the gateway BINARY directly with --host/--port/--config/--db-path.
+// Lessons (2026-09-07, updated 2026-09-10):
+// - The `sleev` CLI was broken by a UTF-8 BOM in Roaming/sleev/config.json
+//   ("expected value at line 1 column 1" — serde_json rejects BOM). Fixed by
+//   stripping the BOM (backup: config.json.pre_bomfix.bak). NEVER gate on CLI
+//   output anyway: signed-in state comes from config.json (auth.signedIn).
+// - Start the gateway BINARY directly with --host/--port/--config/--db-path
+//   (minimal args — extra log flags correlated with an early exit once).
 // - Stale sleeve-gateway.exe zombies (from dead server runs) hold no port but
-//   confuse checks: liveness = TCP response on PORT, nothing else.
+//   confuse checks: liveness = REAL health below, nothing else.
+// - 2026-09-10: gateway went wedged (400 "Could not determine model" on every
+//   request, then 401 on caller tokens) while still answering TCP — so isUp
+//   MUST validate model resolution, not just socket liveness, and
+//   ensureRunning MUST restart (kill + respawn) a wedged instance.
 
 export default {
   id: "sleev-gateway",
@@ -67,15 +73,59 @@ export default {
 
     async function isUp() {
       const { request } = await import("node:http");
-      return new Promise((resolve) => {
+      // Stage 1: TCP liveness (any HTTP response = process alive).
+      const alive = await new Promise((resolve) => {
         const req = request(`http://${HOST}:${PORT}/`, { method: "GET", timeout: 4000 }, (res) => {
-          resolve(true); // any HTTP response = alive (it 400s without harness headers)
+          resolve(true);
           res.resume();
         });
         req.on("error", () => resolve(false));
         req.on("timeout", () => { req.destroy(); resolve(false); });
         req.end();
       });
+      if (!alive) return false;
+      // Stage 2: end-to-end chat resolution. A wedged gateway still answers
+      // TCP and even serves /v1/models, but 400/401s every chat request —
+      // so only a real (minimal, 1-token, non-streaming) completion counts
+      // as healthy. Runs only on server start/connected events, not per
+      // request, so the probe cost is negligible.
+      try {
+        const ctl = new AbortController();
+        const timer = setTimeout(() => ctl.abort(), 20000);
+        const r = await fetch(`http://${HOST}:${PORT}/v1/chat/completions`, {
+          method: "POST",
+          signal: ctl.signal,
+          headers: {
+            "content-type": "application/json",
+            "sleeve-harness": "opencode",
+            "sleeve-base-url": "https://hyper.charm.land/v1",
+          },
+          body: JSON.stringify({
+            model: "glm-5.3-flash",
+            messages: [{ role: "user", content: "Reply with the single word OK" }],
+            stream: false,
+            max_tokens: 1,
+          }),
+        });
+        clearTimeout(timer);
+        return r.status === 200;
+      } catch {
+        return false;
+      }
+    }
+
+    async function killZombies() {
+      // Kill only the port HOLDER — sleeve-gateway spawns supervisor/harness
+      // twins that correctly DON'T listen; killing them causes restart loops.
+      try {
+        const { execFile } = await import("node:child_process");
+        await new Promise((resolve) => {
+          execFile("powershell", ["-NoProfile", "-Command",
+            `$c = Get-NetTCPConnection -LocalPort ${PORT} -State Listen -ErrorAction SilentlyContinue | Select-Object -ExpandProperty OwningProcess -First 1; if ($c) { Stop-Process -Id $c -Force }`
+          ], () => resolve());
+        });
+        await new Promise((r) => setTimeout(r, 2000));
+      } catch {}
     }
 
     let starting = false; // singleflight: concurrent ensureRunning calls must not spawn twice (EADDRINUSE -> exit 255)
@@ -95,6 +145,9 @@ export default {
         const bin = gatewayBin();
         if (!bin) { log("gateway binary not found (config.json gateway.binPath)"); return; }
 
+        // Unhealthy or absent: kill everything (wedged holder + zombies) and
+        // spawn one fresh instance with the minimal known-good arg set.
+        await killZombies();
         const child = spawn(bin, [
           "--host", HOST,
           "--port", String(PORT),

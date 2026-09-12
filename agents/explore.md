@@ -1,7 +1,7 @@
 ---
 description: "🔎Explore agent specialized for exploring codebases. Use this when you need to quickly find files by patterns (eg. 'src/components/**/*.tsx'), search code for keywords (eg. 'API endpoints'), or answer questions about the codebase (eg. 'how do API endpoints work?'). When calling this agent, specify the desired thoroughness level: 'quick' for basic searches, 'medium' for moderate exploration, or 'very thorough' for comprehensive analysis across multiple locations and naming conventions."
 mode: subagent
-model: agnes-research/agnes-3.0-flash#explore
+model: commandcode/meta/muse-spark-1.3-contributor
 steps: 60
 permissions:
   - action: edit
@@ -10,9 +10,9 @@ permissions:
   - action: shell
     resource: "*"
     effect: deny
-    - action: write_findings
-    resource: "*"
-    effect: allow
+- action: write_findings
+  resource: "*"
+  effect: allow
   - action: write
     resource: "*"
     effect: allow

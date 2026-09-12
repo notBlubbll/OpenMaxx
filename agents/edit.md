@@ -1,7 +1,7 @@
 ---
 description: "✏️Edit agent for applying code edits and running build/verify commands with MINIMUM tool requests. Provide exact file paths and precise change descriptions; it applies edits and reports results."
 mode: subagent
-model: agnes-execute/agnes-3.0-flash#edit
+model: commandcode/meta/muse-spark-1.3-contributor
 steps: 80
 color: "#ffd54f"
 permissions:

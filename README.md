@@ -21,7 +21,7 @@ Editing:
 
 1. Add API keys in `opencode.json`: `agnes-research` + `agnes-execute`
    (https://apihub.agnes-ai.com/v1, separate keys for reads vs writes),
-   `hypercharm` (https://hyper.charm.land/v1), plus IFM/camelai/airouter if used.
+   `hypercharm` (https://hyper.charm.land/v1), `commandcode`.
 2. Copy this repo over `%USERPROFILE%\.config\opencode\` (Windows).
 3. Requires OpenCode V2 (`subagent` tool). Restart opencode after any change.
 
@@ -31,22 +31,22 @@ Editing:
 |---|---|
 | primary (orchestration) | hypercharm/glm-5.3-flash |
 | detective (research orchestrator) | hypercharm/qwen3.8-flash |
-| research-worker (parallel lookups) | agnes-research/agnes-3.0-flash |
-| coordinator (implementation orchestrator) | hypercharm/deepseek-v4-flash-0731#high |
-| edit (code edits + builds) | agnes-execute/agnes-3.0-flash |
-| research (fallback only) | agnes-research/agnes-3.0-flash |
-| explore (nested lookups) | agnes-research/agnes-3.0-flash |
-| titles / compaction | hypercharm/qwen3.8-flash / hypercharm/glm-5.3-flash |
+| research-worker (parallel lookups) | commandcode/meta/muse-spark-1.3-contributor |
+| coordinator (implementation orchestrator) | hypercharm/deepseek-v4.1-flash#high |
+| edit (code edits + builds) | commandcode/meta/muse-spark-1.3-contributor |
+| research (fallback only) | commandcode/meta/muse-spark-1.3-contributor |
+| explore (nested lookups) | commandcode/meta/muse-spark-1.3-contributor |
+| titles | hypercharm/gpt-oss-120b |
 | findings saving | write_findings tool (local, zero cost) |
 
 ```
 Primary (hypercharm/glm-5.3-flash)      receives request, routes ALL research to detective
   ├── detective (hypercharm/qwen3.8-flash)   research orchestrator
-  │   └── research-worker (agnes-research/agnes-3.0-flash)   parallel lookups
-     ├── coordinator (hypercharm/deepseek-v4-flash-0731#high)   plans + delegates, cannot edit/shell
-  │   ├── edit (agnes-execute/agnes-3.0-flash)   applies edits + builds
-  │   └── research (agnes-research/agnes-3.0-flash)   fallback for gaps only
-  └── explore (agnes-research/agnes-3.0-flash)   nested lookups inside edit
+  │   └── research-worker (commandcode/meta/muse-spark-1.3-contributor)   parallel lookups
+     ├── coordinator (hypercharm/deepseek-v4.1-flash#high)   plans + delegates, cannot edit/shell
+  │   ├── edit (commandcode/meta/muse-spark-1.3-contributor)   applies edits + builds
+  │   └── research (commandcode/meta/muse-spark-1.3-contributor)   fallback for gaps only
+  └── explore (commandcode/meta/muse-spark-1.3-contributor)   nested lookups inside edit
 ```
 
 Rules that matter: primary never spawns `edit`, never researches itself.
@@ -55,7 +55,7 @@ to `.opencode-findings/` and return path + one-line summary.
 
 ## Proxies (all inline, no extra processes)
 
-- `tinyproxy` (:17300) forwards HyperCharm traffic, `agnes-proxy` (:8090)
+- `tinyproxy` (:17300) forwards HyperCharm AND CommandCode traffic (all four providers point at 127.0.0.1:17300/v1), `agnes-proxy` (:8090)
   rotates Agnes keys. Both forward the Bearer header and route through Sleev
   when its gateway is up, direct otherwise.
 - `sleev-gateway` plugin manages the Sleev gateway (:17321, compresses
@@ -66,19 +66,24 @@ to `.opencode-findings/` and return path + one-line summary.
 
 ```
 ~/.config/opencode/
+├── AGENTS.md            # global instructions
 ├── opencode.json        # providers, agents, permissions, MCP servers
+├── cli.json             # CLI metadata
+├── package.json         # tooling metadata
 ├── agents/              # research, research-worker, detective, edit, coordinator, explore, title
-├── plugins/            # tinyproxy, agnes-proxy, sleev-gateway, write-findings, edit-tool-fix, grep-fix, rg-fix, mind-automation, task-args-fixer
-├── findings-mcp.cjs    # write_findings as MCP server (reaches subagents; plugin version is the fallback)
+├── plugins/            # tinyproxy, agnes-proxy, sleev-gateway, edit-tool-fix, grep-fix, rg-fix, mind-automation, task-args-fixer, sse-toolcall-fix.js, zen-responses.js, k2-reasoning-proxy.js
+├── mcp/                 # findings-mcp.cjs (write_findings MCP server, reaches subagents)
 ├── tools/              # edit-ops.js (batch edits), write.js (schema-safe write)
-└── instructions/       # AGENTS.md reference copy (V2 loads root AGENTS.md)
+├── skills/mind-management/ # memory protocol skill
+└── instructions/       # AGENTS.md + mind-memory-protocol.md + opencode-v1-v2-setup.md
 ```
 
 Plugin fixes worth knowing: `edit-tool-fix` fuzzy-matches oldString
 (whitespace/line-endings); `rg-fix` normalizes Windows globs to forward
 slashes and promotes bare `rg --files path/**` to `--glob`; `grep-fix`
-validates regex balance. Findings also exist as MCP tool
-`findings_write_findings` because plugin tools don't propagate to subagents.
+validates regex balance. `sse-toolcall-fix.js` repairs SSE tool-call framing
+shared by tinyproxy/agnes-proxy; `zen-responses.js` normalizes Zen-style responses.
+Findings also exist as MCP tool `findings_write_findings` because plugin tools don't propagate to subagents.
 
 ## Verify
 
@@ -86,7 +91,7 @@ validates regex balance. Findings also exist as MCP tool
 opencode agent list
 Select-String "$env:USERPROFILE\.local\share\opencode\log\opencode.log" -Pattern 'message=stream' |
   Select-String 'agent=edit'
-# expect: providerID=agnes-execute modelID=agnes-3.0-flash
+# expect: providerID=commandcode modelID=meta/muse-spark-1.3-contributor
 ```
 
 Subagent sessions are title-tagged ([Edit], [Coordinate], [Research],
@@ -94,7 +99,7 @@ Subagent sessions are title-tagged ([Edit], [Coordinate], [Research],
 
 ## Data note
 
-Edits and research run on Agnes AI and HyperCharm — review their terms for
+Edits and research run on CommandCode; heavy agents on HyperCharm — review their terms for
 training-data policies. Mind MCP memory is optional and off by default.
 
-> **NOTE:** All API keys in this snapshot are REDACTED placeholders (opencode.json apiKey fields - hypercharm included - and plugins/agnes-proxy AGNES_KEYS). The hypercharm model list is trimmed to the three used models: glm-5.3-flash, qwen3.8-flash, deepseek-v4-flash-0731. Pruned providers not referenced by the live setup: airouter, camelai, freebuff, ifm, synthetic, xkiro. Restore real values from ~/.config/opencode when deploying.
+> **NOTE:** All API keys in this snapshot are REDACTED placeholders (opencode.json apiKey fields - hypercharm and commandcode included - and plugins/agnes-proxy AGNES_KEYS). The hypercharm model list is glm-5.3-flash (default), deepseek-v4.1-flash (coordinator), qwen3.8-flash (detective), gpt-oss-120b (titles), plus the 5 catalog extras (deepseek-v4-pro-0813, deepseek-v4-flash, glm-5.3, qwen3-next-80b-a3b-instruct, gemma-4-26b-a4b-it). Pruned providers not referenced by the live setup: airouter, camelai, freebuff, ifm, synthetic, xkiro. Restore real values from ~/.config/opencode when deploying.
